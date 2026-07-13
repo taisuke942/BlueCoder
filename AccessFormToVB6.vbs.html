@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccessFormToVB6.vbs</title>
+    <style>
+        :root {
+            --bg: #f4f6f8;
+            --panel: #ffffff;
+            --text: #2f3337;
+            --muted: #6b7280;
+            --main: #1d4f85;
+            --accent: #2864a8;
+            --code-bg: #1f242b;
+            --code-text: #f3f4f6;
+            --line: #d8e0e8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         "Yu Gothic", "Meiryo", sans-serif;
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1180px;
+            margin: 36px auto;
+            padding: 36px;
+            background: var(--panel);
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .date {
+            margin: 0 0 10px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        h1 {
+            margin: 0;
+            padding-bottom: 14px;
+            border-bottom: 3px solid var(--accent);
+            color: var(--main);
+            font-size: 28px;
+        }
+
+        .summary {
+            margin: 22px 0;
+            padding: 18px 20px;
+            background: #eef5fc;
+            border: 1px solid #bdd4eb;
+            border-radius: 8px;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 18px 0 10px;
+        }
+
+        button {
+            padding: 10px 16px;
+            border: 0;
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        pre {
+            margin: 0;
+            padding: 22px;
+            overflow-x: auto;
+            background: var(--code-bg);
+            color: var(--code-text);
+            border-radius: 8px;
+            border: 1px solid #15191e;
+            white-space: pre;
+            tab-size: 4;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+
+        .footer {
+            margin-top: 28px;
+            padding-top: 16px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                margin: 0;
+                padding: 20px;
+                border-radius: 0;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            pre {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="container">
+    <p class="date">作成日：2026年7月13日</p>
+    <h1>AccessFormToVB6.vbs</h1>
+
+    <div class="summary">
+        Accessフォームを読み取り、VB6用の<code>.frm</code>ファイルを
+        作成するVBSコードです。
+    </div>
+
+    <div class="toolbar">
+        <button type="button" onclick="copyCode()">コードをコピー</button>
+    </div>
+
+    <pre id="code">Option Explicit
+
+&#x27; ============================================================
+&#x27; AccessフォームをVB6の.frmファイルへ変換する簡易ツール
+&#x27;
+&#x27; 使い方
+&#x27; 1. このVBSをダブルクリック
+&#x27; 2. Accessファイル（.accdb / .mdb）を選択
+&#x27; 3. 同じ場所に「VB6_Forms」フォルダが作成される
+&#x27; 4. その中の.frmファイルをVB6へ追加する
+&#x27;
+&#x27; 注意
+&#x27; ・画面の位置・大きさ・基本コントロールを移すための「ひな形」です。
+&#x27; ・Access VBA、RecordSource、ControlSource、サブフォームの動作は
+&#x27;   自動移植されません。
+&#x27; ============================================================
+
+Const acDesign = 1
+Const acForm = 2
+Const acSaveNo = 2
+Const msoFileDialogFilePicker = 3
+
+Dim acc
+Dim fso
+Dim picker
+Dim dbPath
+Dim dbFolder
+Dim outputFolder
+Dim logPath
+Dim logFile
+Dim formCount
+Dim i
+Dim formName
+Dim successCount
+Dim failedCount
+Dim resultMessage
+
+Set fso = CreateObject(&quot;Scripting.FileSystemObject&quot;)
+Set acc = CreateObject(&quot;Access.Application&quot;)
+
+On Error Resume Next
+
+&#x27; Accessファイルを選択
+Set picker = acc.FileDialog(msoFileDialogFilePicker)
+
+If Err.Number &lt;&gt; 0 Then
+    MsgBox &quot;Accessのファイル選択画面を開けませんでした。&quot; &amp; vbCrLf &amp; _
+           &quot;Microsoft Accessがインストールされているか確認してください。&quot;, _
+           vbCritical, &quot;Accessフォーム変換&quot;
+    acc.Quit
+    WScript.Quit
+End If
+
+On Error GoTo 0
+
+With picker
+    .Title = &quot;変換するAccessファイルを選択してください&quot;
+    .AllowMultiSelect = False
+    .Filters.Clear
+    .Filters.Add &quot;Accessファイル&quot;, &quot;*.accdb;*.mdb&quot;
+
+    If .Show &lt;&gt; -1 Then
+        acc.Quit
+        WScript.Quit
+    End If
+
+    dbPath = .SelectedItems(1)
+End With
+
+dbFolder = fso.GetParentFolderName(dbPath)
+outputFolder = fso.BuildPath(dbFolder, &quot;VB6_Forms&quot;)
+
+If Not fso.FolderExists(outputFolder) Then
+    fso.CreateFolder outputFolder
+End If
+
+logPath = fso.BuildPath(outputFolder, &quot;変換結果.txt&quot;)
+Set logFile = fso.CreateTextFile(logPath, True, True)
+
+logFile.WriteLine &quot;Accessフォーム → VB6フォーム 変換結果&quot;
+logFile.WriteLine &quot;Accessファイル: &quot; &amp; dbPath
+logFile.WriteLine &quot;作成日時: &quot; &amp; Now
+logFile.WriteLine String(60, &quot;-&quot;)
+
+On Error Resume Next
+acc.OpenCurrentDatabase dbPath
+
+If Err.Number &lt;&gt; 0 Then
+    MsgBox &quot;Accessファイルを開けませんでした。&quot; &amp; vbCrLf &amp; _
+           Err.Description, vbCritical, &quot;Accessフォーム変換&quot;
+    logFile.WriteLine &quot;エラー: &quot; &amp; Err.Description
+    logFile.Close
+    acc.Quit
+    WScript.Quit
+End If
+
+On Error GoTo 0
+
+formCount = acc.CurrentProject.AllForms.Count
+
+If formCount = 0 Then
+    MsgBox &quot;このAccessファイルにはフォームがありません。&quot;, _
+           vbInformation, &quot;Accessフォーム変換&quot;
+    logFile.WriteLine &quot;フォームはありませんでした。&quot;
+    logFile.Close
+    acc.CloseCurrentDatabase
+    acc.Quit
+    WScript.Quit
+End If
+
+successCount = 0
+failedCount = 0
+
+For i = 0 To formCount - 1
+
+    formName = acc.CurrentProject.AllForms(i).Name
+
+    If ConvertOneForm(acc, fso, formName, outputFolder, logFile) Then
+        successCount = successCount + 1
+    Else
+        failedCount = failedCount + 1
+    End If
+
+Next
+
+logFile.WriteLine String(60, &quot;-&quot;)
+logFile.WriteLine &quot;成功: &quot; &amp; successCount &amp; &quot;フォーム&quot;
+logFile.WriteLine &quot;失敗: &quot; &amp; failedCount &amp; &quot;フォーム&quot;
+logFile.Close
+
+acc.CloseCurrentDatabase
+acc.Quit
+
+Set picker = Nothing
+Set acc = Nothing
+Set logFile = Nothing
+Set fso = Nothing
+
+resultMessage = _
+    &quot;変換が完了しました。&quot; &amp; vbCrLf &amp; vbCrLf &amp; _
+    &quot;成功: &quot; &amp; successCount &amp; &quot;フォーム&quot; &amp; vbCrLf &amp; _
+    &quot;失敗: &quot; &amp; failedCount &amp; &quot;フォーム&quot; &amp; vbCrLf &amp; vbCrLf &amp; _
+    &quot;作成場所:&quot; &amp; vbCrLf &amp; outputFolder &amp; vbCrLf &amp; vbCrLf &amp; _
+    &quot;この中の.frmファイルをVB6へ追加してください。&quot;
+
+MsgBox resultMessage, vbInformation, &quot;Accessフォーム変換&quot;
+
+
+Function ConvertOneForm(ByRef accessApp, ByRef fileSystem, _
+                        ByVal sourceFormName, ByVal destinationFolder, _
+                        ByRef resultLog)
+
+    Dim frm
+    Dim ctl
+    Dim outputFile
+    Dim outputPath
+    Dim vbFormName
+    Dim vbControlName
+    Dim controlClass
+    Dim captionText
+    Dim formCaption
+    Dim formWidth
+    Dim formHeight
+    Dim headerHeight
+    Dim detailHeight
+    Dim footerHeight
+    Dim topOffset
+    Dim tabIndex
+    Dim controlSource
+    Dim rowSource
+    Dim mappingText
+    Dim unsupportedCount
+    Dim errText
+
+    On Error Resume Next
+
+    accessApp.DoCmd.OpenForm sourceFormName, acDesign
+
+    If Err.Number &lt;&gt; 0 Then
+        errText = Err.Description
+        Err.Clear
+
+        resultLog.WriteLine &quot;失敗: &quot; &amp; sourceFormName &amp; &quot; / &quot; &amp; errText
+        ConvertOneForm = False
+        Exit Function
+    End If
+
+    Set frm = accessApp.Forms(sourceFormName)
+
+    If Err.Number &lt;&gt; 0 Or frm Is Nothing Then
+        errText = Err.Description
+        Err.Clear
+
+        resultLog.WriteLine &quot;失敗: &quot; &amp; sourceFormName &amp; &quot; / &quot; &amp; errText
+        accessApp.DoCmd.Close acForm, sourceFormName, acSaveNo
+        ConvertOneForm = False
+        Exit Function
+    End If
+
+    vbFormName = MakeVbName(sourceFormName, &quot;frm&quot;)
+
+    If LCase(Left(vbFormName, 3)) &lt;&gt; &quot;frm&quot; Then
+        vbFormName = &quot;frm&quot; &amp; vbFormName
+    End If
+
+    outputPath = fileSystem.BuildPath( _
+        destinationFolder, vbFormName &amp; &quot;.frm&quot;)
+
+    Set outputFile = fileSystem.CreateTextFile(outputPath, True, False)
+
+    If Err.Number &lt;&gt; 0 Then
+        errText = Err.Description
+        Err.Clear
+
+        resultLog.WriteLine &quot;失敗: &quot; &amp; sourceFormName &amp; &quot; / &quot; &amp; errText
+        accessApp.DoCmd.Close acForm, sourceFormName, acSaveNo
+        ConvertOneForm = False
+        Exit Function
+    End If
+
+    formCaption = GetPropertyText(frm, &quot;Caption&quot;)
+    If formCaption = &quot;&quot; Then
+        formCaption = sourceFormName
+    End If
+
+    formWidth = GetNumericProperty(frm, &quot;InsideWidth&quot;, 9000)
+
+    headerHeight = GetSectionHeight(frm, 1)
+    detailHeight = GetSectionHeight(frm, 0)
+    footerHeight = GetSectionHeight(frm, 2)
+
+    formHeight = headerHeight + detailHeight + footerHeight
+
+    If formHeight &lt;= 0 Then
+        formHeight = 6000
+    End If
+
+    outputFile.WriteLine &quot;VERSION 5.00&quot;
+    outputFile.WriteLine &quot;Begin VB.Form &quot; &amp; vbFormName
+    outputFile.WriteLine &quot;   Caption         =   &quot;&quot;&quot; &amp; EscapeVbString(formCaption) &amp; &quot;&quot;&quot;&quot;
+    outputFile.WriteLine &quot;   ClientHeight    =   &quot; &amp; CStr(formHeight)
+    outputFile.WriteLine &quot;   ClientLeft      =   60&quot;
+    outputFile.WriteLine &quot;   ClientTop       =   345&quot;
+    outputFile.WriteLine &quot;   ClientWidth     =   &quot; &amp; CStr(formWidth)
+    outputFile.WriteLine &quot;   LinkTopic       =   &quot;&quot;Form1&quot;&quot;&quot;
+    outputFile.WriteLine &quot;   ScaleHeight     =   &quot; &amp; CStr(formHeight)
+    outputFile.WriteLine &quot;   ScaleWidth      =   &quot; &amp; CStr(formWidth)
+    outputFile.WriteLine &quot;   StartUpPosition =   3  &#x27;Windows の既定値&quot;
+
+    tabIndex = 0
+    mappingText = &quot;&quot;
+    unsupportedCount = 0
+
+    For Each ctl In frm.Controls
+
+        controlClass = GetVb6ControlClass(GetNumericProperty(ctl, &quot;ControlType&quot;, -1))
+        vbControlName = MakeVbName(GetPropertyText(ctl, &quot;Name&quot;), &quot;ctl&quot;)
+
+        If controlClass = &quot;&quot; Then
+
+            unsupportedCount = unsupportedCount + 1
+
+            &#x27; 未対応コントロールは、位置確認用のラベルに置き換える
+            outputFile.WriteLine &quot;   Begin VB.Label &quot; &amp; vbControlName
+            outputFile.WriteLine &quot;      Caption         =   &quot;&quot;[未対応] &quot; &amp; _
+                                 EscapeVbString(GetPropertyText(ctl, &quot;Name&quot;)) &amp; &quot;&quot;&quot;&quot;
+            outputFile.WriteLine &quot;      Height          =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Height&quot;, 315))
+            outputFile.WriteLine &quot;      Left            =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Left&quot;, 0))
+            outputFile.WriteLine &quot;      Top             =   &quot; &amp; _
+                                 CStr(GetControlTop(frm, ctl, headerHeight, detailHeight))
+            outputFile.WriteLine &quot;      Width           =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Width&quot;, 1200))
+            outputFile.WriteLine &quot;   End&quot;
+
+        Else
+
+            outputFile.WriteLine &quot;   Begin &quot; &amp; controlClass &amp; &quot; &quot; &amp; vbControlName
+
+            captionText = GetPropertyText(ctl, &quot;Caption&quot;)
+
+            If HasCaption(controlClass) Then
+                If captionText = &quot;&quot; Then
+                    captionText = GetPropertyText(ctl, &quot;Name&quot;)
+                End If
+
+                outputFile.WriteLine &quot;      Caption         =   &quot;&quot;&quot; &amp; _
+                                     EscapeVbString(captionText) &amp; &quot;&quot;&quot;&quot;
+            End If
+
+            outputFile.WriteLine &quot;      Height          =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Height&quot;, 315))
+            outputFile.WriteLine &quot;      Left            =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Left&quot;, 0))
+
+            If HasTabIndex(controlClass) Then
+                outputFile.WriteLine &quot;      TabIndex        =   &quot; &amp; CStr(tabIndex)
+                tabIndex = tabIndex + 1
+            End If
+
+            topOffset = GetControlTop(frm, ctl, headerHeight, detailHeight)
+
+            outputFile.WriteLine &quot;      Top             =   &quot; &amp; CStr(topOffset)
+            outputFile.WriteLine &quot;      Width           =   &quot; &amp; _
+                                 CStr(GetNumericProperty(ctl, &quot;Width&quot;, 1200))
+            outputFile.WriteLine &quot;   End&quot;
+
+        End If
+
+        controlSource = GetPropertyText(ctl, &quot;ControlSource&quot;)
+        rowSource = GetPropertyText(ctl, &quot;RowSource&quot;)
+
+        If controlSource &lt;&gt; &quot;&quot; Then
+            mappingText = mappingText &amp; _
+                          &quot;&#x27; &quot; &amp; vbControlName &amp; _
+                          &quot;  ← Access ControlSource: &quot; &amp; _
+                          Replace(controlSource, vbCr, &quot; &quot;) &amp; vbCrLf
+        End If
+
+        If rowSource &lt;&gt; &quot;&quot; Then
+            mappingText = mappingText &amp; _
+                          &quot;&#x27; &quot; &amp; vbControlName &amp; _
+                          &quot;  ← Access RowSource: &quot; &amp; _
+                          Replace(rowSource, vbCr, &quot; &quot;) &amp; vbCrLf
+        End If
+
+    Next
+
+    outputFile.WriteLine &quot;End&quot;
+    outputFile.WriteLine &quot;Attribute VB_Name = &quot;&quot;&quot; &amp; vbFormName &amp; &quot;&quot;&quot;&quot;
+    outputFile.WriteLine &quot;Attribute VB_GlobalNameSpace = False&quot;
+    outputFile.WriteLine &quot;Attribute VB_Creatable = False&quot;
+    outputFile.WriteLine &quot;Attribute VB_PredeclaredId = True&quot;
+    outputFile.WriteLine &quot;Attribute VB_Exposed = False&quot;
+    outputFile.WriteLine &quot;Option Explicit&quot;
+    outputFile.WriteLine &quot;&quot;
+    outputFile.WriteLine &quot;&#x27; ------------------------------------------------------------&quot;
+    outputFile.WriteLine &quot;&#x27; Accessから引き継いだ情報&quot;
+    outputFile.WriteLine &quot;&#x27; RecordSource: &quot; &amp; _
+                         Replace(GetPropertyText(frm, &quot;RecordSource&quot;), vbCr, &quot; &quot;)
+
+    If mappingText &lt;&gt; &quot;&quot; Then
+        outputFile.Write mappingText
+    End If
+
+    outputFile.WriteLine &quot;&#x27; ------------------------------------------------------------&quot;
+
+    outputFile.Close
+
+    accessApp.DoCmd.Close acForm, sourceFormName, acSaveNo
+
+    resultLog.WriteLine _
+        &quot;成功: &quot; &amp; sourceFormName &amp; _
+        &quot; → &quot; &amp; vbFormName &amp; &quot;.frm&quot; &amp; _
+        &quot; / 未対応コントロール: &quot; &amp; unsupportedCount
+
+    ConvertOneForm = True
+
+    On Error GoTo 0
+
+End Function
+
+
+Function GetVb6ControlClass(ByVal accessControlType)
+
+    Select Case CLng(accessControlType)
+
+        Case 100
+            GetVb6ControlClass = &quot;VB.Label&quot;
+
+        Case 104
+            GetVb6ControlClass = &quot;VB.CommandButton&quot;
+
+        Case 105
+            GetVb6ControlClass = &quot;VB.OptionButton&quot;
+
+        Case 106
+            GetVb6ControlClass = &quot;VB.CheckBox&quot;
+
+        Case 107
+            GetVb6ControlClass = &quot;VB.Frame&quot;
+
+        Case 109
+            GetVb6ControlClass = &quot;VB.TextBox&quot;
+
+        Case 110
+            GetVb6ControlClass = &quot;VB.ListBox&quot;
+
+        Case 111
+            GetVb6ControlClass = &quot;VB.ComboBox&quot;
+
+        Case 122
+            GetVb6ControlClass = &quot;VB.CommandButton&quot;
+
+        Case Else
+            GetVb6ControlClass = &quot;&quot;
+
+    End Select
+
+End Function
+
+
+Function HasCaption(ByVal vbClassName)
+
+    Select Case vbClassName
+
+        Case &quot;VB.Label&quot;, _
+             &quot;VB.CommandButton&quot;, _
+             &quot;VB.OptionButton&quot;, _
+             &quot;VB.CheckBox&quot;, _
+             &quot;VB.Frame&quot;
+
+            HasCaption = True
+
+        Case Else
+            HasCaption = False
+
+    End Select
+
+End Function
+
+
+Function HasTabIndex(ByVal vbClassName)
+
+    Select Case vbClassName
+
+        Case &quot;VB.CommandButton&quot;, _
+             &quot;VB.OptionButton&quot;, _
+             &quot;VB.CheckBox&quot;, _
+             &quot;VB.TextBox&quot;, _
+             &quot;VB.ListBox&quot;, _
+             &quot;VB.ComboBox&quot;
+
+            HasTabIndex = True
+
+        Case Else
+            HasTabIndex = False
+
+    End Select
+
+End Function
+
+
+Function GetControlTop(ByRef sourceForm, ByRef sourceControl, _
+                       ByVal formHeaderHeight, ByVal formDetailHeight)
+
+    Dim sectionNumber
+    Dim originalTop
+
+    sectionNumber = GetNumericProperty(sourceControl, &quot;Section&quot;, 0)
+    originalTop = GetNumericProperty(sourceControl, &quot;Top&quot;, 0)
+
+    Select Case sectionNumber
+
+        Case 1
+            GetControlTop = originalTop
+
+        Case 0
+            GetControlTop = formHeaderHeight + originalTop
+
+        Case 2
+            GetControlTop = formHeaderHeight + _
+                            formDetailHeight + originalTop
+
+        Case Else
+            GetControlTop = originalTop
+
+    End Select
+
+End Function
+
+
+Function GetSectionHeight(ByRef sourceForm, ByVal sectionNumber)
+
+    Dim value
+
+    On Error Resume Next
+
+    Err.Clear
+    value = sourceForm.Section(sectionNumber).Height
+
+    If Err.Number &lt;&gt; 0 Then
+        Err.Clear
+        value = 0
+    End If
+
+    On Error GoTo 0
+
+    GetSectionHeight = CLng(value)
+
+End Function
+
+
+Function GetPropertyText(ByRef targetObject, ByVal propertyName)
+
+    Dim value
+
+    On Error Resume Next
+
+    Err.Clear
+    value = targetObject.Properties(propertyName).Value
+
+    If Err.Number &lt;&gt; 0 Or IsNull(value) Then
+        Err.Clear
+        value = &quot;&quot;
+    End If
+
+    On Error GoTo 0
+
+    GetPropertyText = CStr(value)
+
+End Function
+
+
+Function GetNumericProperty(ByRef targetObject, ByVal propertyName, _
+                            ByVal defaultValue)
+
+    Dim value
+
+    On Error Resume Next
+
+    Err.Clear
+    value = targetObject.Properties(propertyName).Value
+
+    If Err.Number &lt;&gt; 0 Or IsNull(value) Or Not IsNumeric(value) Then
+        Err.Clear
+        value = defaultValue
+    End If
+
+    On Error GoTo 0
+
+    GetNumericProperty = CLng(value)
+
+End Function
+
+
+Function MakeVbName(ByVal originalName, ByVal prefixText)
+
+    Dim result
+    Dim i
+    Dim ch
+
+    result = &quot;&quot;
+
+    For i = 1 To Len(originalName)
+
+        ch = Mid(originalName, i, 1)
+
+        If IsAllowedNameCharacter(ch) Then
+            result = result &amp; ch
+        Else
+            result = result &amp; &quot;_&quot;
+        End If
+
+    Next
+
+    If result = &quot;&quot; Then
+        result = prefixText
+    End If
+
+    If IsNumeric(Left(result, 1)) Then
+        result = prefixText &amp; &quot;_&quot; &amp; result
+    End If
+
+    MakeVbName = result
+
+End Function
+
+
+Function IsAllowedNameCharacter(ByVal oneCharacter)
+
+    Dim code
+
+    code = AscW(oneCharacter)
+
+    If (code &gt;= 48 And code &lt;= 57) Or _
+       (code &gt;= 65 And code &lt;= 90) Or _
+       (code &gt;= 97 And code &lt;= 122) Or _
+       oneCharacter = &quot;_&quot; Or _
+       code &gt; 127 Then
+
+        IsAllowedNameCharacter = True
+    Else
+        IsAllowedNameCharacter = False
+    End If
+
+End Function
+
+
+Function EscapeVbString(ByVal value)
+
+    EscapeVbString = Replace(value, &quot;&quot;&quot;&quot;, &quot;&quot;&quot;&quot;&quot;&quot;)
+
+End Function
+</pre>
+
+    <footer class="footer">
+        AccessフォームからVB6フォームへの簡易変換VBS
+    </footer>
+</main>
+
+<script>
+function copyCode() {
+    const code = document.getElementById("code").innerText;
+
+    navigator.clipboard.writeText(code).then(function() {
+        alert("コードをコピーしました。");
+    }).catch(function() {
+        alert("コピーできませんでした。コードを選択してコピーしてください。");
+    });
+}
+</script>
+</body>
+</html>
