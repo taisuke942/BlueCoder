@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>VBSを使ったAccessフォームからVB6への移行</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6f8;
+            color: #333333;
+            font-family:
+                -apple-system,
+                BlinkMacSystemFont,
+                "Segoe UI",
+                "Yu Gothic",
+                "Meiryo",
+                sans-serif;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            margin-top: 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #2864a8;
+            color: #1d4f85;
+            font-size: 28px;
+        }
+
+        h2 {
+            margin-top: 40px;
+            padding-left: 12px;
+            border-left: 5px solid #2864a8;
+            color: #1d4f85;
+            font-size: 22px;
+        }
+
+        h3 {
+            margin-top: 30px;
+            color: #315f8f;
+            font-size: 18px;
+        }
+
+        .date {
+            color: #666666;
+            font-size: 14px;
+        }
+
+        .summary {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #eef5fc;
+            border: 1px solid #bdd4eb;
+            border-radius: 6px;
+        }
+
+        .important {
+            margin: 25px 0;
+            padding: 18px 20px;
+            background-color: #fff8e1;
+            border-left: 5px solid #e0a000;
+        }
+
+        ul {
+            padding-left: 28px;
+        }
+
+        li {
+            margin-bottom: 7px;
+        }
+
+        pre {
+            overflow-x: auto;
+            padding: 20px;
+            background-color: #20252b;
+            color: #f2f2f2;
+            border-radius: 7px;
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            tab-size: 4;
+        }
+
+        code {
+            font-family:
+                Consolas,
+                "Courier New",
+                monospace;
+        }
+
+        p code,
+        li code,
+        td code {
+            padding: 2px 5px;
+            background-color: #edf0f3;
+            color: #b3261e;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            margin: 25px 0;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            border: 1px solid #cccccc;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background-color: #e8f1fa;
+            color: #1d4f85;
+        }
+
+        tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        blockquote {
+            margin: 25px 0;
+            padding: 18px 22px;
+            background-color: #eef5fc;
+            border-left: 5px solid #2864a8;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 1px solid #dddddd;
+            color: #777777;
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media screen and (max-width: 700px) {
+            .container {
+                margin: 0;
+                padding: 22px;
+                border-radius: 0;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            h2 {
+                font-size: 19px;
+            }
+
+            table {
+                font-size: 14px;
+            }
+
+            th,
+            td {
+                padding: 9px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<main class="container">
+
+    <p class="date">作成日：2026年7月13日</p>
+
+    <h1>VBSを使ったAccessフォームからVB6への移行</h1>
+
+    <div class="summary">
+        <strong>結論：</strong><br>
+        VBSを使って、AccessフォームからVB6への移行作業を
+        一部自動化することはできます。
+        ただし、AccessフォームをVB6フォームへ
+        そのまま完全変換することはできません。
+    </div>
+
+    <h2>VBSでできること</h2>
+
+    <p>VBSでは、主に次の作業を自動化できます。</p>
+
+    <ul>
+        <li>Accessフォームの定義をテキストファイルへ出力する</li>
+        <li>フォーム上のコントロール名、位置、サイズを取得する</li>
+        <li>レコードソースやコントロールソースを取得する</li>
+        <li>VB6の<code>.frm</code>ファイルのひな形を生成する</li>
+        <li>AccessのテーブルデータをCSVなどへ出力する</li>
+    </ul>
+
+    <h2>Accessフォーム定義をVBSで出力する例</h2>
+
+    <p>
+        Accessの<code>SaveAsText</code>機能をVBSから呼び出し、
+        フォームの設計情報をテキストファイルとして出力します。
+    </p>
+
+<pre><code>Option Explicit
+
+Const acForm = 2
+
+Dim accessApp
+Dim dbPath
+Dim formName
+Dim outputPath
+
+dbPath = "C:\Work\Sample.accdb"
+formName = "F_顧客入力"
+outputPath = "C:\Work\F_顧客入力.txt"
+
+Set accessApp = CreateObject("Access.Application")
+
+accessApp.OpenCurrentDatabase dbPath
+
+' Accessフォームの設計情報をテキスト出力
+accessApp.SaveAsText acForm, formName, outputPath
+
+accessApp.CloseCurrentDatabase
+accessApp.Quit
+
+Set accessApp = Nothing
+
+WScript.Echo "フォーム定義を出力しました。"</code></pre>
+
+    <p>
+        このVBSを実行すると、Accessフォームの設定が
+        次のようなテキストとして出力されます。
+    </p>
+
+<pre><code>Begin Form
+    RecordSource ="T_顧客"
+    Width =12000
+
+    Begin TextBox
+        Name ="txt顧客名"
+        ControlSource ="顧客名"
+        Left =1200
+        Top =600
+        Width =3000
+    End
+End</code></pre>
+
+    <h2>VB6フォームのひな形への変換</h2>
+
+    <p>
+        出力したAccessフォーム定義を解析することで、
+        次のようなVB6フォームのコントロール定義を生成できます。
+    </p>
+
+<pre><code>Begin VB.TextBox txt顧客名
+   Height          =   315
+   Left            =   1200
+   TabIndex        =   0
+   Top             =   600
+   Width           =   3000
+End</code></pre>
+
+    <div class="important">
+        AccessとVB6では、座標やサイズの扱い、コントロールの種類、
+        プロパティ名などが異なります。<br>
+        そのため、単純な文字列置換だけではなく、
+        コントロールごとの変換処理が必要です。
+    </div>
+
+    <h2>コントロール一覧をCSVに出力する例</h2>
+
+    <p>
+        フォームから直接VB6の<code>.frm</code>ファイルを作る前に、
+        コントロール情報をCSVへ出力して確認する方法もあります。
+    </p>
+
+<pre><code>Option Explicit
+
+Const acDesign = 1
+Const acForm = 2
+
+Dim accessApp
+Dim formObject
+Dim ctl
+Dim fso
+Dim outputFile
+Dim controlSource
+
+Set accessApp = CreateObject("Access.Application")
+Set fso = CreateObject("Scripting.FileSystemObject")
+
+accessApp.OpenCurrentDatabase "C:\Work\Sample.accdb"
+
+accessApp.DoCmd.OpenForm "F_顧客入力", acDesign
+
+Set formObject = accessApp.Forms("F_顧客入力")
+
+Set outputFile = fso.CreateTextFile( _
+    "C:\Work\controls.csv", _
+    True, _
+    True _
+)
+
+outputFile.WriteLine _
+    "コントロール名,種類,ControlSource,Left,Top,Width,Height"
+
+For Each ctl In formObject.Controls
+
+    controlSource = ""
+
+    On Error Resume Next
+    controlSource = ctl.ControlSource
+
+    If Err.Number &lt;&gt; 0 Then
+        controlSource = ""
+        Err.Clear
+    End If
+
+    On Error GoTo 0
+
+    outputFile.WriteLine _
+        """" &amp; ctl.Name &amp; """," &amp; _
+        ctl.ControlType &amp; "," &amp; _
+        """" &amp; controlSource &amp; """," &amp; _
+        ctl.Left &amp; "," &amp; _
+        ctl.Top &amp; "," &amp; _
+        ctl.Width &amp; "," &amp; _
+        ctl.Height
+
+Next
+
+outputFile.Close
+
+accessApp.DoCmd.Close acForm, "F_顧客入力"
+accessApp.CloseCurrentDatabase
+accessApp.Quit
+
+Set outputFile = Nothing
+Set formObject = Nothing
+Set fso = Nothing
+Set accessApp = Nothing
+
+WScript.Echo "コントロール一覧を出力しました。"</code></pre>
+
+    <h2>出力されるCSVの例</h2>
+
+<pre><code>コントロール名,種類,ControlSource,Left,Top,Width,Height
+"txt顧客名",109,"顧客名",1200,600,3000,315
+"txt住所",109,"住所",1200,1000,5000,315
+"cmd登録",104,"",6500,5000,1500,500</code></pre>
+
+    <h2>完全自動化が難しい部分</h2>
+
+    <p>
+        VBSを使用しても、次の部分は通常、
+        手作業または個別の変換処理が必要です。
+    </p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Access側の機能</th>
+                <th>VB6側で必要になる対応</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            <tr>
+                <td>Access VBA</td>
+                <td>VB6用のコードに書き換える</td>
+            </tr>
+
+            <tr>
+                <td><code>DoCmd.OpenForm</code></td>
+                <td><code>Form.Show</code>などへ変更する</td>
+            </tr>
+
+            <tr>
+                <td><code>Me!コントロール名</code></td>
+                <td>VB6のコントロール参照形式へ変更する</td>
+            </tr>
+
+            <tr>
+                <td><code>DLookup</code>、<code>DCount</code></td>
+                <td>SQL、DAOまたはADOの処理へ置き換える</td>
+            </tr>
+
+            <tr>
+                <td>サブフォーム</td>
+                <td>別フォームやグリッドなどで再構築する</td>
+            </tr>
+
+            <tr>
+                <td>コンボボックスのRowSource</td>
+                <td>ADOなどで一覧データを読み込む</td>
+            </tr>
+
+            <tr>
+                <td>条件付き書式</td>
+                <td>VB6のイベント処理で再現する</td>
+            </tr>
+
+            <tr>
+                <td>Accessマクロ</td>
+                <td>VB6コードとして再実装する</td>
+            </tr>
+
+            <tr>
+                <td>Accessレポート</td>
+                <td>DataReportや別の帳票機能で作り直す</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>現実的な移行方法</h2>
+
+    <ol>
+        <li>VBSでAccessフォームの設計情報を出力する</li>
+        <li>コントロール名、種類、位置、サイズを取得する</li>
+        <li>AccessとVB6のコントロール対応表を作る</li>
+        <li>VBSでVB6の<code>.frm</code>ファイルのひな形を生成する</li>
+        <li>VB6でフォームを開き、配置を調整する</li>
+        <li>Access VBAをVB6用に書き換える</li>
+        <li>DAOまたはADOでデータベース接続処理を実装する</li>
+        <li>動作確認を行い、Access固有機能を個別に修正する</li>
+    </ol>
+
+    <blockquote>
+        VBSでフォーム情報を抽出し、VB6フォームのひな形を
+        自動生成した後、処理部分を手作業で仕上げる方法が現実的です。
+    </blockquote>
+
+    <h2>向いているAccessフォーム</h2>
+
+    <p>
+        次のような比較的単純なフォームであれば、
+        VBSによる自動変換の効果が期待できます。
+    </p>
+
+    <ul>
+        <li>テキストボックスが中心の入力フォーム</li>
+        <li>ラベル、ボタン、コンボボックスが中心のフォーム</li>
+        <li>単票形式のマスタ登録画面</li>
+        <li>単純な検索・一覧画面</li>
+        <li>複雑なサブフォームや条件付き書式が少ない画面</li>
+    </ul>
+
+    <h2>移行が難しくなりやすいフォーム</h2>
+
+    <ul>
+        <li>複数のサブフォームを使用している</li>
+        <li>Access VBAのコード量が多い</li>
+        <li>Accessマクロに強く依存している</li>
+        <li>複雑な集計クエリを使用している</li>
+        <li>条件付き書式や動的な画面制御が多い</li>
+        <li>Accessレポートと密接に連動している</li>
+    </ul>
+
+    <div class="summary">
+        <strong>最終的な整理</strong><br><br>
+
+        VBSを使えば、Accessフォームのコントロール情報を取得し、
+        VB6フォームのひな形を生成できます。<br><br>
+
+        ただし、AccessのVBA、マクロ、サブフォーム、
+        クエリとの連動などは、VB6向けに個別に作り直す必要があります。
+    </div>
+
+    <footer class="footer">
+        AccessフォームからVB6への移行検討資料
+    </footer>
+
+</main>
+
+</body>
+</html>
