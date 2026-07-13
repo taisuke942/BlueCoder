@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AccessフォームからVB6フォームを作成するVBS</title>
+    <style>
+        :root {
+            --main: #1d4f85;
+            --accent: #2864a8;
+            --bg: #f4f6f8;
+            --panel: #ffffff;
+            --line: #d7e0e8;
+            --soft-blue: #eef5fc;
+            --soft-yellow: #fff8e1;
+            --text: #2f3337;
+            --muted: #68717a;
+            --code-bg: #20252b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI",
+                         "Yu Gothic", "Meiryo", sans-serif;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 40px auto;
+            padding: 42px;
+            background: var(--panel);
+            border-radius: 12px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+        }
+
+        .date {
+            margin: 0 0 12px;
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        h1 {
+            margin: 0;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--accent);
+            color: var(--main);
+            font-size: 29px;
+        }
+
+        h2 {
+            margin-top: 38px;
+            padding-left: 12px;
+            border-left: 5px solid var(--accent);
+            color: var(--main);
+            font-size: 22px;
+        }
+
+        p {
+            margin: 14px 0;
+        }
+
+        .summary,
+        .notice {
+            margin: 24px 0;
+            padding: 20px;
+            border-radius: 7px;
+        }
+
+        .summary {
+            background: var(--soft-blue);
+            border: 1px solid #b9d3eb;
+        }
+
+        .notice {
+            background: var(--soft-yellow);
+            border-left: 5px solid #d7a000;
+        }
+
+        .flow {
+            margin: 22px 0;
+            padding: 20px;
+            background: #f8fafc;
+            border: 1px solid var(--line);
+            border-radius: 7px;
+            text-align: center;
+            font-weight: 700;
+            line-height: 2.2;
+        }
+
+        .download-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 22px 0;
+        }
+
+        .download-link {
+            display: inline-block;
+            padding: 11px 18px;
+            background: var(--accent);
+            color: #fff;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .download-link:hover {
+            opacity: 0.88;
+        }
+
+        ol,
+        ul {
+            padding-left: 28px;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        code {
+            font-family: Consolas, "Courier New", monospace;
+        }
+
+        p code,
+        li code {
+            padding: 2px 6px;
+            background: #edf0f3;
+            color: #a62f27;
+            border-radius: 4px;
+        }
+
+        pre {
+            overflow-x: auto;
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--code-bg);
+            color: #f5f5f5;
+            border-radius: 8px;
+            font-family: Consolas, "Courier New", monospace;
+            line-height: 1.6;
+        }
+
+        table {
+            width: 100%;
+            margin: 24px 0;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 12px 14px;
+            border: 1px solid #ccd5dd;
+            text-align: left;
+            vertical-align: top;
+        }
+
+        th {
+            background: #e8f1fa;
+            color: var(--main);
+        }
+
+        tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .footer {
+            margin-top: 44px;
+            padding-top: 18px;
+            border-top: 1px solid #dddddd;
+            color: var(--muted);
+            font-size: 13px;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                margin: 0;
+                padding: 22px;
+                border-radius: 0;
+            }
+
+            h1 {
+                font-size: 23px;
+            }
+
+            h2 {
+                font-size: 19px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+<main class="container">
+
+    <p class="date">作成日：2026年7月13日</p>
+
+    <h1>AccessフォームからVB6フォームを作成するVBS</h1>
+
+    <div class="summary">
+        <strong>結論：</strong><br>
+        このVBSを実行すると、Accessファイルから直接、
+        VB6で読み込める<code>.frm</code>ファイルを作成できます。<br>
+        CSVやAccessフォーム定義テキストを、自分で用意する必要はありません。
+    </div>
+
+    <h2>処理の流れ</h2>
+
+    <div class="flow">
+        Accessファイル（.accdb／.mdb）<br>
+        ↓<br>
+        AccessFormToVB6.vbsを実行<br>
+        ↓<br>
+        VB6用の.frmファイルが作成される
+    </div>
+
+    <h2>使用するファイル</h2>
+
+    <div class="download-box">
+        <a class="download-link" href="AccessFormToVB6.vbs">
+            AccessFormToVB6.vbs
+        </a>
+
+        <a class="download-link" href="AccessFormToVB6_使い方.txt">
+            使い方の説明
+        </a>
+    </div>
+
+    <p>
+        GitHub PagesでこのHTMLを公開する場合は、
+        このHTML、VBS、使い方テキストの3ファイルを
+        同じフォルダへ置いてください。
+    </p>
+
+    <h2>使い方</h2>
+
+    <ol>
+        <li><code>AccessFormToVB6.vbs</code>をダウンロードします。</li>
+        <li>変換するAccessファイルを閉じます。</li>
+        <li><code>AccessFormToVB6.vbs</code>をダブルクリックします。</li>
+        <li>変換したい<code>.accdb</code>または<code>.mdb</code>を選びます。</li>
+        <li>Accessファイルと同じ場所に、<code>VB6_Forms</code>フォルダが作られます。</li>
+        <li>その中に、Accessフォームごとの<code>.frm</code>ファイルが作られます。</li>
+    </ol>
+
+    <h2>作成されるファイル</h2>
+
+<pre><code>Accessファイルがあるフォルダ
+├─ Sample.accdb
+└─ VB6_Forms
+   ├─ frm顧客入力.frm
+   ├─ frm商品登録.frm
+   └─ 変換結果.txt</code></pre>
+
+    <p>
+        <code>変換結果.txt</code>には、成功したフォーム数や、
+        変換できなかったコントロールの情報が記録されます。
+    </p>
+
+    <h2>VB6へ追加する方法</h2>
+
+    <p>VB6で対象プロジェクトを開き、次の順に操作します。</p>
+
+<pre><code>プロジェクト
+  ↓
+フォームの追加
+  ↓
+既存</code></pre>
+
+    <p>
+        その後、<code>VB6_Forms</code>フォルダ内に作成された
+        <code>.frm</code>ファイルを選びます。
+    </p>
+
+    <h2>CSVとテキストファイルは必要か</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ファイル</th>
+                <th>今回のVBSで必要か</th>
+                <th>説明</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>CSV</td>
+                <td>不要</td>
+                <td>コントロール一覧を確認するための補助データでした。</td>
+            </tr>
+            <tr>
+                <td>Accessフォーム定義テキスト</td>
+                <td>不要</td>
+                <td>VBSがAccessファイルを直接読み取るため、自分で出力する必要はありません。</td>
+            </tr>
+            <tr>
+                <td>VB6の.frm</td>
+                <td>必要</td>
+                <td>このVBSが自動作成し、VB6へ追加する実際のフォームファイルです。</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h2>自動で移せる主な内容</h2>
+
+    <ul>
+        <li>フォームのおおよその大きさ</li>
+        <li>ラベル</li>
+        <li>テキストボックス</li>
+        <li>コマンドボタン</li>
+        <li>チェックボックス</li>
+        <li>オプションボタン</li>
+        <li>コンボボックス</li>
+        <li>リストボックス</li>
+        <li>各コントロールの位置と大きさ</li>
+    </ul>
+
+    <h2>自動では移らない内容</h2>
+
+    <div class="notice">
+        このツールが作成する<code>.frm</code>は、
+        VB6画面の<strong>ひな形</strong>です。
+        Accessのすべての機能を完全変換するものではありません。
+    </div>
+
+    <ul>
+        <li>Access VBA</li>
+        <li>Accessマクロ</li>
+        <li><code>RecordSource</code>によるデータ表示</li>
+        <li><code>ControlSource</code>によるテーブルとの自動連携</li>
+        <li>サブフォーム</li>
+        <li>条件付き書式</li>
+        <li>Access固有の特殊コントロール</li>
+        <li>ボタンを押したときの処理</li>
+    </ul>
+
+    <p>
+        これらは、作成されたVB6フォームに対して、
+        ADOやDAO、VB6のイベントコードを追加して仕上げます。
+    </p>
+
+    <h2>最終的な整理</h2>
+
+    <div class="summary">
+        <strong>必要な操作は簡単です。</strong><br><br>
+
+        1. VBSをダブルクリックする<br>
+        2. Accessファイルを選ぶ<br>
+        3. 作成された<code>.frm</code>をVB6へ追加する<br><br>
+
+        CSVやテキストファイルを途中で扱う必要はありません。
+    </div>
+
+    <footer class="footer">
+        AccessフォームからVB6フォームへの簡易移行ガイド
+    </footer>
+
+</main>
+</body>
+</html>
