@@ -1,911 +1,171 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>BlueCoder | Excel・VBA業務改善ポートフォリオ</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GASコード一覧</title>
 <style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --text: #1f2328;
+  --muted: #59636e;
+  --border: #d0d7de;
+  --code-bg: #0d1117;
+  --code-text: #e6edf3;
+  --link: #0969da;
+}
+@media (prefers-color-scheme: dark) {
   :root {
-    --navy: #1a2744;
-    --navy-light: #243358;
-    --accent: #2e7df7;
-    --accent-soft: #e8f0fe;
-    --gold: #c9a84c;
-    --text: #1e2030;
-    --text-sub: #5a6278;
-    --bg: #f8f9fc;
-    --white: #ffffff;
-    --border: #e2e6f0;
-    --radius: 12px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  html { scroll-behavior: smooth; }
-
-  body {
-    font-family: 'Noto Sans JP', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.8;
-  }
-
-  /* ナビ */
-  nav {
-    position: fixed;
-    top: 0; left: 0; right: 0;
-    background: rgba(26, 39, 68, 0.97);
-    backdrop-filter: blur(8px);
-    z-index: 100;
-    padding: 0 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 60px;
-  }
-
-  .nav-logo {
-    color: #fff;
-    font-weight: 700;
-    font-size: 1.1rem;
-    letter-spacing: 0.05em;
-  }
-
-  .nav-logo span { color: var(--gold); }
-
-  nav ul {
-    display: flex;
-    gap: 2rem;
-    list-style: none;
-  }
-
-  nav ul a {
-    color: rgba(255,255,255,0.75);
-    text-decoration: none;
-    font-size: 0.85rem;
-    letter-spacing: 0.03em;
-    transition: color 0.2s;
-  }
-
-  nav ul a:hover { color: #fff; }
-
-  /* ヒーロー */
-  .hero {
-    min-height: 100vh;
-    background: linear-gradient(145deg, var(--navy) 0%, #0f1e45 60%, #1a3060 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    padding: 6rem 2rem 4rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hero::before {
-    content: '';
-    position: absolute;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(46,125,247,0.15) 0%, transparent 70%);
-    top: 10%; left: 50%;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-
-  .hero-inner { position: relative; z-index: 1; max-width: 720px; }
-
-  .hero-badge {
-    display: inline-block;
-    background: rgba(201,168,76,0.15);
-    border: 1px solid rgba(201,168,76,0.4);
-    color: var(--gold);
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
-    padding: 0.4rem 1.2rem;
-    border-radius: 2rem;
-    margin-bottom: 2rem;
-    animation: fadeUp 0.6s ease both;
-  }
-
-  .hero h1 {
-    font-family: 'Noto Sans JP', sans-serif;
-    font-size: clamp(1.8rem, 5vw, 2.8rem);
-    font-weight: 700;
-    color: #fff;
-    line-height: 1.4;
-    margin-bottom: 1.5rem;
-    animation: fadeUp 0.7s 0.1s ease both;
-  }
-
-  .hero h1 em {
-    font-style: normal;
-    color: var(--gold);
-  }
-
-  .hero-sub {
-    color: rgba(255,255,255,0.65);
-    font-size: 1rem;
-    margin-bottom: 2.5rem;
-    animation: fadeUp 0.7s 0.2s ease both;
-  }
-
-  .hero-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    justify-content: center;
-    margin-bottom: 2.5rem;
-    animation: fadeUp 0.7s 0.3s ease both;
-  }
-
-  .hero-tag {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.85);
-    font-size: 0.82rem;
-    padding: 0.35rem 1rem;
-    border-radius: 2rem;
-  }
-
-  .hero-cta {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-    animation: fadeUp 0.7s 0.4s ease both;
-  }
-
-  .btn {
-    padding: 0.75rem 2rem;
-    border-radius: 2rem;
-    font-size: 0.9rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s;
-    cursor: pointer;
-  }
-
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-
-  .btn-primary:hover {
-    background: #1a6ae0;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(46,125,247,0.4);
-  }
-
-  .btn-outline {
-    border: 1px solid rgba(255,255,255,0.3);
-    color: #fff;
-  }
-
-  .btn-outline:hover {
-    border-color: rgba(255,255,255,0.7);
-    background: rgba(255,255,255,0.08);
-  }
-
-  /* セクション共通 */
-  section { padding: 5rem 1.5rem; }
-
-  .container { max-width: 860px; margin: 0 auto; }
-
-  .section-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    color: var(--accent);
-    text-transform: uppercase;
-    margin-bottom: 0.5rem;
-  }
-
-  .section-title {
-    font-size: clamp(1.5rem, 3vw, 2rem);
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 2.5rem;
-    line-height: 1.3;
-  }
-
-  /* プロフィール */
-  #profile { background: var(--white); }
-
-  .profile-card {
-    background: var(--bg);
-    border-radius: var(--radius);
-    padding: 2.5rem;
-    border: 1px solid var(--border);
-  }
-
-  .profile-intro {
-    font-size: 1.05rem;
-    color: var(--text);
-    margin-bottom: 1.5rem;
-  }
-
-  .three-points {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin: 1.5rem 0 2rem;
-  }
-
-  .point-item {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--accent);
-    border-radius: 8px;
-    padding: 1rem 1.2rem;
-    font-size: 0.92rem;
-    font-weight: 500;
-    color: var(--navy);
-  }
-
-  .profile-body {
-    color: var(--text);
-    font-size: 0.95rem;
-    line-height: 2;
-  }
-
-  .profile-body p { margin-bottom: 1.2rem; }
-
-  .quote-list {
-    background: var(--accent-soft);
-    border-radius: 8px;
-    padding: 1.2rem 1.5rem;
-    margin: 1.2rem 0;
-  }
-
-  .quote-list p {
-    color: var(--navy);
-    font-size: 0.92rem;
-    margin-bottom: 0.3rem;
-  }
-
-  .quote-list p:last-child { margin-bottom: 0; }
-
-  /* スキル */
-  #skills { background: var(--bg); }
-
-  .skills-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 1.2rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .skill-card {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    transition: box-shadow 0.2s, transform 0.2s;
-  }
-
-  .skill-card:hover {
-    box-shadow: 0 4px 20px rgba(26,39,68,0.08);
-    transform: translateY(-2px);
-  }
-
-  .skill-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.8rem;
-  }
-
-  .skill-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 0.5rem;
-  }
-
-  .skill-desc {
-    font-size: 0.85rem;
-    color: var(--text-sub);
-    line-height: 1.7;
-  }
-
-  .tech-note {
-    background: var(--navy);
-    color: rgba(255,255,255,0.85);
-    border-radius: var(--radius);
-    padding: 1.2rem 1.5rem;
-    font-size: 0.88rem;
-    line-height: 1.8;
-  }
-
-  .tech-note strong { color: var(--gold); }
-
-  /* 実績 */
-  #works { background: var(--white); }
-
-  .works-cw {
-    background: linear-gradient(135deg, var(--navy) 0%, #1e3a6e 100%);
-    border-radius: var(--radius);
-    padding: 2rem;
-    margin-bottom: 2rem;
-    color: #fff;
-  }
-
-  .cw-header {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-    margin-bottom: 1.2rem;
-  }
-
-  .cw-badge {
-    background: var(--gold);
-    color: var(--navy);
-    font-size: 0.72rem;
-    font-weight: 700;
-    padding: 0.2rem 0.7rem;
-    border-radius: 2rem;
-    letter-spacing: 0.05em;
-  }
-
-  .cw-title {
-    font-size: 1rem;
-    font-weight: 600;
-  }
-
-  .cw-stats {
-    display: flex;
-    gap: 2rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.2rem;
-  }
-
-  .cw-stat { text-align: center; }
-
-  .cw-stat-num {
-    font-size: 1.8rem;
-    font-weight: 700;
-    color: var(--gold);
-    display: block;
-  }
-
-  .cw-stat-label {
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.65);
-  }
-
-  .cw-detail {
-    background: rgba(255,255,255,0.08);
-    border-radius: 8px;
-    padding: 1rem 1.2rem;
-    font-size: 0.88rem;
-    color: rgba(255,255,255,0.85);
-    line-height: 1.8;
-  }
-
-  .se-experience {
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-
-  .se-header {
-    background: var(--bg);
-    padding: 1.2rem 1.5rem;
-    border-bottom: 1px solid var(--border);
-    font-weight: 600;
-    font-size: 0.95rem;
-    color: var(--navy);
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .se-list {
-    padding: 1.5rem;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0.8rem;
-  }
-
-  .se-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.5rem;
-    font-size: 0.88rem;
-    color: var(--text);
-  }
-
-  .se-item::before {
-    content: '▸';
-    color: var(--accent);
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-
-  /* 進め方 */
-  #flow { background: var(--white); }
-
-  .flow-steps {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-  }
-
-  .flow-step {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.5rem;
-    text-align: center;
-    position: relative;
-  }
-
-  .step-num {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 36px; height: 36px;
-    background: var(--accent);
-    color: #fff;
-    font-size: 0.85rem;
-    font-weight: 700;
-    border-radius: 50%;
-    margin-bottom: 0.8rem;
-  }
-
-  .step-title {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--navy);
-    margin-bottom: 0.4rem;
-  }
-
-  .step-desc {
-    font-size: 0.8rem;
-    color: var(--text-sub);
-    line-height: 1.6;
-  }
-
-  .flow-note {
-    margin-top: 1.5rem;
-    background: var(--accent-soft);
-    border-radius: var(--radius);
-    padding: 1.2rem 1.5rem;
-    font-size: 0.9rem;
-    color: var(--navy);
-    border-left: 3px solid var(--accent);
-  }
-
-  /* 大切にしていること */
-  #values { background: var(--bg); }
-
-  .values-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
-  }
-
-  .value-item {
-    background: var(--white);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.3rem 1.5rem;
-    display: flex;
-    align-items: flex-start;
-    gap: 0.8rem;
-  }
-
-  .value-icon {
-    font-size: 1.2rem;
-    flex-shrink: 0;
-    margin-top: 0.1rem;
-  }
-
-  .value-text {
-    font-size: 0.88rem;
-    color: var(--text);
-    line-height: 1.7;
-  }
-
-  /* お問い合わせ */
-  #contact {
-    background: linear-gradient(145deg, var(--navy) 0%, #0f1e45 100%);
-    text-align: center;
-    padding: 5rem 1.5rem;
-  }
-
-  #contact .section-label { color: var(--gold); }
-  #contact .section-title { color: #fff; }
-
-  .contact-desc {
-    color: rgba(255,255,255,0.65);
-    font-size: 0.95rem;
-    margin-bottom: 2rem;
-  }
-
-  .consult-list {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.6rem;
-    margin-bottom: 2.5rem;
-  }
-
-  .consult-item {
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(255,255,255,0.15);
-    color: rgba(255,255,255,0.85);
-    font-size: 0.82rem;
-    padding: 0.4rem 1rem;
-    border-radius: 2rem;
-  }
-
-  .contact-btns {
-    display: flex;
-    gap: 1rem;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  .btn-cw {
-    background: #00b900;
-    color: #fff;
-    padding: 0.85rem 2.2rem;
-    border-radius: 2rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
-    display: inline-block;
-  }
-
-  .btn-cw:hover {
-    background: #00a000;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,185,0,0.35);
-  }
-
-  .btn-coconala {
-    background: #ff6633;
-    color: #fff;
-    padding: 0.85rem 2.2rem;
-    border-radius: 2rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
-    display: inline-block;
-  }
-
-  .btn-coconala:hover {
-    background: #e55a2b;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(255,102,51,0.35);
-  }
-
-  .btn-lancers {
-    background: #00b4d8;
-    color: #fff;
-    padding: 0.85rem 2.2rem;
-    border-radius: 2rem;
-    font-size: 0.95rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: all 0.2s;
-    display: inline-block;
-  }
-
-  .btn-lancers:hover {
-    background: #0096c7;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,180,216,0.35);
-  }
-
-  /* フッター */
-  footer {
-    background: #0d1630;
-    color: rgba(255,255,255,0.4);
-    text-align: center;
-    padding: 1.5rem;
-    font-size: 0.8rem;
-  }
-
-  /* アニメーション */
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  .fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 0.6s ease, transform 0.6s ease;
-  }
-
-  .fade-in.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  /* レスポンシブ */
-  @media (max-width: 600px) {
-    nav ul { display: none; }
-    .cw-stats { gap: 1.2rem; }
-    section { padding: 3.5rem 1.2rem; }
-  }
+    --bg: #0d1117;
+    --panel: #161b22;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+    --code-bg: #010409;
+    --code-text: #e6edf3;
+    --link: #58a6ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI",
+               "Meiryo", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+header { margin-bottom: 24px; }
+h1 {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--muted);
+  margin: 0;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+.nav a {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 18px;
+}
+.code-wrap {
+  position: relative;
+  margin-top: 18px;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid #30363d;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #21262d;
+  color: #f0f6fc;
+  cursor: pointer;
+}
+pre {
+  margin: 0;
+  padding: 20px;
+  padding-top: 54px;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.card {
+  display: block;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.card:hover {
+  text-decoration: none;
+  border-color: var(--link);
+}
+.card h2 {
+  font-size: 1.08rem;
+  margin: 0 0 8px;
+}
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+footer {
+  margin-top: 32px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
 </style>
 </head>
 <body>
+<main class="container">
+  <header>
+    <h1>GASコード一覧</h1>
+    <p class="subtitle">2026年8月30日作成・Google Apps Scriptの参照ページ</p>
+  </header>
 
-<!-- ナビ -->
-<nav>
-  <div class="nav-logo">Blue<span>Coder</span></div>
-  <ul>
-    <li><a href="#profile">プロフィール</a></li>
-    <li><a href="#skills">得意分野</a></li>
-    <li><a href="#works">実績</a></li>
-    <li><a href="#flow">進め方</a></li>
-    <li><a href="#contact">お問い合わせ</a></li>
-  </ul>
-</nav>
+  <section class="cards">
+    <a class="card" href="gas_text_receive.html">
+      <h2>GAS テキスト受信</h2>
+      <p>H列が「○」のGoogleスプレッドシートを開き、「シート1」のA1の値を取得して、コントロール側のI列へ書き込むGASコードです。</p>
+    </a>
+<a class="card" href="gas_text_send.html">
+      <h2>GAS テキスト送信</h2>
+      <p>H列が「○」のGoogleスプレッドシートを開き、コントロール側J列の値を対象ファイルの「シート1」B1へ書き込むGASコードです。</p>
+    </a>
+<a class="card" href="gas_path_get.html">
+      <h2>GAS パス取得</h2>
+      <p>マイドライブ配下のファイル・フォルダを再帰的に取得し、パス・種類・名前・ID・URL・MIMEタイプをスプレッドシートへ一覧出力するGASコードです。</p>
+    </a>
+<a class="card" href="gas_file_copy.html">
+      <h2>GAS ファイルコピー</h2>
+      <p>H列が「○」のファイルを、K列で指定したGoogle Driveのフォルダへコピーし、L列の名前へリネームするGASコードです。コピー先はフォルダID・URL・マイドライブのパスに対応します。</p>
+    </a>
+  </section>
 
-<!-- ヒーロー -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-badge">Excel・VBA / Access / 業務改善</div>
-    <h1>「毎回の転記・集計・チェック作業」を<br><em>仕組みで解決します。</em></h1>
-    <p class="hero-sub">製造業・小売・EC事業など業種を問わず、<br>現場の手作業をExcel・VBAで自動化・効率化します。</p>
-    <div class="hero-tags">
-      <span class="hero-tag">Excel VBA</span>
-      <span class="hero-tag">Access VBA</span>
-      <span class="hero-tag">業務改善</span>
-      <span class="hero-tag">転記自動化</span>
-      <span class="hero-tag">帳票出力</span>
-      <span class="hero-tag">入力チェック</span>
-      <span class="hero-tag">現場主義</span>
-    </div>
-    <div class="hero-cta">
-      <a href="#works" class="btn btn-primary">実績を見る</a>
-      <a href="#contact" class="btn btn-outline">相談する</a>
-    </div>
-  </div>
-</section>
-
-<!-- プロフィール -->
-<section id="profile">
-  <div class="container">
-    <p class="section-label fade-in">Profile</p>
-    <h2 class="section-title fade-in">自己紹介</h2>
-    <div class="profile-card fade-in">
-      <p class="profile-intro">Excel・Access・VBAを中心に、現場業務の</p>
-      <div class="three-points">
-        <div class="point-item">「手作業を減らす」</div>
-        <div class="point-item">「転記ミス・確認漏れを防ぐ」</div>
-        <div class="point-item">「担当者が迷わず使える仕組みにする」</div>
-      </div>
-      <div class="profile-body">
-        <p>ことを目的とした業務改善ツールの作成・改修を行っています。製造業・小売・EC事業など業種を問わず、Excel／Access／VBAを使った管理表、集計ツール、帳票作成ツール、入力チェック付きツールなどを作成してきました。</p>
-        <p>製造業では品質保証・在庫管理・修理管理、ECでは受注データ処理・売上集計・在庫台帳など、現場の困りごとに合わせて対応してきました。</p>
-        <p>得意としているのは、単にマクロを作ることではありません。</p>
-        <div class="quote-list">
-          <p>「どの作業に時間がかかっているか」</p>
-          <p>「どこで入力ミスや確認漏れが起きやすいか」</p>
-          <p>「実際に使う方が迷わず操作できるか」</p>
-        </div>
-        <p>を確認したうえで、今の業務に合った形へ落とし込むことを大切にしています。</p>
-        <p>「立派な仕様書より、早く動くもの」を優先する現場主義のスタイルで、今あるExcelやAccessを活かしながらコストを抑えた改善を行います。最初から仕様が決まっていなくても、実際の作業を確認しながら使いやすい形に整えていきます。納品後もブラックボックス化しないよう、コードや操作手順を整理してお渡しします。</p>
-        <p>必要以上に大きな開発にせず、今あるExcelやAccessを活かしながら、コストと時間を抑えて、実務で使いやすい改善を行います。</p>
-        <div class="quote-list">
-          <p>「何を頼めばよいか分からない」</p>
-          <p>「今のExcelを使いやすくしたい」</p>
-          <p>「毎回の転記や集計を自動化したい」</p>
-          <p>「ミスが起きにくい仕組みにしたい」</p>
-          <p>「作った後も相談できる人に頼みたい」</p>
-        </div>
-        <p>という段階からでも対応可能です。通常はオンライン対応ですが、業務内容によっては現場へのご訪問も可能です。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 得意分野 -->
-<section id="skills">
-  <div class="container">
-    <p class="section-label fade-in">Skills</p>
-    <h2 class="section-title fade-in">得意分野</h2>
-    <div class="skills-grid">
-      <div class="skill-card fade-in">
-        <div class="skill-icon">⚙️</div>
-        <div class="skill-title">VBAツール作成・改修</div>
-        <div class="skill-desc">Excel VBA・Access VBAによる業務ツールの新規作成、既存マクロの調査・修正・改善</div>
-      </div>
-      <div class="skill-card fade-in">
-        <div class="skill-icon">📊</div>
-        <div class="skill-title">集計・帳票の自動化</div>
-        <div class="skill-desc">CSV取込・データ整形・集計・帳票出力の自動化。複数ファイルの一括処理・一括変換</div>
-      </div>
-      <div class="skill-card fade-in">
-        <div class="skill-icon">✅</div>
-        <div class="skill-title">ミス防止機能の実装</div>
-        <div class="skill-desc">入力チェック・空欄チェック・日付チェックなど、転記ミス・確認漏れを防ぐ仕組みの実装</div>
-      </div>
-      <div class="skill-card fade-in">
-        <div class="skill-icon">🗂️</div>
-        <div class="skill-title">管理表・台帳の整備</div>
-        <div class="skill-desc">管理表・集計表・台帳・帳票の作成・改善。既存ExcelやAccessファイルの整理・使いやすい形への改修</div>
-      </div>
-      <div class="skill-card fade-in">
-        <div class="skill-icon">📋</div>
-        <div class="skill-title">業務フロー整理・マニュアル</div>
-        <div class="skill-desc">作業手順の整理・業務フローの見える化、操作マニュアル作成、納品後の運用フォロー</div>
-      </div>
-      <div class="skill-card fade-in">
-        <div class="skill-icon">🔧</div>
-        <div class="skill-title">Access・システム改修</div>
-        <div class="skill-desc">Accessによるデータ管理システムの構築・改修。VB.NET・SQL Serverを使った既存システムの調査・改修経験あり</div>
-      </div>
-    </div>
-    <div class="tech-note fade-in" style="margin-top:1.2rem;">
-      <strong>使用技術：</strong> Excel VBA / Access VBA / Python / SQL / VB.NET / SQL Server<br>
-      VBAだけでは対応しづらい処理については、必要に応じてPython・SQLも活用し、より効率的な方法をご提案します。
-    </div>
-  </div>
-</section>
-
-<!-- 実績 -->
-<section id="works">
-  <div class="container">
-    <p class="section-label fade-in">Works</p>
-    <h2 class="section-title fade-in">実績</h2>
-
-    <div class="works-cw fade-in">
-      <div class="cw-header">
-        <span class="cw-badge">クラウドソーシング</span>
-        <span class="cw-title">フリーランス対応実績</span>
-      </div>
-      <div class="cw-detail" style="margin-bottom:1rem;">
-        クラウドワークス・ランサーズにて、Excel VBA・Access VBA・業務改善ツール作成・既存マクロ修正などのご相談に対応しています。<br>
-        最新の評価・受注実績は、各サービスの公開プロフィールをご確認ください。
-      </div>
-      <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-        <a href="https://crowdworks.jp/public/employees/6687979" target="_blank" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:0.5rem 1.2rem;border-radius:2rem;font-size:0.85rem;text-decoration:none;">クラウドワークス プロフィール →</a>
-        <a href="https://www.lancers.jp/profile/fanks2013" target="_blank" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:0.5rem 1.2rem;border-radius:2rem;font-size:0.85rem;text-decoration:none;">ランサーズ プロフィール →</a>
-        <a href="https://coconala.com/users/6023002" target="_blank" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:0.5rem 1.2rem;border-radius:2rem;font-size:0.85rem;text-decoration:none;">ココナラ プロフィール →</a>
-      </div>
-    </div>
-
-    <div class="se-experience fade-in">
-      <div class="se-header">🏭 社内SE時代の経験（製造業・品質保証／在庫管理部門）</div>
-      <div class="se-list">
-        <div class="se-item">品質保証・検査管理の自動化</div>
-        <div class="se-item">在庫管理・入出庫管理ツールの作成</div>
-        <div class="se-item">修理対応・顧客対応管理表の整備</div>
-        <div class="se-item">月約20時間の集計作業を自動化</div>
-        <div class="se-item">月10件のミスをほぼゼロにする入力チェック実装</div>
-        <div class="se-item">10名規模の管理ツール作成・運用</div>
-        <div class="se-item">複数部署への業務ヒアリング・改善提案</div>
-        <div class="se-item">紙・複数Excelの台帳をシステムに一本化</div>
-        <div class="se-item">社内システムの内製・運用・保守</div>
-        <div class="se-item">サーバー・LAN管理・ヘルプデスク対応</div>
-        <div class="se-item">操作マニュアル作成・運用定着支援</div>
-        <div class="se-item">VB.NET・SQL Serverでの業務システム改修</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 進め方 -->
-<section id="flow">
-  <div class="container">
-    <p class="section-label fade-in">Flow</p>
-    <h2 class="section-title fade-in">進め方</h2>
-    <div class="flow-steps">
-      <div class="flow-step fade-in">
-        <div class="step-num">1</div>
-        <div class="step-title">困りごとの確認</div>
-        <div class="step-desc">現在の業務内容・使用ファイル・困っている点をヒアリングします</div>
-      </div>
-      <div class="flow-step fade-in">
-        <div class="step-num">2</div>
-        <div class="step-title">改善方針の整理</div>
-        <div class="step-desc">自動化・改善できる部分を整理し、対応方針を確認します</div>
-      </div>
-      <div class="flow-step fade-in">
-        <div class="step-num">3</div>
-        <div class="step-title">早めの試作・確認</div>
-        <div class="step-desc">まず動くものを作り、認識違いを早めに解消します</div>
-      </div>
-      <div class="flow-step fade-in">
-        <div class="step-num">4</div>
-        <div class="step-title">修正・調整</div>
-        <div class="step-desc">実際の業務に合わせて修正・改善を行います</div>
-      </div>
-      <div class="flow-step fade-in">
-        <div class="step-num">5</div>
-        <div class="step-title">手順整理・納品</div>
-        <div class="step-desc">操作手順を整理し、コードとともに納品します</div>
-      </div>
-      <div class="flow-step fade-in">
-        <div class="step-num">6</div>
-        <div class="step-title">納品後フォロー</div>
-        <div class="step-desc">使い始めた後の相談・調整にも対応します</div>
-      </div>
-    </div>
-    <div class="flow-note fade-in">
-      最初から完璧な仕様が決まっていなくても問題ありません。実際の作業内容を確認しながら、使いやすい形に整えていきます。
-    </div>
-  </div>
-</section>
-
-<!-- 大切にしていること -->
-<section id="values">
-  <div class="container">
-    <p class="section-label fade-in">Values</p>
-    <h2 class="section-title fade-in">大切にしていること</h2>
-    <div class="values-grid">
-      <div class="value-item fade-in">
-        <span class="value-icon">⚡</span>
-        <span class="value-text">「立派な仕様書より、早く動くもの」を優先。現場の実態に合わせてスピーディに改善を積み重ねます</span>
-      </div>
-      <div class="value-item fade-in">
-        <span class="value-icon">💰</span>
-        <span class="value-text">今あるExcelやAccessを活かし、費用対効果の高い改善を行います</span>
-      </div>
-      <div class="value-item fade-in">
-        <span class="value-icon">🎯</span>
-        <span class="value-text">入力ミス・転記ミス・確認漏れを減らす仕組みを入れます</span>
-      </div>
-      <div class="value-item fade-in">
-        <span class="value-icon">🖥️</span>
-        <span class="value-text">操作する方が迷わない、わかりやすい画面・手順を意識します</span>
-      </div>
-      <div class="value-item fade-in">
-        <span class="value-icon">📖</span>
-        <span class="value-text">コードや操作手順を整理し、納品後もブラックボックス化しないようにします</span>
-      </div>
-      <div class="value-item fade-in">
-        <span class="value-icon">🤝</span>
-        <span class="value-text">「作って終わり」ではなく、使い始めた後のフォロー・相談にも対応します</span>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- お問い合わせ -->
-<section id="contact">
-  <div class="container">
-    <p class="section-label">Contact</p>
-    <h2 class="section-title">お気軽にご相談ください</h2>
-    <p class="contact-desc">小さな改善でも歓迎です。まずはご相談ください。</p>
-    <div class="consult-list">
-      <span class="consult-item">「毎回この作業が面倒」</span>
-      <span class="consult-item">「転記ミスが不安」</span>
-      <span class="consult-item">「今のExcelをもう少し使いやすくしたい」</span>
-      <span class="consult-item">「前任者が作ったマクロを直したい」</span>
-      <span class="consult-item">「業務改善を相談しながら進めたい」</span>
-    </div>
-    <div class="contact-btns">
-      <a href="https://crowdworks.jp/public/employees/6687979" class="btn-cw" target="_blank">クラウドワークスで相談する</a>
-      <a href="https://coconala.com/users/6023002" class="btn-coconala" target="_blank">ココナラで相談する</a>
-      <a href="https://www.lancers.jp/profile/fanks2013" class="btn-lancers" target="_blank">ランサーズで相談する</a>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <p>© BlueCoder. All rights reserved.</p>
-</footer>
-
-<script>
-  // スクロールアニメーション
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-      }
-    });
-  }, { threshold: 0.1 });
-
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
-</script>
+  <footer>
+    GitHub Pagesへ配置すれば、外部PCやスマートフォンからブラウザで閲覧できます。
+  </footer>
+</main>
 </body>
 </html>

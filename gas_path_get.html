@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAS パス取得</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --text: #1f2328;
+  --muted: #59636e;
+  --border: #d0d7de;
+  --code-bg: #0d1117;
+  --code-text: #e6edf3;
+  --link: #0969da;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+    --code-bg: #010409;
+    --code-text: #e6edf3;
+    --link: #58a6ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI",
+               "Meiryo", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+header { margin-bottom: 24px; }
+h1 {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--muted);
+  margin: 0;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+.nav a {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 18px;
+}
+.code-wrap {
+  position: relative;
+  margin-top: 18px;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid #30363d;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #21262d;
+  color: #f0f6fc;
+  cursor: pointer;
+}
+pre {
+  margin: 0;
+  padding: 20px;
+  padding-top: 54px;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.card {
+  display: block;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.card:hover {
+  text-decoration: none;
+  border-color: var(--link);
+}
+.card h2 {
+  font-size: 1.08rem;
+  margin: 0 0 8px;
+}
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+footer {
+  margin-top: 32px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+</style>
+</head>
+<body>
+<main class="container">
+  <header>
+    <h1>GAS パス取得</h1>
+    <p class="subtitle">Google Apps Script コード</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">← 一覧へ戻る</a>
+  </nav>
+
+  <section class="panel">
+    <p>マイドライブ配下のファイル・フォルダを再帰的に取得し、パス・種類・名前・ID・URL・MIMEタイプをスプレッドシートへ一覧出力するGASコードです。</p>
+  </section>
+
+  <div class="code-wrap">
+    <button class="copy-btn" type="button" onclick="copyCode()">コードをコピー</button>
+    <pre><code id="code">function getMyDriveFileList() {
+
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+
+  // -----------------------------
+  // 出力設定
+  // -----------------------------
+  const START_ROW = 2;
+  const START_COL = 2; // B列
+
+  // 見出し
+  const headers = [
+    &quot;パス&quot;,
+    &quot;種類&quot;,
+    &quot;名前&quot;,
+    &quot;ID&quot;,
+    &quot;URL&quot;,
+    &quot;MIMEタイプ&quot;
+  ];
+
+  sheet
+    .getRange(1, START_COL, 1, headers.length)
+    .setValues([headers]);
+
+  // B2:G の既存内容をクリア
+  const clearRows = sheet.getMaxRows() - START_ROW + 1;
+
+  if (clearRows &gt; 0) {
+    sheet
+      .getRange(
+        START_ROW,
+        START_COL,
+        clearRows,
+        headers.length
+      )
+      .clearContent();
+  }
+
+  // -----------------------------
+  // マイドライブ取得
+  // -----------------------------
+  const rootFolder = DriveApp.getRootFolder();
+
+  const output = [];
+
+  // マイドライブ配下を取得
+  scanFolder(
+    rootFolder,
+    &quot;マイドライブ&quot;,
+    output
+  );
+
+  // パス順に並び替え
+  output.sort(function(a, b) {
+    return a[0].localeCompare(b[0], &quot;ja&quot;);
+  });
+
+  // -----------------------------
+  // 行数が不足していたら追加
+  // -----------------------------
+  const requiredRows =
+    START_ROW + output.length - 1;
+
+  if (requiredRows &gt; sheet.getMaxRows()) {
+
+    sheet.insertRowsAfter(
+      sheet.getMaxRows(),
+      requiredRows - sheet.getMaxRows()
+    );
+  }
+
+  // -----------------------------
+  // 一括出力
+  // -----------------------------
+  if (output.length &gt; 0) {
+
+    sheet
+      .getRange(
+        START_ROW,
+        START_COL,
+        output.length,
+        headers.length
+      )
+      .setValues(output);
+  }
+}
+
+
+/**
+ * フォルダ内を再帰的に調査する
+ *
+ * @param {Folder} folder
+ * @param {string} currentPath
+ * @param {Array} output
+ */
+function scanFolder(folder, currentPath, output) {
+
+  // =============================
+  // このフォルダ内のファイル
+  // =============================
+  const fileIterator = folder.getFiles();
+
+  const files = [];
+
+  while (fileIterator.hasNext()) {
+    files.push(fileIterator.next());
+  }
+
+  // ファイル名順
+  files.sort(function(a, b) {
+    return a.getName().localeCompare(
+      b.getName(),
+      &quot;ja&quot;
+    );
+  });
+
+  files.forEach(function(file) {
+
+    const filePath =
+      currentPath +
+      &quot;/&quot; +
+      file.getName();
+
+    output.push([
+      filePath,          // B：パス
+      &quot;ファイル&quot;,        // C：種類
+      file.getName(),    // D：名前
+      file.getId(),      // E：ID
+      file.getUrl(),     // F：URL
+      file.getMimeType() // G：MIMEタイプ
+    ]);
+  });
+
+
+  // =============================
+  // 下位フォルダ
+  // =============================
+  const folderIterator = folder.getFolders();
+
+  const folders = [];
+
+  while (folderIterator.hasNext()) {
+    folders.push(folderIterator.next());
+  }
+
+  // フォルダ名順
+  folders.sort(function(a, b) {
+    return a.getName().localeCompare(
+      b.getName(),
+      &quot;ja&quot;
+    );
+  });
+
+
+  folders.forEach(function(subFolder) {
+
+    const folderPath =
+      currentPath +
+      &quot;/&quot; +
+      subFolder.getName();
+
+    // フォルダ自体も1行出力
+    output.push([
+      folderPath,          // B：パス
+      &quot;フォルダ&quot;,          // C：種類
+      subFolder.getName(), // D：名前
+      subFolder.getId(),   // E：ID
+      subFolder.getUrl(),  // F：URL
+      &quot;&quot;                   // G：MIMEタイプ
+    ]);
+
+    // さらに下を調べる
+    scanFolder(
+      subFolder,
+      folderPath,
+      output
+    );
+  });
+}</code></pre>
+  </div>
+
+  <footer>作成日: 2026-08-30</footer>
+</main>
+
+<script>
+async function copyCode() {
+  const text = document.getElementById("code").textContent;
+  const button = document.querySelector(".copy-btn");
+  try {
+    await navigator.clipboard.writeText(text);
+    const old = button.textContent;
+    button.textContent = "コピーしました";
+    setTimeout(() => button.textContent = old, 1500);
+  } catch (e) {
+    alert("コピーできませんでした。コードを選択してコピーしてください。");
+  }
+}
+</script>
+</body>
+</html>

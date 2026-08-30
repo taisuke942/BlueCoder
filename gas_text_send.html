@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAS テキスト送信</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f6f8fa;
+  --panel: #ffffff;
+  --text: #1f2328;
+  --muted: #59636e;
+  --border: #d0d7de;
+  --code-bg: #0d1117;
+  --code-text: #e6edf3;
+  --link: #0969da;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+    --code-bg: #010409;
+    --code-text: #e6edf3;
+    --link: #58a6ff;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Yu Gothic UI",
+               "Meiryo", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.65;
+}
+.container {
+  width: min(1100px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 32px 0 56px;
+}
+header { margin-bottom: 24px; }
+h1 {
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  margin: 0 0 8px;
+}
+.subtitle {
+  color: var(--muted);
+  margin: 0;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0;
+}
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover { text-decoration: underline; }
+.nav a {
+  display: inline-block;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--panel);
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  margin-top: 18px;
+}
+.code-wrap {
+  position: relative;
+  margin-top: 18px;
+}
+.copy-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid #30363d;
+  border-radius: 7px;
+  padding: 7px 10px;
+  background: #21262d;
+  color: #f0f6fc;
+  cursor: pointer;
+}
+pre {
+  margin: 0;
+  padding: 20px;
+  padding-top: 54px;
+  overflow-x: auto;
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--code-text);
+  font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+  font-size: 14px;
+  line-height: 1.55;
+  tab-size: 2;
+}
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.card {
+  display: block;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+}
+.card:hover {
+  text-decoration: none;
+  border-color: var(--link);
+}
+.card h2 {
+  font-size: 1.08rem;
+  margin: 0 0 8px;
+}
+.card p {
+  margin: 0;
+  color: var(--muted);
+}
+footer {
+  margin-top: 32px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+</style>
+</head>
+<body>
+<main class="container">
+  <header>
+    <h1>GAS テキスト送信</h1>
+    <p class="subtitle">Google Apps Script コード</p>
+  </header>
+
+  <nav class="nav">
+    <a href="index.html">← 一覧へ戻る</a>
+  </nav>
+
+  <section class="panel">
+    <p>H列が「○」のGoogleスプレッドシートを開き、コントロール側J列の値を対象ファイルの「シート1」B1へ書き込むGASコードです。</p>
+  </section>
+
+  <div class="code-wrap">
+    <button class="copy-btn" type="button" onclick="copyCode()">コードをコピー</button>
+    <pre><code id="code">function pasteJToMarkedSpreadsheets() {
+
+  // ==========================================
+  // 設定
+  // ==========================================
+  const START_ROW = 2;
+
+  const COL_FILE_ID   = 5;  // E列
+  const COL_MIME_TYPE = 7;  // G列
+  const COL_MARK      = 8;  // H列
+  const COL_SOURCE    = 10; // J列
+
+  const TARGET_SHEET_NAME = &quot;シート1&quot;;
+
+  const SPREADSHEET_MIME =
+    &quot;application/vnd.google-apps.spreadsheet&quot;;
+
+
+  // ==========================================
+  // コントロール側スプレッドシート
+  // ==========================================
+  const controlSS = SpreadsheetApp.getActiveSpreadsheet();
+  const controlSheet = controlSS.getActiveSheet();
+
+  const lastRow = controlSheet.getLastRow();
+
+  if (lastRow &lt; START_ROW) {
+    return;
+  }
+
+
+  // ==========================================
+  // E列～J列をまとめて取得
+  // ==========================================
+  const data = controlSheet
+    .getRange(
+      START_ROW,
+      COL_FILE_ID,
+      lastRow - START_ROW + 1,
+      6
+    )
+    .getValues();
+
+
+  // ==========================================
+  // 1行ずつ処理
+  // ==========================================
+  data.forEach(function(row) {
+
+    // E列
+    const fileId = String(row[0]).trim();
+
+    // G列
+    const mimeType = String(row[2]).trim();
+
+    // H列
+    const mark = String(row[3]).trim();
+
+    // J列
+    const valueToPaste = row[5];
+
+
+    // ------------------------------------------
+    // H列が「○」でなければ処理しない
+    // ------------------------------------------
+    if (mark !== &quot;○&quot;) {
+      return;
+    }
+
+
+    // ------------------------------------------
+    // Googleスプレッドシート以外は処理しない
+    // ------------------------------------------
+    if (mimeType !== SPREADSHEET_MIME) {
+      return;
+    }
+
+
+    // ------------------------------------------
+    // ファイルIDが空なら処理しない
+    // ------------------------------------------
+    if (fileId === &quot;&quot;) {
+      return;
+    }
+
+
+    try {
+
+      // 対象のGoogleスプレッドシートを開く
+      const targetSS =
+        SpreadsheetApp.openById(fileId);
+
+
+      // 「シート1」を取得
+      const targetSheet =
+        targetSS.getSheetByName(TARGET_SHEET_NAME);
+
+
+      // 「シート1」が存在しない場合
+      if (targetSheet === null) {
+        Logger.log(
+          &quot;シート1がありません：&quot; +
+          targetSS.getName()
+        );
+        return;
+      }
+
+
+      // ========================================
+      // J列の値を対象ファイルのB1へ貼り付け
+      // ========================================
+      targetSheet
+        .getRange(&quot;B1&quot;)
+        .setValue(valueToPaste);
+
+
+    } catch (error) {
+
+      Logger.log(
+        &quot;エラー：&quot; +
+        fileId +
+        &quot; / &quot; +
+        error.message
+      );
+    }
+
+  });
+
+
+  SpreadsheetApp.flush();
+}</code></pre>
+  </div>
+
+  <footer>作成日: 2026-08-30</footer>
+</main>
+
+<script>
+async function copyCode() {
+  const text = document.getElementById("code").textContent;
+  const button = document.querySelector(".copy-btn");
+  try {
+    await navigator.clipboard.writeText(text);
+    const old = button.textContent;
+    button.textContent = "コピーしました";
+    setTimeout(() => button.textContent = old, 1500);
+  } catch (e) {
+    alert("コピーできませんでした。コードを選択してコピーしてください。");
+  }
+}
+</script>
+</body>
+</html>
