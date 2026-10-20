@@ -1,13 +1,15 @@
 @echo off
 setlocal DisableDelayedExpansion
 
-rem Edit these settings. The default INI is next to this BAT.
-rem set "INI_FILE=%~dp0test.ini"
+rem Set the target INI path, section, key, value, and charset below.
 set "INI_FILE=%~dp0test.ini"
+rem Japanese section name [Setto]. Unicode escapes avoid BAT code-page problems.
+set "TARGET_SECTION=\u30BB\u30C3\u30C8"
+set "TARGET_KEY=case"
 set "NEW_VALUE=99DB"
 set "INI_CHARSET=utf-8"
 
-"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%"
+"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%" "%TARGET_SECTION%" "%TARGET_KEY%"
 set "RESULT=%ERRORLEVEL%"
 
 echo.
