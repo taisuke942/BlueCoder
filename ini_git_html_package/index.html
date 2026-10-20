@@ -52,30 +52,33 @@ footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
 @media(max-width:650px){.wrap{padding-left:15px;padding-right:15px}.box{padding:17px}.source-top{padding:16px}.number-gutter,pre{font-size:11.5px}td,th{display:block;width:100%;padding:8px 10px}td{padding-top:2px}.notice{padding:10px 13px}}
 </style></head>
 <body><header><div class="wrap"><div class="meta">2026-10-20 ・ INI CONFIGURATION TOOL ・ BAT + VBS</div>
-<h1>INI設定更新ツール — ソース一覧</h1><p>PowerShellを使わず、指定セクションの有効な test= 値だけを変更するWindows用スクリプト。</p></div></header>
+<h1>INI設定更新ツール — ソース一覧</h1><p>PowerShellを使わず、BATで指定したセクションとキーの値だけを更新するWindows用スクリプト。</p></div></header>
 <nav aria-label="ページ内ナビゲーション"><div class="wrap"><a href="#overview">概要</a><a href="#usage">使い方</a><a href="#bat">BATのソース</a><a href="#vbs">VBSのソース</a><a href="set_test_7777DB.html">BAT個別ページ</a><a href="set_ini_test.html">VBS個別ページ</a></div></nav>
 <main class="wrap"><section class="box" id="overview"><h2>概要</h2>
-<p>BATで対象INI・書き換え後の値・文字コードを指定し、共通VBSを呼び出します。対象は <code>[設定1]</code> のうち、コメントアウトされていない行の <code>test=</code> です。</p>
+<p>BATで対象INIのパス、対象セクション名、キー名、書き換え後の値、文字コードを指定し、共通VBSを呼び出します。現在の設定例では <code>[セット]</code> にあるコメントアウトされていない行の <code>case=</code> を <code>case=99DB</code> に更新します。</p>
 <div class="flow"><span>set_test_7777DB.bat</span><span class="arrow">→</span><span>cscript.exe</span><span class="arrow">→</span><span>set_ini_test.vbs</span><span class="arrow">→</span><span>INI更新</span></div>
 <p>HTMLはコード閲覧用で、<strong>HTMLからBATやVBSを実行するものではありません</strong>。表示・コピー・実行用ファイルの取得に使えます。</p>
 <h3>現在のBAT設定</h3><table><thead><tr><th>項目</th><th>添付ファイルでの設定</th></tr></thead><tbody>
 <tr><td>対象INI</td><td><code>%~dp0test.ini</code>（BATと同じフォルダー）</td></tr>
+<tr><td>対象セクション</td><td><code>\u30BB\u30C3\u30C8</code> （[セット]）</td></tr>
+<tr><td>対象キー</td><td><code>case</code></td></tr>
 <tr><td>置換後の値</td><td><code>99DB</code></td></tr>
 <tr><td>文字コード</td><td><code>utf-8</code></td></tr>
 <tr><td>実行方法</td><td><code>set_test_7777DB.bat</code> を実行</td></tr>
 </tbody></table>
-<div class="notice"><strong>アップロード内容から確認された注意点</strong>
-<ul><li>BATファイル名には <code>7777DB</code> とありますが、現状の設定値は <code>99DB</code> です。変更されるのは <strong>99DB</strong> です。</li>
-<li>アップロード時のVBS名は <code>set_ini_test(1).vbs</code> でした。BATが呼び出す <code>set_ini_test.vbs</code> という名前に揃えて同梱しています。コード内容は同一です。</li>
-<li>バックアップ作成の6行はコメントアウトされています。ただしVBS内の一部エラーメッセージには以前のバックアップに関する文言が残っています。</li></ul></div></section><section class="box" id="usage"><h2>実行・運用手順</h2>
+<div class="notice"><strong>運用時の注意</strong>
+<ul><li>BAT名は以前の <code>set_test_7777DB.bat</code> を維持していますが、実際の更新値はBAT内の <code>NEW_VALUE=99DB</code> です。</li>
+<li>日本語のセクション名は <code>\uXXXX</code> 形式で指定できます。例：<code>\u30BB\u30C3\u30C8</code> は「セット」です。</li>
+<li>バックアップファイルを自動生成しません。必ず本番INIのコピーで事前に試してください。</li>
+<li>以前の2～3引数のBATも利用でき、その場合だけ <code>[設定1]</code> 内の <code>test=</code> を対象にします。</li></ul></div></section><section class="box" id="usage"><h2>実行・運用手順</h2>
 <ol><li><code>set_test_7777DB.bat</code> と <code>set_ini_test.vbs</code> を同じフォルダーに配置します。</li>
-<li>BAT内の <code>INI_FILE</code> にINIのパスを設定し、<code>NEW_VALUE</code> を希望の値にします。UTF-8でない場合は <code>INI_CHARSET</code> も確認します。</li>
+<li>BAT内の <code>INI_FILE</code>、<code>TARGET_SECTION</code>、<code>TARGET_KEY</code>、<code>NEW_VALUE</code> を設定します。UTF-8でない場合は <code>INI_CHARSET</code> も確認します。</li>
 <li>Windows上でBATを起動します。<code>/nopause</code> を付けると終了時の一時停止を省略できます。</li>
 <li><code>Updated: ... value(s).</code>、<code>SUCCESS</code> と表示されれば、書き換えた値と対象INIを確認してください。</li></ol>
 <p class="mini">必要環境：Windows Script Host（cscript.exe）、ADODB.Streamが利用可能であり、INIへの書込権限があること。PowerShellは不要です。実運用前に対象INIのコピーで検証してください。</p>
 <h3>Git上でのHTML閲覧</h3><p><code>index.html</code> をPCにダウンロードしてブラウザで開く方法なら、ネット接続も追加ライブラリも不要です。GitHubのリポジトリ画面ではHTML自体がソース表示になるため、ブラウザ表示用のURLが必要ならGitHub Pagesなどの静的サイト公開機能を使ってください。</p></section><section id="bat" class="box source-section" aria-labelledby="bat-title">
       <div class="source-top"><div><h2 id="bat-title">BAT：設定値・実行処理</h2>
-      <p>set_test_7777DB.bat ／ 17行 ／ 元の内容を保持</p></div>
+      <p>set_test_7777DB.bat ／ 19行 ／ 汎用BAT版</p></div>
       <div class="actions"><button type="button" class="button" onclick="copySource('code-bat', 'status-bat')">ソースをコピー</button>
       <a class="download" href="set_test_7777DB.bat" download>実行用ファイル</a><span class="copy-status" id="status-bat" role="status" aria-live="polite"></span></div></div>
       <div class="code-view" role="region" aria-label="set_test_7777DB.bat のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
@@ -94,16 +97,20 @@ footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
 14
 15
 16
-17</div><pre><code id="code-bat" class="source">@echo off
+17
+18
+19</div><pre><code id="code-bat" class="source">@echo off
 setlocal DisableDelayedExpansion
 
-rem Edit these settings. The default INI is next to this BAT.
-rem set "INI_FILE=%~dp0test.ini"
+rem Set the target INI path, section, key, value, and charset below.
 set "INI_FILE=%~dp0test.ini"
+rem Japanese section name [Setto]. Unicode escapes avoid BAT code-page problems.
+set "TARGET_SECTION=\u30BB\u30C3\u30C8"
+set "TARGET_KEY=case"
 set "NEW_VALUE=99DB"
 set "INI_CHARSET=utf-8"
 
-"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%"
+"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%" "%TARGET_SECTION%" "%TARGET_KEY%"
 set "RESULT=%ERRORLEVEL%"
 
 echo.
@@ -115,7 +122,7 @@ exit /b %RESULT%
       <div class="source-bottom">set_test_7777DB.bat ／ スクロールで全体を閲覧できます。右上のボタンからコピーまたは元ファイルの取得ができます。</div>
     </section><section id="vbs" class="box source-section" aria-labelledby="vbs-title">
       <div class="source-top"><div><h2 id="vbs-title">VBS：INIの書き換え処理</h2>
-      <p>set_ini_test.vbs ／ 342行 ／ 元の内容を保持</p></div>
+      <p>set_ini_test.vbs ／ 391行 ／ 汎用VBS v3</p></div>
       <div class="actions"><button type="button" class="button" onclick="copySource('code-vbs', 'status-vbs')">ソースをコピー</button>
       <a class="download" href="set_ini_test.vbs" download>実行用ファイル</a><span class="copy-status" id="status-vbs" role="status" aria-live="polite"></span></div></div>
       <div class="code-view" role="region" aria-label="set_ini_test.vbs のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
@@ -459,14 +466,63 @@ exit /b %RESULT%
 339
 340
 341
-342</div><pre><code id="code-vbs" class="source">Option Explicit
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391</div><pre><code id="code-vbs" class="source">Option Explicit
 
-' Version 2: inspect COM byte arrays with LenB / MidB / AscB.
+' Version 3: a single VBS for all INI sections, keys, and values.
 
-' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" [charset]
-' charset: utf-8 (default), shift_jis, or unicode (UTF-16 LE with BOM).
-' This source is ASCII-only. ChrW builds the Japanese section name.
-' Only standalone test= tokens in active lines of that section are edited.
+' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" "charset" "section" "key"
+' charset: utf-8, shift_jis, or unicode (UTF-16 LE with BOM).
+' This source is ASCII-only. Section names can contain Unicode escapes: \uXXXX.
+' Only standalone key= tokens in active lines of the requested section are edited.
 
 Const adTypeBinary = 1
 Const adTypeText = 2
@@ -478,7 +534,7 @@ tempPath = ""
 backupPath = ""
 stage = "initialization"
 
-WScript.Echo "INI updater v2"
+WScript.Echo "INI updater v3"
 
 On Error Resume Next
 Main
@@ -498,18 +554,29 @@ WScript.Quit 0
 
 Sub Main()
     Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
-    Dim hasBom, targetSection, position, ending, line, trimmed, closePos, inSection
+    Dim hasBom, targetSection, targetKey, position, ending, line, trimmed, closePos, inSection
     Dim matched, changed, fileInfo, checkBytes, candidateBackup
 
-    If WScript.Arguments.Count &lt; 2 Or WScript.Arguments.Count &gt; 3 Then
-        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset]"
+    If WScript.Arguments.Count &lt;&gt; 2 And WScript.Arguments.Count &lt;&gt; 3 And WScript.Arguments.Count &lt;&gt; 5 Then
+        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
     End If
 
     Set fso = CreateObject("Scripting.FileSystemObject")
     path = fso.GetAbsolutePathName(WScript.Arguments(0))
     newValue = WScript.Arguments(1)
     charset = "utf-8"
-    If WScript.Arguments.Count = 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+    If WScript.Arguments.Count &gt;= 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+    If WScript.Arguments.Count = 5 Then
+        targetSection = DecodeUnicodeEscapes(Trim(WScript.Arguments(3)))
+        targetKey = Trim(WScript.Arguments(4))
+    Else
+        ' Backward compatibility: existing BAT files with two or three arguments.
+        targetSection = ChrW(&amp;H8A2D) &amp; ChrW(&amp;H5B9A) &amp; "1"
+        targetKey = "test"
+    End If
+    If Len(targetSection) = 0 Then Fail "TARGET_SECTION must not be empty."
+    If InStr(targetSection, "]") &gt; 0 Then Fail "TARGET_SECTION must not contain ]."
+    ValidateKey targetKey
     Select Case charset
         Case "utf8": charset = "utf-8"
         Case "sjis", "cp932", "shift-jis": charset = "shift_jis"
@@ -540,7 +607,6 @@ Sub Main()
     End If
 
     stage = "parsing the INI"
-    targetSection = ChrW(&amp;H8A2D) &amp; ChrW(&amp;H5B9A) &amp; "1"
     inSection = False
     matched = 0
     changed = 0
@@ -560,14 +626,14 @@ Sub Main()
                         inSection = (Trim(Mid(trimmed, 2, closePos - 2)) = targetSection)
                     End If
                 ElseIf inSection Then
-                    line = RewriteLine(line, newValue, matched, changed)
+                    line = RewriteLine(line, targetKey, newValue, matched, changed)
                 End If
             End If
         End If
         updated = updated &amp; line &amp; ending
     Loop
 
-    If matched = 0 Then Fail "No active test= token found in the target section. No file was changed."
+    If matched = 0 Then Fail "No active " &amp; targetKey &amp; "= token found in [" &amp; targetSection &amp; "]. No file was changed."
     If changed = 0 Then
         WScript.Echo "No change needed. " &amp; matched &amp; " value(s) already match."
         Exit Sub
@@ -593,17 +659,56 @@ Sub Main()
     If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
 
     ' Keep the existing pathname and file permissions by writing to that file.
-    ' The backup is retained if a write or verification fails.
-    stage = "writing the INI (the backup is retained if this fails)"
+    ' No backup is created (the backup steps above are disabled).
+    stage = "writing the INI"
     WriteBytes path, outputBytes, adSaveCreateOverWrite
     checkBytes = ReadBytes(path)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed; use the backup to restore."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed."
     fso.DeleteFile tempPath, True
     tempPath = ""
 
     WScript.Echo "Updated: " &amp; changed &amp; " value(s)."
     WScript.Echo "File: " &amp; path
     'WScript.Echo "Backup: " &amp; backupPath
+End Sub
+
+
+' Convert \uXXXX notation (e.g. \u30BB\u30C3\u30C8 = a Japanese section name).
+' Plain names such as MAIN or SETTING work without escapes.
+Function DecodeUnicodeEscapes(ByVal value)
+    Dim i, j, digits, result, ch
+    i = 1
+    result = ""
+    Do While i &lt;= Len(value)
+        If Mid(value, i, 2) = "\u" Then
+            If i + 5 &gt; Len(value) Then Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+            digits = Mid(value, i + 2, 4)
+            For j = 1 To 4
+                ch = UCase(Mid(digits, j, 1))
+                If InStr(1, "0123456789ABCDEF", ch, vbBinaryCompare) = 0 Then
+                    Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+                End If
+            Next
+            result = result &amp; ChrW(CLng("&amp;H" &amp; digits))
+            i = i + 6
+        Else
+            result = result &amp; Mid(value, i, 1)
+            i = i + 1
+        End If
+    Loop
+    DecodeUnicodeEscapes = result
+End Function
+
+Sub ValidateKey(ByVal keyName)
+    Dim i, ch, charCode
+    If Len(keyName) = 0 Then Fail "TARGET_KEY must not be empty."
+    For i = 1 To Len(keyName)
+        ch = Mid(keyName, i, 1)
+        charCode = AscW(ch)
+        If (charCode &gt;= 0 And charCode &lt;= 32) Or ch = "=" Or ch = ";" Or ch = "#" Or ch = """" Then
+            Fail "TARGET_KEY must not contain spaces, =, ;, #, or double quotes."
+        End If
+    Next
 End Sub
 
 Sub ValidateValue(ByVal value)
@@ -616,7 +721,7 @@ Sub ValidateValue(ByVal value)
     Next
 End Sub
 
-Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
+Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched, ByRef changed)
     Dim i, n, ch, boundary, eqPos, valueStart, valueEnd, quoteEnd, copied, result
     i = 1
     n = Len(line)
@@ -632,8 +737,8 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
         Else
             boundary = (i = 1)
             If i &gt; 1 Then boundary = IsBlank(Mid(line, i - 1, 1))
-            If boundary And StrComp(Mid(line, i, 4), "test", vbTextCompare) = 0 Then
-                eqPos = i + 4
+            If boundary And StrComp(Mid(line, i, Len(targetKey)), targetKey, vbTextCompare) = 0 Then
+                eqPos = i + Len(targetKey)
                 Do While IsBlank(Mid(line, eqPos, 1))
                     eqPos = eqPos + 1
                 Loop
@@ -645,8 +750,8 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
                     If Mid(line, valueStart, 1) = """" Then
                         valueStart = valueStart + 1
                         valueEnd = InStr(valueStart, line, """")
-                        If valueEnd = 0 Then Fail "Unclosed quote in a test= value."
-                        If Mid(line, valueEnd + 1, 1) = """" Then Fail "Escaped quotes in a test= value are not supported."
+                        If valueEnd = 0 Then Fail "Unclosed quote in a " &amp; targetKey &amp; "= value."
+                        If Mid(line, valueEnd + 1, 1) = """" Then Fail "Escaped quotes in a " &amp; targetKey &amp; "= value are not supported."
                         i = valueEnd + 1
                     Else
                         valueEnd = valueStart
@@ -657,7 +762,7 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
                         Loop
                         If valueStart &gt; eqPos + 1 Then
                             If InStr(Mid(line, valueStart, valueEnd - valueStart), "=") &gt; 0 Then
-                                Fail "Ambiguous empty test= value followed by another setting. Update cancelled."
+                                Fail "Ambiguous empty " &amp; targetKey &amp; "= value followed by another setting. Update cancelled."
                             End If
                         End If
                         i = valueEnd
