@@ -52,11 +52,11 @@ footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
 @media(max-width:650px){.wrap{padding-left:15px;padding-right:15px}.box{padding:17px}.source-top{padding:16px}.number-gutter,pre{font-size:11.5px}td,th{display:block;width:100%;padding:8px 10px}td{padding-top:2px}.notice{padding:10px 13px}}
 </style></head>
 <body><header><div class="wrap"><div class="meta">2026-10-20 ・ INI CONFIGURATION TOOL ・ BAT + VBS</div>
-<h1>BAT ソースコード</h1><p>PowerShellを使わず、指定セクションの有効な test= 値だけを変更するWindows用スクリプト。</p></div></header>
+<h1>BAT ソースコード</h1><p>PowerShellを使わず、BATで指定したセクションとキーの値だけを更新するWindows用スクリプト。</p></div></header>
 <nav aria-label="ページ内ナビゲーション"><div class="wrap"><a href="index.html">← 一覧に戻る</a><a href="#bat">BATのソース</a><a href="set_ini_test.html">VBSも見る</a></div></nav>
-<main class="wrap"><section class="box"><h2>このファイルの役割</h2><p>INIの場所、書き換える値、文字コードを設定して共通VBSを呼び出します。現在の <code>NEW_VALUE</code> は <strong>99DB</strong> です。</p></section><section id="bat" class="box source-section" aria-labelledby="bat-title">
+<main class="wrap"><section class="box"><h2>このファイルの役割</h2><p>INIの場所、セクション、キー名、更新後の値、文字コードを設定して共通VBSを呼び出します。現在は <code>[セット]</code> の <code>case=</code> を <strong>99DB</strong> に更新します。</p></section><section id="bat" class="box source-section" aria-labelledby="bat-title">
       <div class="source-top"><div><h2 id="bat-title">BAT：設定値・実行処理</h2>
-      <p>set_test_7777DB.bat ／ 17行 ／ 元の内容を保持</p></div>
+      <p>set_test_7777DB.bat ／ 19行 ／ 汎用BAT版</p></div>
       <div class="actions"><button type="button" class="button" onclick="copySource('code-bat', 'status-bat')">ソースをコピー</button>
       <a class="download" href="set_test_7777DB.bat" download>実行用ファイル</a><span class="copy-status" id="status-bat" role="status" aria-live="polite"></span></div></div>
       <div class="code-view" role="region" aria-label="set_test_7777DB.bat のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
@@ -75,16 +75,20 @@ footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
 14
 15
 16
-17</div><pre><code id="code-bat" class="source">@echo off
+17
+18
+19</div><pre><code id="code-bat" class="source">@echo off
 setlocal DisableDelayedExpansion
 
-rem Edit these settings. The default INI is next to this BAT.
-rem set "INI_FILE=%~dp0test.ini"
+rem Set the target INI path, section, key, value, and charset below.
 set "INI_FILE=%~dp0test.ini"
+rem Japanese section name [Setto]. Unicode escapes avoid BAT code-page problems.
+set "TARGET_SECTION=\u30BB\u30C3\u30C8"
+set "TARGET_KEY=case"
 set "NEW_VALUE=99DB"
 set "INI_CHARSET=utf-8"
 
-"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%"
+"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%" "%TARGET_SECTION%" "%TARGET_KEY%"
 set "RESULT=%ERRORLEVEL%"
 
 echo.
