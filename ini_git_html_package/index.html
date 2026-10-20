@@ -1,0 +1,836 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light"><title>INI設定更新ツール | BAT・VBSソース一覧</title><style>
+:root{--bg:#f4f7fb;--paper:#fff;--ink:#172033;--muted:#5c687a;--line:#dfe5ee;--accent:#215bc8;--accent-dark:#143c93;--code:#111b2a;--code-ink:#e7edf7;--code-muted:#7c8ba1;--warning-bg:#fff8eb;--warning-line:#efd7a8}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Yu Gothic','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;line-height:1.8;font-size:15px}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+header{background:#12223a;color:#f8faff;border-bottom:4px solid #447ff1}
+header .wrap{padding:30px 0 27px}
+header h1{margin:5px 0;font-size:clamp(1.55rem,3.3vw,2.3rem);font-weight:750;letter-spacing:.01em}
+header p{margin:5px 0 0;color:#d1dded;max-width:920px}
+.meta{color:#a9c5ee;font-size:13px;font-weight:600;letter-spacing:.04em}
+.wrap{max-width:1110px;padding:0 22px;margin:0 auto}
+nav{background:var(--paper);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
+nav a{display:inline-block;padding:4px 12px;border-radius:7px;font-weight:600;font-size:14px}
+nav a:hover{background:#edf3ff;text-decoration:none}
+main{padding:26px 0 62px}
+section{margin:0 0 22px}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px 25px;box-shadow:0 3px 16px rgba(22,40,76,.035)}
+h2{font-size:1.27rem;line-height:1.5;margin:0 0 12px}
+h3{font-size:1.06rem;margin:14px 0 6px}
+p{margin:9px 0}
+ul,ol{margin:8px 0;padding-left:1.55rem}
+li{margin:2px 0}
+code:not(.source){font-size:.93em;color:#143b81;background:#f0f5fc;border-radius:4px;padding:.1em .3em;overflow-wrap:anywhere}
+.notice{background:var(--warning-bg);border:1px solid var(--warning-line);border-left:4px solid #c98b22;border-radius:8px;padding:13px 17px;margin:16px 0 0}
+.notice strong{display:block;margin-bottom:5px}
+.mini{font-size:13px;color:var(--muted)}
+.flow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:15px 0}
+.flow span{background:#eaf1ff;border:1px solid #d3dff8;padding:4px 11px;border-radius:7px;font-weight:600;white-space:nowrap}
+.flow .arrow{border:none;background:none;color:#506481;padding:0 1px}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}
+th,td{padding:10px 12px;vertical-align:top;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#f2f5fa;white-space:nowrap}
+.source-section{padding:0;overflow:hidden}
+.source-top{padding:20px 23px 15px;display:flex;gap:15px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+.source-top h2{margin:0}
+.source-top p{margin:3px 0 0;color:var(--muted);font-size:14px}
+.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.button,.download{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 13px;border-radius:7px;font:inherit;font-weight:650;font-size:13px;border:1px solid #cad4e3;white-space:nowrap;cursor:pointer}
+.button{background:#ecf2ff;color:#173d8b}.button:hover{background:#dfebff}
+.download{background:white;color:#263856}.download:hover{background:#f6f9fe;text-decoration:none}
+.copy-status{font-size:12px;color:#146d44;min-width:0}
+.code-view{display:flex;background:var(--code);color:var(--code-ink);overflow:auto;max-height:625px;border-top:1px solid #33445b;border-bottom:1px solid #33445b;scrollbar-color:#607089 #1b293d}
+.number-gutter{flex:none;background:#17243a;color:var(--code-muted);border-right:1px solid #2e3a4f;white-space:pre;text-align:right;padding:15px 12px 15px 14px;font-family:Consolas,'Cascadia Code','Courier New',monospace;font-size:12.5px;line-height:1.65;user-select:none}
+pre{margin:0;white-space:pre;tab-size:4;padding:15px 23px;font-family:Consolas,'Cascadia Code','Courier New',monospace;font-size:12.5px;line-height:1.65;min-width:max-content}
+code.source{background:none;color:inherit;padding:0;font:inherit;white-space:pre}
+.source-bottom{padding:12px 23px;font-size:12px;color:var(--muted)}
+footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
+@media(max-width:650px){.wrap{padding-left:15px;padding-right:15px}.box{padding:17px}.source-top{padding:16px}.number-gutter,pre{font-size:11.5px}td,th{display:block;width:100%;padding:8px 10px}td{padding-top:2px}.notice{padding:10px 13px}}
+</style></head>
+<body><header><div class="wrap"><div class="meta">2026-10-20 ・ INI CONFIGURATION TOOL ・ BAT + VBS</div>
+<h1>INI設定更新ツール — ソース一覧</h1><p>PowerShellを使わず、指定セクションの有効な test= 値だけを変更するWindows用スクリプト。</p></div></header>
+<nav aria-label="ページ内ナビゲーション"><div class="wrap"><a href="#overview">概要</a><a href="#usage">使い方</a><a href="#bat">BATのソース</a><a href="#vbs">VBSのソース</a><a href="set_test_7777DB.html">BAT個別ページ</a><a href="set_ini_test.html">VBS個別ページ</a></div></nav>
+<main class="wrap"><section class="box" id="overview"><h2>概要</h2>
+<p>BATで対象INI・書き換え後の値・文字コードを指定し、共通VBSを呼び出します。対象は <code>[設定1]</code> のうち、コメントアウトされていない行の <code>test=</code> です。</p>
+<div class="flow"><span>set_test_7777DB.bat</span><span class="arrow">→</span><span>cscript.exe</span><span class="arrow">→</span><span>set_ini_test.vbs</span><span class="arrow">→</span><span>INI更新</span></div>
+<p>HTMLはコード閲覧用で、<strong>HTMLからBATやVBSを実行するものではありません</strong>。表示・コピー・実行用ファイルの取得に使えます。</p>
+<h3>現在のBAT設定</h3><table><thead><tr><th>項目</th><th>添付ファイルでの設定</th></tr></thead><tbody>
+<tr><td>対象INI</td><td><code>%~dp0test.ini</code>（BATと同じフォルダー）</td></tr>
+<tr><td>置換後の値</td><td><code>99DB</code></td></tr>
+<tr><td>文字コード</td><td><code>utf-8</code></td></tr>
+<tr><td>実行方法</td><td><code>set_test_7777DB.bat</code> を実行</td></tr>
+</tbody></table>
+<div class="notice"><strong>アップロード内容から確認された注意点</strong>
+<ul><li>BATファイル名には <code>7777DB</code> とありますが、現状の設定値は <code>99DB</code> です。変更されるのは <strong>99DB</strong> です。</li>
+<li>アップロード時のVBS名は <code>set_ini_test(1).vbs</code> でした。BATが呼び出す <code>set_ini_test.vbs</code> という名前に揃えて同梱しています。コード内容は同一です。</li>
+<li>バックアップ作成の6行はコメントアウトされています。ただしVBS内の一部エラーメッセージには以前のバックアップに関する文言が残っています。</li></ul></div></section><section class="box" id="usage"><h2>実行・運用手順</h2>
+<ol><li><code>set_test_7777DB.bat</code> と <code>set_ini_test.vbs</code> を同じフォルダーに配置します。</li>
+<li>BAT内の <code>INI_FILE</code> にINIのパスを設定し、<code>NEW_VALUE</code> を希望の値にします。UTF-8でない場合は <code>INI_CHARSET</code> も確認します。</li>
+<li>Windows上でBATを起動します。<code>/nopause</code> を付けると終了時の一時停止を省略できます。</li>
+<li><code>Updated: ... value(s).</code>、<code>SUCCESS</code> と表示されれば、書き換えた値と対象INIを確認してください。</li></ol>
+<p class="mini">必要環境：Windows Script Host（cscript.exe）、ADODB.Streamが利用可能であり、INIへの書込権限があること。PowerShellは不要です。実運用前に対象INIのコピーで検証してください。</p>
+<h3>Git上でのHTML閲覧</h3><p><code>index.html</code> をPCにダウンロードしてブラウザで開く方法なら、ネット接続も追加ライブラリも不要です。GitHubのリポジトリ画面ではHTML自体がソース表示になるため、ブラウザ表示用のURLが必要ならGitHub Pagesなどの静的サイト公開機能を使ってください。</p></section><section id="bat" class="box source-section" aria-labelledby="bat-title">
+      <div class="source-top"><div><h2 id="bat-title">BAT：設定値・実行処理</h2>
+      <p>set_test_7777DB.bat ／ 17行 ／ 元の内容を保持</p></div>
+      <div class="actions"><button type="button" class="button" onclick="copySource('code-bat', 'status-bat')">ソースをコピー</button>
+      <a class="download" href="set_test_7777DB.bat" download>実行用ファイル</a><span class="copy-status" id="status-bat" role="status" aria-live="polite"></span></div></div>
+      <div class="code-view" role="region" aria-label="set_test_7777DB.bat のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17</div><pre><code id="code-bat" class="source">@echo off
+setlocal DisableDelayedExpansion
+
+rem Edit these settings. The default INI is next to this BAT.
+rem set "INI_FILE=%~dp0test.ini"
+set "INI_FILE=%~dp0test.ini"
+set "NEW_VALUE=99DB"
+set "INI_CHARSET=utf-8"
+
+"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%"
+set "RESULT=%ERRORLEVEL%"
+
+echo.
+if "%RESULT%"=="0" (echo SUCCESS) else (echo FAILED - see the error above.)
+rem Use /nopause when calling this BAT from another BAT or a job.
+if /i not "%~1"=="/nopause" pause
+exit /b %RESULT%
+</code></pre></div>
+      <div class="source-bottom">set_test_7777DB.bat ／ スクロールで全体を閲覧できます。右上のボタンからコピーまたは元ファイルの取得ができます。</div>
+    </section><section id="vbs" class="box source-section" aria-labelledby="vbs-title">
+      <div class="source-top"><div><h2 id="vbs-title">VBS：INIの書き換え処理</h2>
+      <p>set_ini_test.vbs ／ 342行 ／ 元の内容を保持</p></div>
+      <div class="actions"><button type="button" class="button" onclick="copySource('code-vbs', 'status-vbs')">ソースをコピー</button>
+      <a class="download" href="set_ini_test.vbs" download>実行用ファイル</a><span class="copy-status" id="status-vbs" role="status" aria-live="polite"></span></div></div>
+      <div class="code-view" role="region" aria-label="set_ini_test.vbs のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342</div><pre><code id="code-vbs" class="source">Option Explicit
+
+' Version 2: inspect COM byte arrays with LenB / MidB / AscB.
+
+' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" [charset]
+' charset: utf-8 (default), shift_jis, or unicode (UTF-16 LE with BOM).
+' This source is ASCII-only. ChrW builds the Japanese section name.
+' Only standalone test= tokens in active lines of that section are edited.
+
+Const adTypeBinary = 1
+Const adTypeText = 2
+Const adSaveCreateNotExist = 1
+Const adSaveCreateOverWrite = 2
+
+Dim fso, tempPath, backupPath, stage, errorNumber, errorText
+tempPath = ""
+backupPath = ""
+stage = "initialization"
+
+WScript.Echo "INI updater v2"
+
+On Error Resume Next
+Main
+errorNumber = Err.Number
+errorText = Err.Description
+On Error GoTo 0
+
+If errorNumber &lt;&gt; 0 Then
+    WScript.Echo "ERROR during " &amp; stage &amp; ": " &amp; errorText &amp; " (0x" &amp; Hex(errorNumber) &amp; ")"
+    If backupPath &lt;&gt; "" Then WScript.Echo "Backup: " &amp; backupPath
+    On Error Resume Next
+    If tempPath &lt;&gt; "" Then fso.DeleteFile tempPath, True
+    On Error GoTo 0
+    WScript.Quit 1
+End If
+WScript.Quit 0
+
+Sub Main()
+    Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
+    Dim hasBom, targetSection, position, ending, line, trimmed, closePos, inSection
+    Dim matched, changed, fileInfo, checkBytes, candidateBackup
+
+    If WScript.Arguments.Count &lt; 2 Or WScript.Arguments.Count &gt; 3 Then
+        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset]"
+    End If
+
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    path = fso.GetAbsolutePathName(WScript.Arguments(0))
+    newValue = WScript.Arguments(1)
+    charset = "utf-8"
+    If WScript.Arguments.Count = 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+    Select Case charset
+        Case "utf8": charset = "utf-8"
+        Case "sjis", "cp932", "shift-jis": charset = "shift_jis"
+        Case "utf-16", "utf-16le": charset = "unicode"
+        Case "utf-8", "shift_jis", "unicode"
+        Case Else: Fail "Supported charsets: utf-8, shift_jis, unicode."
+    End Select
+
+    ValidateValue newValue
+    If Not fso.FileExists(path) Then Fail "INI file not found: " &amp; path
+    Set fileInfo = fso.GetFile(path)
+    If fileInfo.Size = 0 Then Fail "The INI file is empty."
+    If (fileInfo.Attributes And 1) &lt;&gt; 0 Then Fail "The INI file is read-only."
+
+    stage = "reading the INI"
+    raw = ReadBytes(path)
+    stage = "checking the file BOM"
+    hasBom = CheckBom(raw, charset)
+    stage = "decoding the INI"
+    original = DecodeBytes(raw, charset)
+    If InStr(original, ChrW(0)) &gt; 0 Then Fail "NUL character found; check INI_CHARSET."
+
+    ' Refuse a charset mismatch or a conversion that would alter other bytes.
+    stage = "checking the original encoding"
+    roundTrip = EncodeText(original, charset, hasBom)
+    If Not SameBytes(raw, roundTrip) Then
+        Fail "The file cannot be preserved with INI_CHARSET=" &amp; charset &amp; ". Check its encoding."
+    End If
+
+    stage = "parsing the INI"
+    targetSection = ChrW(&amp;H8A2D) &amp; ChrW(&amp;H5B9A) &amp; "1"
+    inSection = False
+    matched = 0
+    changed = 0
+    updated = ""
+
+    ' Keep every original line ending, including a missing final newline.
+    position = 1
+    Do While position &lt;= Len(original)
+        SplitNextLine original, position, line, ending
+        trimmed = Trim(Replace(line, vbTab, " "))
+        If Len(trimmed) &gt; 0 Then
+            If Left(trimmed, 1) &lt;&gt; ";" And Left(trimmed, 1) &lt;&gt; "#" Then
+                If Left(trimmed, 1) = "[" Then
+                    inSection = False
+                    closePos = InStr(2, trimmed, "]")
+                    If closePos &gt; 0 Then
+                        inSection = (Trim(Mid(trimmed, 2, closePos - 2)) = targetSection)
+                    End If
+                ElseIf inSection Then
+                    line = RewriteLine(line, newValue, matched, changed)
+                End If
+            End If
+        End If
+        updated = updated &amp; line &amp; ending
+    Loop
+
+    If matched = 0 Then Fail "No active test= token found in the target section. No file was changed."
+    If changed = 0 Then
+        WScript.Echo "No change needed. " &amp; matched &amp; " value(s) already match."
+        Exit Sub
+    End If
+
+    stage = "preparing the updated file"
+    outputBytes = EncodeText(updated, charset, hasBom)
+    If DecodeBytes(outputBytes, charset) &lt;&gt; updated Then
+        Fail "The new value cannot be represented in INI_CHARSET=" &amp; charset &amp; "."
+    End If
+    tempPath = fso.BuildPath(fso.GetParentFolderName(path), "ini_edit_" &amp; fso.GetTempName)
+    WriteBytes tempPath, outputBytes, adSaveCreateNotExist
+    checkBytes = ReadBytes(tempPath)
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "Temporary file verification failed."
+
+    'stage = "creating a backup"
+    'candidateBackup = NextBackupPath(path)
+    'fso.CopyFile path, candidateBackup, False
+    'backupPath = candidateBackup
+    'checkBytes = ReadBytes(backupPath)
+    'If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+    checkBytes = ReadBytes(path)
+    If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+
+    ' Keep the existing pathname and file permissions by writing to that file.
+    ' The backup is retained if a write or verification fails.
+    stage = "writing the INI (the backup is retained if this fails)"
+    WriteBytes path, outputBytes, adSaveCreateOverWrite
+    checkBytes = ReadBytes(path)
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed; use the backup to restore."
+    fso.DeleteFile tempPath, True
+    tempPath = ""
+
+    WScript.Echo "Updated: " &amp; changed &amp; " value(s)."
+    WScript.Echo "File: " &amp; path
+    'WScript.Echo "Backup: " &amp; backupPath
+End Sub
+
+Sub ValidateValue(ByVal value)
+    Dim i, ch
+    If Len(value) = 0 Then Fail "The new value must not be empty."
+    For i = 1 To Len(value)
+        ch = Mid(value, i, 1)
+        If AscW(ch) &gt;= 0 And AscW(ch) &lt;= 32 Then Fail "The new value must not contain spaces or control characters."
+        If ch = ";" Or ch = "#" Or ch = """" Then Fail "The new value must not contain semicolons, #, or double quotes."
+    Next
+End Sub
+
+Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
+    Dim i, n, ch, boundary, eqPos, valueStart, valueEnd, quoteEnd, copied, result
+    i = 1
+    n = Len(line)
+    copied = 1
+    result = ""
+    Do While i &lt;= n
+        ch = Mid(line, i, 1)
+        If ch = ";" Or ch = "#" Then Exit Do
+        If ch = """" Then
+            quoteEnd = InStr(i + 1, line, """")
+            If quoteEnd = 0 Then Exit Do
+            i = quoteEnd + 1
+        Else
+            boundary = (i = 1)
+            If i &gt; 1 Then boundary = IsBlank(Mid(line, i - 1, 1))
+            If boundary And StrComp(Mid(line, i, 4), "test", vbTextCompare) = 0 Then
+                eqPos = i + 4
+                Do While IsBlank(Mid(line, eqPos, 1))
+                    eqPos = eqPos + 1
+                Loop
+                If Mid(line, eqPos, 1) = "=" Then
+                    valueStart = eqPos + 1
+                    Do While IsBlank(Mid(line, valueStart, 1))
+                        valueStart = valueStart + 1
+                    Loop
+                    If Mid(line, valueStart, 1) = """" Then
+                        valueStart = valueStart + 1
+                        valueEnd = InStr(valueStart, line, """")
+                        If valueEnd = 0 Then Fail "Unclosed quote in a test= value."
+                        If Mid(line, valueEnd + 1, 1) = """" Then Fail "Escaped quotes in a test= value are not supported."
+                        i = valueEnd + 1
+                    Else
+                        valueEnd = valueStart
+                        Do While valueEnd &lt;= n
+                            ch = Mid(line, valueEnd, 1)
+                            If IsBlank(ch) Or ch = ";" Or ch = "#" Then Exit Do
+                            valueEnd = valueEnd + 1
+                        Loop
+                        If valueStart &gt; eqPos + 1 Then
+                            If InStr(Mid(line, valueStart, valueEnd - valueStart), "=") &gt; 0 Then
+                                Fail "Ambiguous empty test= value followed by another setting. Update cancelled."
+                            End If
+                        End If
+                        i = valueEnd
+                    End If
+                    matched = matched + 1
+                    If Mid(line, valueStart, valueEnd - valueStart) &lt;&gt; newValue Then changed = changed + 1
+                    result = result &amp; Mid(line, copied, valueStart - copied) &amp; newValue
+                    copied = valueEnd
+                Else
+                    i = i + 1
+                End If
+            Else
+                i = i + 1
+            End If
+        End If
+    Loop
+    RewriteLine = result &amp; Mid(line, copied)
+End Function
+
+Sub SplitNextLine(ByRef text, ByRef position, ByRef line, ByRef ending)
+    Dim stopPos, ch
+    stopPos = position
+    Do While stopPos &lt;= Len(text)
+        ch = Mid(text, stopPos, 1)
+        If ch = vbCr Or ch = vbLf Then Exit Do
+        stopPos = stopPos + 1
+    Loop
+    line = Mid(text, position, stopPos - position)
+    ending = Mid(text, stopPos, 1)
+    If ending = vbCr Then
+        If Mid(text, stopPos + 1, 1) = vbLf Then ending = vbCrLf
+    End If
+    position = stopPos + Len(ending)
+End Sub
+
+Function IsBlank(ByVal ch)
+    IsBlank = (ch = " " Or ch = vbTab)
+End Function
+
+Function ReadBytes(ByVal path)
+    Dim stream
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = adTypeBinary
+    stream.Open
+    stream.LoadFromFile path
+    If stream.Size = 0 Then Fail "An empty file was encountered: " &amp; path
+    ReadBytes = stream.Read
+    stream.Close
+End Function
+
+Function DecodeBytes(ByRef bytes, ByVal charset)
+    Dim stream, value
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = adTypeBinary
+    stream.Open
+    stream.Write bytes
+    stream.Position = 0
+    stream.Type = adTypeText
+    stream.Charset = charset
+    value = stream.ReadText
+    If Len(value) &gt; 0 Then
+        If Left(value, 1) = ChrW(&amp;HFEFF) Then value = Mid(value, 2)
+    End If
+    DecodeBytes = value
+    stream.Close
+End Function
+
+Function EncodeText(ByVal value, ByVal charset, ByVal hasBom)
+    Dim stream
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = adTypeText
+    stream.Charset = charset
+    stream.Open
+    stream.WriteText value
+    stream.Position = 0
+    stream.Type = adTypeBinary
+    If charset = "utf-8" And Not hasBom Then stream.Position = 3
+    EncodeText = stream.Read
+    stream.Close
+End Function
+
+Sub WriteBytes(ByVal path, ByRef bytes, ByVal saveOption)
+    Dim stream
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = adTypeBinary
+    stream.Open
+    stream.Write bytes
+    stream.SaveToFile path, saveOption
+    stream.Close
+End Sub
+
+Function CheckBom(ByRef bytes, ByVal charset)
+    Dim length, utf8Bom, utf16Bom
+    length = LenB(bytes)
+    utf8Bom = False
+    utf16Bom = False
+    If length &gt;= 3 Then
+        utf8Bom = (AscB(MidB(bytes, 1, 1)) = &amp;HEF And AscB(MidB(bytes, 2, 1)) = &amp;HBB And AscB(MidB(bytes, 3, 1)) = &amp;HBF)
+    End If
+    If length &gt;= 2 Then
+        utf16Bom = (AscB(MidB(bytes, 1, 1)) = &amp;HFF And AscB(MidB(bytes, 2, 1)) = &amp;HFE)
+        If AscB(MidB(bytes, 1, 1)) = &amp;HFE And AscB(MidB(bytes, 2, 1)) = &amp;HFF Then Fail "UTF-16 BE is not supported."
+    End If
+    If length &gt;= 4 Then
+        If utf16Bom And AscB(MidB(bytes, 3, 1)) = 0 And AscB(MidB(bytes, 4, 1)) = 0 Then Fail "UTF-32 is not supported."
+    End If
+    If utf8Bom And charset &lt;&gt; "utf-8" Then Fail "The file has a UTF-8 BOM. Set INI_CHARSET=utf-8."
+    If utf16Bom And charset &lt;&gt; "unicode" Then Fail "The file has a UTF-16 LE BOM. Set INI_CHARSET=unicode."
+    If charset = "unicode" And Not utf16Bom Then Fail "UTF-16 LE input must have a BOM."
+    CheckBom = (utf8Bom Or utf16Bom)
+End Function
+
+Function SameBytes(ByRef first, ByRef second)
+    Dim i, length
+    SameBytes = False
+    length = LenB(first)
+    If length &lt;&gt; LenB(second) Then Exit Function
+    For i = 1 To length
+        If AscB(MidB(first, i, 1)) &lt;&gt; AscB(MidB(second, i, 1)) Then Exit Function
+    Next
+    SameBytes = True
+End Function
+
+Function NextBackupPath(ByVal path)
+    Dim stamp, candidate, counter, t
+    t = Now
+    stamp = Year(t) &amp; Pad2(Month(t)) &amp; Pad2(Day(t)) &amp; "_" &amp; Pad2(Hour(t)) &amp; Pad2(Minute(t)) &amp; Pad2(Second(t))
+    candidate = path &amp; ".bak_" &amp; stamp
+    counter = 1
+    Do While fso.FileExists(candidate)
+        candidate = path &amp; ".bak_" &amp; stamp &amp; "_" &amp; counter
+        counter = counter + 1
+    Loop
+    NextBackupPath = candidate
+End Function
+
+Function Pad2(ByVal value)
+    Pad2 = Right("0" &amp; CStr(value), 2)
+End Function
+
+Sub Fail(ByVal message)
+    Err.Raise vbObjectError + 1000, "set_ini_test.vbs", message
+End Sub
+</code></pre></div>
+      <div class="source-bottom">set_ini_test.vbs ／ スクロールで全体を閲覧できます。右上のボタンからコピーまたは元ファイルの取得ができます。</div>
+    </section></main><footer>このHTMLは閲覧・コピー用です。INIを更新する際は、BATとVBSをWindows上で実行してください。</footer>
+<script>
+(function(){
+  'use strict';
+  window.copySource = async function(id, statusId){
+    var node = document.getElementById(id);
+    var status = document.getElementById(statusId);
+    if(!node || !status) return;
+    var text = node.textContent;
+    try {
+      if(navigator.clipboard && window.isSecureContext){
+        await navigator.clipboard.writeText(text);
+      } else {
+        var field = document.createElement('textarea');
+        field.value = text;
+        field.setAttribute('readonly', '');
+        field.style.position = 'fixed';
+        field.style.top = '-9999px';
+        document.body.appendChild(field);
+        field.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(field);
+        if (!ok) throw new Error('copy failed');
+      }
+      status.textContent = 'コピーしました';
+    } catch(err){
+      status.textContent = 'コピーできませんでした。コード部分を選択してコピーしてください。';
+    }
+  };
+})();
+</script></body></html>
