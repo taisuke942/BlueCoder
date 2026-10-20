@@ -1,11 +1,11 @@
 Option Explicit
 
-' Version 2: inspect COM byte arrays with LenB / MidB / AscB.
+' Version 3: a single VBS for all INI sections, keys, and values.
 
-' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" [charset]
-' charset: utf-8 (default), shift_jis, or unicode (UTF-16 LE with BOM).
-' This source is ASCII-only. ChrW builds the Japanese section name.
-' Only standalone test= tokens in active lines of that section are edited.
+' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" "charset" "section" "key"
+' charset: utf-8, shift_jis, or unicode (UTF-16 LE with BOM).
+' This source is ASCII-only. Section names can contain Unicode escapes: \uXXXX.
+' Only standalone key= tokens in active lines of the requested section are edited.
 
 Const adTypeBinary = 1
 Const adTypeText = 2
@@ -17,7 +17,7 @@ tempPath = ""
 backupPath = ""
 stage = "initialization"
 
-WScript.Echo "INI updater v2"
+WScript.Echo "INI updater v3"
 
 On Error Resume Next
 Main
@@ -37,18 +37,29 @@ WScript.Quit 0
 
 Sub Main()
     Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
-    Dim hasBom, targetSection, position, ending, line, trimmed, closePos, inSection
+    Dim hasBom, targetSection, targetKey, position, ending, line, trimmed, closePos, inSection
     Dim matched, changed, fileInfo, checkBytes, candidateBackup
 
-    If WScript.Arguments.Count < 2 Or WScript.Arguments.Count > 3 Then
-        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset]"
+    If WScript.Arguments.Count <> 2 And WScript.Arguments.Count <> 3 And WScript.Arguments.Count <> 5 Then
+        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
     End If
 
     Set fso = CreateObject("Scripting.FileSystemObject")
     path = fso.GetAbsolutePathName(WScript.Arguments(0))
     newValue = WScript.Arguments(1)
     charset = "utf-8"
-    If WScript.Arguments.Count = 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+    If WScript.Arguments.Count >= 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+    If WScript.Arguments.Count = 5 Then
+        targetSection = DecodeUnicodeEscapes(Trim(WScript.Arguments(3)))
+        targetKey = Trim(WScript.Arguments(4))
+    Else
+        ' Backward compatibility: existing BAT files with two or three arguments.
+        targetSection = ChrW(&H8A2D) & ChrW(&H5B9A) & "1"
+        targetKey = "test"
+    End If
+    If Len(targetSection) = 0 Then Fail "TARGET_SECTION must not be empty."
+    If InStr(targetSection, "]") > 0 Then Fail "TARGET_SECTION must not contain ]."
+    ValidateKey targetKey
     Select Case charset
         Case "utf8": charset = "utf-8"
         Case "sjis", "cp932", "shift-jis": charset = "shift_jis"
@@ -79,7 +90,6 @@ Sub Main()
     End If
 
     stage = "parsing the INI"
-    targetSection = ChrW(&H8A2D) & ChrW(&H5B9A) & "1"
     inSection = False
     matched = 0
     changed = 0
@@ -99,14 +109,14 @@ Sub Main()
                         inSection = (Trim(Mid(trimmed, 2, closePos - 2)) = targetSection)
                     End If
                 ElseIf inSection Then
-                    line = RewriteLine(line, newValue, matched, changed)
+                    line = RewriteLine(line, targetKey, newValue, matched, changed)
                 End If
             End If
         End If
         updated = updated & line & ending
     Loop
 
-    If matched = 0 Then Fail "No active test= token found in the target section. No file was changed."
+    If matched = 0 Then Fail "No active " & targetKey & "= token found in [" & targetSection & "]. No file was changed."
     If changed = 0 Then
         WScript.Echo "No change needed. " & matched & " value(s) already match."
         Exit Sub
@@ -132,17 +142,56 @@ Sub Main()
     If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
 
     ' Keep the existing pathname and file permissions by writing to that file.
-    ' The backup is retained if a write or verification fails.
-    stage = "writing the INI (the backup is retained if this fails)"
+    ' No backup is created (the backup steps above are disabled).
+    stage = "writing the INI"
     WriteBytes path, outputBytes, adSaveCreateOverWrite
     checkBytes = ReadBytes(path)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed; use the backup to restore."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed."
     fso.DeleteFile tempPath, True
     tempPath = ""
 
     WScript.Echo "Updated: " & changed & " value(s)."
     WScript.Echo "File: " & path
     'WScript.Echo "Backup: " & backupPath
+End Sub
+
+
+' Convert \uXXXX notation (e.g. \u30BB\u30C3\u30C8 = a Japanese section name).
+' Plain names such as MAIN or SETTING work without escapes.
+Function DecodeUnicodeEscapes(ByVal value)
+    Dim i, j, digits, result, ch
+    i = 1
+    result = ""
+    Do While i <= Len(value)
+        If Mid(value, i, 2) = "\u" Then
+            If i + 5 > Len(value) Then Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+            digits = Mid(value, i + 2, 4)
+            For j = 1 To 4
+                ch = UCase(Mid(digits, j, 1))
+                If InStr(1, "0123456789ABCDEF", ch, vbBinaryCompare) = 0 Then
+                    Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+                End If
+            Next
+            result = result & ChrW(CLng("&H" & digits))
+            i = i + 6
+        Else
+            result = result & Mid(value, i, 1)
+            i = i + 1
+        End If
+    Loop
+    DecodeUnicodeEscapes = result
+End Function
+
+Sub ValidateKey(ByVal keyName)
+    Dim i, ch, charCode
+    If Len(keyName) = 0 Then Fail "TARGET_KEY must not be empty."
+    For i = 1 To Len(keyName)
+        ch = Mid(keyName, i, 1)
+        charCode = AscW(ch)
+        If (charCode >= 0 And charCode <= 32) Or ch = "=" Or ch = ";" Or ch = "#" Or ch = """" Then
+            Fail "TARGET_KEY must not contain spaces, =, ;, #, or double quotes."
+        End If
+    Next
 End Sub
 
 Sub ValidateValue(ByVal value)
@@ -155,7 +204,7 @@ Sub ValidateValue(ByVal value)
     Next
 End Sub
 
-Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
+Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched, ByRef changed)
     Dim i, n, ch, boundary, eqPos, valueStart, valueEnd, quoteEnd, copied, result
     i = 1
     n = Len(line)
@@ -171,8 +220,8 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
         Else
             boundary = (i = 1)
             If i > 1 Then boundary = IsBlank(Mid(line, i - 1, 1))
-            If boundary And StrComp(Mid(line, i, 4), "test", vbTextCompare) = 0 Then
-                eqPos = i + 4
+            If boundary And StrComp(Mid(line, i, Len(targetKey)), targetKey, vbTextCompare) = 0 Then
+                eqPos = i + Len(targetKey)
                 Do While IsBlank(Mid(line, eqPos, 1))
                     eqPos = eqPos + 1
                 Loop
@@ -184,8 +233,8 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
                     If Mid(line, valueStart, 1) = """" Then
                         valueStart = valueStart + 1
                         valueEnd = InStr(valueStart, line, """")
-                        If valueEnd = 0 Then Fail "Unclosed quote in a test= value."
-                        If Mid(line, valueEnd + 1, 1) = """" Then Fail "Escaped quotes in a test= value are not supported."
+                        If valueEnd = 0 Then Fail "Unclosed quote in a " & targetKey & "= value."
+                        If Mid(line, valueEnd + 1, 1) = """" Then Fail "Escaped quotes in a " & targetKey & "= value are not supported."
                         i = valueEnd + 1
                     Else
                         valueEnd = valueStart
@@ -196,7 +245,7 @@ Function RewriteLine(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
                         Loop
                         If valueStart > eqPos + 1 Then
                             If InStr(Mid(line, valueStart, valueEnd - valueStart), "=") > 0 Then
-                                Fail "Ambiguous empty test= value followed by another setting. Update cancelled."
+                                Fail "Ambiguous empty " & targetKey & "= value followed by another setting. Update cancelled."
                             End If
                         End If
                         i = valueEnd
