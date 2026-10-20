@@ -1,28 +1,41 @@
-# INI設定更新ツール — Git用HTMLソース閲覧パッケージ
+# INI 設定更新ツール（BAT + 共通VBS v3）
 
-作成日：2026-10-20
+**2026-10-20 更新** / Windows Script Host・ADODB.Stream を使用。PowerShell不要。
 
-## ファイル一覧
+## GitHub Pages での閲覧
 
-- `index.html` : BAT・VBSの説明とコード全文をまとめたHTML（まずこれを開く）
-- `set_test_7777DB.html` : BAT単独のコード閲覧用HTML
-- `set_ini_test.html` : VBS単独のコード閲覧用HTML
-- `set_test_7777DB.bat` : オリジナルのBAT（内容・バイト列を変更していません）
-- `set_ini_test.vbs` : VBS（アップロード時の `set_ini_test(1).vbs` を、BATから呼べるようファイル名だけ変更。内容・バイト列は変更していません）
+- `index.html`：使い方とBAT・VBSのコード全文
+- `set_test_7777DB.html`：BAT全文
+- `set_ini_test.html`：VBS全文
 
-HTMLはブラウザでコードと説明を読むためのファイルであり、HTML自体はINIの書き換えを行いません。Windowsでの実行はBATとVBSを使います。
+HTMLは閲覧・コピー・ダウンロード用です。INIの更新はWindowsでBATを実行してください。
 
-## 使い方
+## 実行ファイル
 
-1. Gitに上記ファイルを同じディレクトリで登録します。
-2. ローカルPCでは `index.html` をブラウザで開いて閲覧できます（ネット・外部ライブラリ不要）。
-3. GitHubの場合、GitHub上のファイル画面ではHTMLのソースが表示されます。Webサイトとして閲覧するには、リポジトリ設定の **Pages** を設定して `index.html` にアクセスします。GitLab等では同等のPages機能が使える場合があります。職場の公開範囲とアクセス権の規定に従ってください。
-4. BATの `INI_FILE`、`NEW_VALUE`、`INI_CHARSET` を実際の運用に合わせます。
+- `set_test_7777DB.bat`：INIパス、対象セクション、キー名、置換値、文字コードを設定
+- `set_ini_test.vbs`：BATの指定に従って処理する共通VBS。単体で再利用可能
+
+現在のBAT設定：
+
+```bat
+set "INI_FILE=%~dp0test.ini"
+set "TARGET_SECTION=\u30BB\u30C3\u30C8"
+set "TARGET_KEY=case"
+set "NEW_VALUE=99DB"
+set "INI_CHARSET=utf-8"
+```
+
+上記の `TARGET_SECTION` は **[セット]**。このセクションでコメントアウトされていない行の `case=` の値を **99DB** にします。別のINIや値に変更するときはBATの設定を編集するだけです。
+
+BATのファイル名は旧名称のままですが、実際の置換値は `NEW_VALUE` に従います。
+
+既存のBATから2～3引数で呼び出した場合は、互換動作として **[設定1] の test=** を更新します。新形式は5引数です。
 
 ## 注意
 
-- 現在のBATには `set "NEW_VALUE=99DB"` とあります。ファイル名には7777DBとありますが、処理値は99DBです。
-- BATは `set_ini_test.vbs` という名前でVBSを呼び出します。
-- VBSのバックアップ作成処理はコメントアウトされているため、実行してもバックアップは作りません。
-- VBSに残っているバックアップ関連の旧エラーメッセージは、元コードを変更しないためそのままです。
-- Git上での閲覧・掲載は、所属組織の情報管理ルールに従ってください。
+- バックアップファイルは**自動作成しません**。本番適用前にINIをコピーして検証してください。
+- 日本語のセクション名は `\uXXXX` を組み合わせてBATに指定できます。これによりBATの文字コード差による文字化けを避けます。
+- `INI_CHARSET` は元ファイルと一致させてください（`utf-8`、`shift_jis`、`unicode`）。
+- BATとVBSは同じフォルダーに配置します。対象INIには書込権限が必要です。
+- 新コードは静的に照合済みですが、職場のAWS/Windowsでの実行試験は未実施です。
+- 公開リポジトリに会社固有のパス・認証情報などを載せないでください。
