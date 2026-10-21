@@ -1,523 +1,55 @@
 <!doctype html>
-<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light"><title>INI設定更新ツール | BAT・VBSソース一覧</title><style>
-:root{--bg:#f4f7fb;--paper:#fff;--ink:#172033;--muted:#5c687a;--line:#dfe5ee;--accent:#215bc8;--accent-dark:#143c93;--code:#111b2a;--code-ink:#e7edf7;--code-muted:#7c8ba1;--warning-bg:#fff8eb;--warning-line:#efd7a8}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Yu Gothic','Hiragino Kaku Gothic ProN',Meiryo,sans-serif;line-height:1.8;font-size:15px}
-a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
-header{background:#12223a;color:#f8faff;border-bottom:4px solid #447ff1}
-header .wrap{padding:30px 0 27px}
-header h1{margin:5px 0;font-size:clamp(1.55rem,3.3vw,2.3rem);font-weight:750;letter-spacing:.01em}
-header p{margin:5px 0 0;color:#d1dded;max-width:920px}
-.meta{color:#a9c5ee;font-size:13px;font-weight:600;letter-spacing:.04em}
-.wrap{max-width:1110px;padding:0 22px;margin:0 auto}
-nav{background:var(--paper);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding-top:10px;padding-bottom:10px}
-nav a{display:inline-block;padding:4px 12px;border-radius:7px;font-weight:600;font-size:14px}
-nav a:hover{background:#edf3ff;text-decoration:none}
-main{padding:26px 0 62px}
-section{margin:0 0 22px}
-.box{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:22px 25px;box-shadow:0 3px 16px rgba(22,40,76,.035)}
-h2{font-size:1.27rem;line-height:1.5;margin:0 0 12px}
-h3{font-size:1.06rem;margin:14px 0 6px}
-p{margin:9px 0}
-ul,ol{margin:8px 0;padding-left:1.55rem}
-li{margin:2px 0}
-code:not(.source){font-size:.93em;color:#143b81;background:#f0f5fc;border-radius:4px;padding:.1em .3em;overflow-wrap:anywhere}
-.notice{background:var(--warning-bg);border:1px solid var(--warning-line);border-left:4px solid #c98b22;border-radius:8px;padding:13px 17px;margin:16px 0 0}
-.notice strong{display:block;margin-bottom:5px}
-.mini{font-size:13px;color:var(--muted)}
-.flow{display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:15px 0}
-.flow span{background:#eaf1ff;border:1px solid #d3dff8;padding:4px 11px;border-radius:7px;font-weight:600;white-space:nowrap}
-.flow .arrow{border:none;background:none;color:#506481;padding:0 1px}
-table{border-collapse:collapse;width:100%;font-size:14px;margin:12px 0}
-th,td{padding:10px 12px;vertical-align:top;text-align:left;border-bottom:1px solid var(--line)}
-th{background:#f2f5fa;white-space:nowrap}
-.source-section{padding:0;overflow:hidden}
-.source-top{padding:20px 23px 15px;display:flex;gap:15px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
-.source-top h2{margin:0}
-.source-top p{margin:3px 0 0;color:var(--muted);font-size:14px}
-.actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.button,.download{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 13px;border-radius:7px;font:inherit;font-weight:650;font-size:13px;border:1px solid #cad4e3;white-space:nowrap;cursor:pointer}
-.button{background:#ecf2ff;color:#173d8b}.button:hover{background:#dfebff}
-.download{background:white;color:#263856}.download:hover{background:#f6f9fe;text-decoration:none}
-.copy-status{font-size:12px;color:#146d44;min-width:0}
-.code-view{display:flex;background:var(--code);color:var(--code-ink);overflow:auto;max-height:625px;border-top:1px solid #33445b;border-bottom:1px solid #33445b;scrollbar-color:#607089 #1b293d}
-.number-gutter{flex:none;background:#17243a;color:var(--code-muted);border-right:1px solid #2e3a4f;white-space:pre;text-align:right;padding:15px 12px 15px 14px;font-family:Consolas,'Cascadia Code','Courier New',monospace;font-size:12.5px;line-height:1.65;user-select:none}
-pre{margin:0;white-space:pre;tab-size:4;padding:15px 23px;font-family:Consolas,'Cascadia Code','Courier New',monospace;font-size:12.5px;line-height:1.65;min-width:max-content}
-code.source{background:none;color:inherit;padding:0;font:inherit;white-space:pre}
-.source-bottom{padding:12px 23px;font-size:12px;color:var(--muted)}
-footer{padding:24px;text-align:center;color:#69768b;font-size:12px}
-@media(max-width:650px){.wrap{padding-left:15px;padding-right:15px}.box{padding:17px}.source-top{padding:16px}.number-gutter,pre{font-size:11.5px}td,th{display:block;width:100%;padding:8px 10px}td{padding-top:2px}.notice{padding:10px 13px}}
-</style></head>
-<body><header><div class="wrap"><div class="meta">2026-10-20 ・ INI CONFIGURATION TOOL ・ BAT + VBS</div>
-<h1>INI設定更新ツール — ソース一覧</h1><p>PowerShellを使わず、BATで指定したセクションとキーの値だけを更新するWindows用スクリプト。</p></div></header>
-<nav aria-label="ページ内ナビゲーション"><div class="wrap"><a href="#overview">概要</a><a href="#usage">使い方</a><a href="#bat">BATのソース</a><a href="#vbs">VBSのソース</a><a href="set_test_7777DB.html">BAT個別ページ</a><a href="set_ini_test.html">VBS個別ページ</a></div></nav>
-<main class="wrap"><section class="box" id="overview"><h2>概要</h2>
-<p>BATで対象INIのパス、対象セクション名、キー名、書き換え後の値、文字コードを指定し、共通VBSを呼び出します。現在の設定例では <code>[セット]</code> にあるコメントアウトされていない行の <code>case=</code> を <code>case=99DB</code> に更新します。</p>
-<div class="flow"><span>set_test_7777DB.bat</span><span class="arrow">→</span><span>cscript.exe</span><span class="arrow">→</span><span>set_ini_test.vbs</span><span class="arrow">→</span><span>INI更新</span></div>
-<p>HTMLはコード閲覧用で、<strong>HTMLからBATやVBSを実行するものではありません</strong>。表示・コピー・実行用ファイルの取得に使えます。</p>
-<h3>現在のBAT設定</h3><table><thead><tr><th>項目</th><th>添付ファイルでの設定</th></tr></thead><tbody>
-<tr><td>対象INI</td><td><code>%~dp0test.ini</code>（BATと同じフォルダー）</td></tr>
-<tr><td>対象セクション</td><td><code>\u30BB\u30C3\u30C8</code> （[セット]）</td></tr>
-<tr><td>対象キー</td><td><code>case</code></td></tr>
-<tr><td>置換後の値</td><td><code>99DB</code></td></tr>
-<tr><td>文字コード</td><td><code>utf-8</code></td></tr>
-<tr><td>実行方法</td><td><code>set_test_7777DB.bat</code> を実行</td></tr>
-</tbody></table>
-<div class="notice"><strong>運用時の注意</strong>
-<ul><li>BAT名は以前の <code>set_test_7777DB.bat</code> を維持していますが、実際の更新値はBAT内の <code>NEW_VALUE=99DB</code> です。</li>
-<li>日本語のセクション名は <code>\uXXXX</code> 形式で指定できます。例：<code>\u30BB\u30C3\u30C8</code> は「セット」です。</li>
-<li>バックアップファイルを自動生成しません。必ず本番INIのコピーで事前に試してください。</li>
-<li>以前の2～3引数のBATも利用でき、その場合だけ <code>[設定1]</code> 内の <code>test=</code> を対象にします。</li></ul></div></section><section class="box" id="usage"><h2>実行・運用手順</h2>
-<ol><li><code>set_test_7777DB.bat</code> と <code>set_ini_test.vbs</code> を同じフォルダーに配置します。</li>
-<li>BAT内の <code>INI_FILE</code>、<code>TARGET_SECTION</code>、<code>TARGET_KEY</code>、<code>NEW_VALUE</code> を設定します。UTF-8でない場合は <code>INI_CHARSET</code> も確認します。</li>
-<li>Windows上でBATを起動します。<code>/nopause</code> を付けると終了時の一時停止を省略できます。</li>
-<li><code>Updated: ... value(s).</code>、<code>SUCCESS</code> と表示されれば、書き換えた値と対象INIを確認してください。</li></ol>
-<p class="mini">必要環境：Windows Script Host（cscript.exe）、ADODB.Streamが利用可能であり、INIへの書込権限があること。PowerShellは不要です。実運用前に対象INIのコピーで検証してください。</p>
-<h3>Git上でのHTML閲覧</h3><p><code>index.html</code> をPCにダウンロードしてブラウザで開く方法なら、ネット接続も追加ライブラリも不要です。GitHubのリポジトリ画面ではHTML自体がソース表示になるため、ブラウザ表示用のURLが必要ならGitHub Pagesなどの静的サイト公開機能を使ってください。</p></section><section id="bat" class="box source-section" aria-labelledby="bat-title">
-      <div class="source-top"><div><h2 id="bat-title">BAT：設定値・実行処理</h2>
-      <p>set_test_7777DB.bat ／ 19行 ／ 汎用BAT版</p></div>
-      <div class="actions"><button type="button" class="button" onclick="copySource('code-bat', 'status-bat')">ソースをコピー</button>
-      <a class="download" href="set_test_7777DB.bat" download>実行用ファイル</a><span class="copy-status" id="status-bat" role="status" aria-live="polite"></span></div></div>
-      <div class="code-view" role="region" aria-label="set_test_7777DB.bat のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19</div><pre><code id="code-bat" class="source">@echo off
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>INI updater v4 — ODBC Database更新</title>
+<style>body{font-family:system-ui,"Yu Gothic",sans-serif;line-height:1.8;color:#183146;background:#f3f6f9;margin:0}header{background:#183c58;color:white;padding:28px max(20px,calc((100% - 1100px)/2))}h1{font-size:26px;margin:0}main{max-width:1100px;margin:24px auto;padding:0 20px 40px}section{background:white;padding:22px;margin:20px 0;border:1px solid #d9e3eb;border-radius:8px}h2{font-size:21px;margin-top:0}pre{overflow:auto;white-space:pre;background:#f0f3f6;padding:18px;border-radius:6px;line-height:1.6;font-size:14px}code{font-family:Consolas,monospace}a{color:#006294}nav a{margin-right:20px}.note{background:#fff5df;border-left:4px solid #c59425;padding:12px}button{background:#17678c;color:white;border:0;padding:9px 16px;border-radius:5px;font:inherit;cursor:pointer}.status{margin-left:12px}table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #d9e3eb;padding:8px;text-align:left}small{color:#536878}@media(max-width:600px){h1{font-size:21px}main{padding:0 12px 30px}section{padding:14px}}</style></head>
+<body><header><h1>INI updater v4 — ODBC Database更新</h1><p>2026-10-21 · BAT＋共通VBS · Shift_JIS · PowerShell不使用</p></header>
+<main><nav><a href="#overview">使い方</a><a href="#bat">BAT全文</a><a href="#vbs">VBS全文</a></nav>
+<section id="overview"><h2>有効な2行のDatabase名を、同じ値に変更</h2>
+<p><code>[ODBC接続文字列]</code> 内で、コメントアウトされていない各行の最後の項目が <code>Database=</code> の場合、その値を共通の <code>NEW_VALUE</code> に変更します。2行あれば2行とも処理します。2行限定ではなく、条件に合う有効行すべてが対象です。</p>
+<p>行頭の空白・タブに続く <code>;</code> または <code>#</code> はコメントとして除外します。接続文字列の途中のセミコロンは項目区切りとして扱います。別セクション、ほかの接続項目、元の改行、末尾のセミコロンは維持する処理です。</p>
+<p class="note"><strong>BATとVBSの両方を更新してください。</strong> GitHubやこのページの更新だけでは、職場のローカルファイルには反映されません。バックアップは自動生成しません。最初は本番INIのコピーで試してください。</p>
+<h3>BATの設定</h3><pre><code>set "INI_FILE=%~dp0test.ini"
+set "TARGET_SECTION=ODBC\u63A5\u7D9A\u6587\u5B57\u5217"
+set "TARGET_KEY=Database"
+set "NEW_VALUE=99DB"
+set "INI_CHARSET=shift_jis"</code></pre>
+<p><code>INI_FILE</code> は実際のINIパスに、<code>NEW_VALUE</code> は希望の共通Database名に変更してください。<code>TARGET_SECTION</code> に角括弧は含めず、<code>TARGET_KEY</code> に等号は付けません。BAT名は旧名称を維持していますが、現在の設定値は <strong>99DB</strong> です。</p>
+<p>起動時の表示は <code>INI updater v4 (ODBC Database tail)</code>。2か所とも変更した場合は <code>Updated: 2 value(s).</code>。既に同じ値の行は変更件数に含めません。</p></section>
+<section><h2>2設定の変更例（架空の接続先）</h2><h3>変更前</h3><pre><code>[ODBC接続文字列]
+;接続先A=Driver={SQL Server};Server=EXAMPLE_A;Database=OLD_DB;
+;接続先B=Driver={SQL Server};Server=EXAMPLE_B;Database=OLD_DB;
+接続先A=Driver={SQL Server};Server=EXAMPLE_A;Database=CURRENT_DB;
+接続先B=Driver={SQL Server};Server=EXAMPLE_B;Database=CURRENT_DB;</code></pre>
+<h3>変更後</h3><pre><code>[ODBC接続文字列]
+;接続先A=Driver={SQL Server};Server=EXAMPLE_A;Database=OLD_DB;
+;接続先B=Driver={SQL Server};Server=EXAMPLE_B;Database=OLD_DB;
+接続先A=Driver={SQL Server};Server=EXAMPLE_A;Database=99DB;
+接続先B=Driver={SQL Server};Server=EXAMPLE_B;Database=99DB;</code></pre></section>
+<section><h2>対応範囲と確認事項</h2><p>接続情報が1行で、Databaseが最後の項目である形式が対象です。末尾セミコロンの有無に対応します。接続文字列全体を引用符で囲む形式、複数行形式、Databaseの後に別項目がある形式は対象外です。</p>
+<p>新しいDatabase名には空白・制御文字・引用符・波括弧・セミコロン・#を使えません。Database以外のキーは旧版の処理を維持します。旧BATの2～3引数呼出しでは、互換動作として [設定1] の test= が対象になります。</p>
+<p><strong>WindowsのVBS本体・ADODB.Stream・職場AWS環境での通し試験は未実施です。</strong> 文字コードの往復変換と書き込み結果を検証する処理はありますが、実環境での動作保証ではありません。このスクリプトはSQL Serverへ接続せず、INIファイルだけを編集します。</p></section>
+<section><h2>短いエラー識別子</h2><table><tr><th>識別子</th><th>確認箇所</th></tr><tr><td>E004</td><td>セクション名のUnicodeエスケープ</td></tr><tr><td>E101</td><td>INIのパス</td></tr><tr><td>E102</td><td>文字コード・元バイトの保持</td></tr><tr><td>E201</td><td>指定セクションが見つからない</td></tr><tr><td>E202</td><td>対象となる末尾Databaseが見つからない</td></tr><tr><td>E203</td><td>接続情報の括弧・引用符の不整合</td></tr></table><p>これらの識別子が出た場合は、写真や実際の接続情報を送らず、識別子で切り分けできます。</p></section>
+<section id="bat"><h2>BAT全文</h2><p><a href="set_test_7777DB.bat" download>set_test_7777DB.bat</a></p><button onclick="copyCode('bat-source','bat-status')">BATをコピー</button><span id="bat-status" class="status" aria-live="polite"></span><pre><code id="bat-source">@echo off
 setlocal DisableDelayedExpansion
 
-rem Set the target INI path, section, key, value, and charset below.
+rem Set the real INI path and the desired database name below.
 set "INI_FILE=%~dp0test.ini"
-rem Japanese section name [Setto]. Unicode escapes avoid BAT code-page problems.
-set "TARGET_SECTION=\u30BB\u30C3\u30C8"
-set "TARGET_KEY=case"
+set "TARGET_SECTION=ODBC\u63A5\u7D9A\u6587\u5B57\u5217"
+set "TARGET_KEY=Database"
 set "NEW_VALUE=99DB"
-set "INI_CHARSET=utf-8"
+set "INI_CHARSET=shift_jis"
 
 "%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%" "%TARGET_SECTION%" "%TARGET_KEY%"
 set "RESULT=%ERRORLEVEL%"
 
 echo.
 if "%RESULT%"=="0" (echo SUCCESS) else (echo FAILED - see the error above.)
-rem Use /nopause when calling this BAT from another BAT or a job.
 if /i not "%~1"=="/nopause" pause
 exit /b %RESULT%
-</code></pre></div>
-      <div class="source-bottom">set_test_7777DB.bat ／ スクロールで全体を閲覧できます。右上のボタンからコピーまたは元ファイルの取得ができます。</div>
-    </section><section id="vbs" class="box source-section" aria-labelledby="vbs-title">
-      <div class="source-top"><div><h2 id="vbs-title">VBS：INIの書き換え処理</h2>
-      <p>set_ini_test.vbs ／ 391行 ／ 汎用VBS v3</p></div>
-      <div class="actions"><button type="button" class="button" onclick="copySource('code-vbs', 'status-vbs')">ソースをコピー</button>
-      <a class="download" href="set_ini_test.vbs" download>実行用ファイル</a><span class="copy-status" id="status-vbs" role="status" aria-live="polite"></span></div></div>
-      <div class="code-view" role="region" aria-label="set_ini_test.vbs のソースコード" tabindex="0"><div class="number-gutter" aria-hidden="true">1
-2
-3
-4
-5
-6
-7
-8
-9
-10
-11
-12
-13
-14
-15
-16
-17
-18
-19
-20
-21
-22
-23
-24
-25
-26
-27
-28
-29
-30
-31
-32
-33
-34
-35
-36
-37
-38
-39
-40
-41
-42
-43
-44
-45
-46
-47
-48
-49
-50
-51
-52
-53
-54
-55
-56
-57
-58
-59
-60
-61
-62
-63
-64
-65
-66
-67
-68
-69
-70
-71
-72
-73
-74
-75
-76
-77
-78
-79
-80
-81
-82
-83
-84
-85
-86
-87
-88
-89
-90
-91
-92
-93
-94
-95
-96
-97
-98
-99
-100
-101
-102
-103
-104
-105
-106
-107
-108
-109
-110
-111
-112
-113
-114
-115
-116
-117
-118
-119
-120
-121
-122
-123
-124
-125
-126
-127
-128
-129
-130
-131
-132
-133
-134
-135
-136
-137
-138
-139
-140
-141
-142
-143
-144
-145
-146
-147
-148
-149
-150
-151
-152
-153
-154
-155
-156
-157
-158
-159
-160
-161
-162
-163
-164
-165
-166
-167
-168
-169
-170
-171
-172
-173
-174
-175
-176
-177
-178
-179
-180
-181
-182
-183
-184
-185
-186
-187
-188
-189
-190
-191
-192
-193
-194
-195
-196
-197
-198
-199
-200
-201
-202
-203
-204
-205
-206
-207
-208
-209
-210
-211
-212
-213
-214
-215
-216
-217
-218
-219
-220
-221
-222
-223
-224
-225
-226
-227
-228
-229
-230
-231
-232
-233
-234
-235
-236
-237
-238
-239
-240
-241
-242
-243
-244
-245
-246
-247
-248
-249
-250
-251
-252
-253
-254
-255
-256
-257
-258
-259
-260
-261
-262
-263
-264
-265
-266
-267
-268
-269
-270
-271
-272
-273
-274
-275
-276
-277
-278
-279
-280
-281
-282
-283
-284
-285
-286
-287
-288
-289
-290
-291
-292
-293
-294
-295
-296
-297
-298
-299
-300
-301
-302
-303
-304
-305
-306
-307
-308
-309
-310
-311
-312
-313
-314
-315
-316
-317
-318
-319
-320
-321
-322
-323
-324
-325
-326
-327
-328
-329
-330
-331
-332
-333
-334
-335
-336
-337
-338
-339
-340
-341
-342
-343
-344
-345
-346
-347
-348
-349
-350
-351
-352
-353
-354
-355
-356
-357
-358
-359
-360
-361
-362
-363
-364
-365
-366
-367
-368
-369
-370
-371
-372
-373
-374
-375
-376
-377
-378
-379
-380
-381
-382
-383
-384
-385
-386
-387
-388
-389
-390
-391</div><pre><code id="code-vbs" class="source">Option Explicit
+</code></pre></section>
+<section id="vbs"><h2>共通VBS v4 全文</h2><p><a href="set_ini_test.vbs" download>set_ini_test.vbs</a> — 491行。先に配布したv4と同じ内容です。</p><button onclick="copyCode('vbs-source','vbs-status')">VBSをコピー</button><span id="vbs-status" class="status" aria-live="polite"></span><pre><code id="vbs-source">Option Explicit
 
-' Version 3: a single VBS for all INI sections, keys, and values.
+' Version 4: Database mode updates only the final ODBC Database attribute.
+' Other keys retain the version 3 standalone-token behavior.
 
 ' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" "charset" "section" "key"
 ' charset: utf-8, shift_jis, or unicode (UTF-16 LE with BOM).
@@ -534,7 +66,7 @@ tempPath = ""
 backupPath = ""
 stage = "initialization"
 
-WScript.Echo "INI updater v3"
+WScript.Echo "INI updater v4 (ODBC Database tail)"
 
 On Error Resume Next
 Main
@@ -555,10 +87,10 @@ WScript.Quit 0
 Sub Main()
     Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
     Dim hasBom, targetSection, targetKey, position, ending, line, trimmed, closePos, inSection
-    Dim matched, changed, fileInfo, checkBytes, candidateBackup
+    Dim matched, changed, fileInfo, checkBytes, candidateBackup, foundSection
 
     If WScript.Arguments.Count &lt;&gt; 2 And WScript.Arguments.Count &lt;&gt; 3 And WScript.Arguments.Count &lt;&gt; 5 Then
-        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
+        Fail "E001: Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
     End If
 
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -574,8 +106,8 @@ Sub Main()
         targetSection = ChrW(&amp;H8A2D) &amp; ChrW(&amp;H5B9A) &amp; "1"
         targetKey = "test"
     End If
-    If Len(targetSection) = 0 Then Fail "TARGET_SECTION must not be empty."
-    If InStr(targetSection, "]") &gt; 0 Then Fail "TARGET_SECTION must not contain ]."
+    If Len(targetSection) = 0 Then Fail "E002: TARGET_SECTION must not be empty."
+    If InStr(targetSection, "]") &gt; 0 Then Fail "E002: TARGET_SECTION must not contain ]."
     ValidateKey targetKey
     Select Case charset
         Case "utf8": charset = "utf-8"
@@ -586,10 +118,15 @@ Sub Main()
     End Select
 
     ValidateValue newValue
-    If Not fso.FileExists(path) Then Fail "INI file not found: " &amp; path
+    If StrComp(targetKey, "Database", vbTextCompare) = 0 Then
+        If InStr(newValue, "{") &gt; 0 Or InStr(newValue, "}") &gt; 0 Or InStr(newValue, "'") &gt; 0 Then
+            Fail "E003: Database name must not contain braces or quotes."
+        End If
+    End If
+    If Not fso.FileExists(path) Then Fail "E101: INI file not found: " &amp; path
     Set fileInfo = fso.GetFile(path)
-    If fileInfo.Size = 0 Then Fail "The INI file is empty."
-    If (fileInfo.Attributes And 1) &lt;&gt; 0 Then Fail "The INI file is read-only."
+    If fileInfo.Size = 0 Then Fail "E104: The INI file is empty."
+    If (fileInfo.Attributes And 1) &lt;&gt; 0 Then Fail "E103: The INI file is read-only."
 
     stage = "reading the INI"
     raw = ReadBytes(path)
@@ -597,16 +134,17 @@ Sub Main()
     hasBom = CheckBom(raw, charset)
     stage = "decoding the INI"
     original = DecodeBytes(raw, charset)
-    If InStr(original, ChrW(0)) &gt; 0 Then Fail "NUL character found; check INI_CHARSET."
+    If InStr(original, ChrW(0)) &gt; 0 Then Fail "E102: NUL character found; check INI_CHARSET."
 
     ' Refuse a charset mismatch or a conversion that would alter other bytes.
     stage = "checking the original encoding"
     roundTrip = EncodeText(original, charset, hasBom)
     If Not SameBytes(raw, roundTrip) Then
-        Fail "The file cannot be preserved with INI_CHARSET=" &amp; charset &amp; ". Check its encoding."
+        Fail "E102: The file cannot be preserved with INI_CHARSET=" &amp; charset &amp; ". Check its encoding."
     End If
 
     stage = "parsing the INI"
+    foundSection = False
     inSection = False
     matched = 0
     changed = 0
@@ -624,6 +162,7 @@ Sub Main()
                     closePos = InStr(2, trimmed, "]")
                     If closePos &gt; 0 Then
                         inSection = (Trim(Mid(trimmed, 2, closePos - 2)) = targetSection)
+                        If inSection Then foundSection = True
                     End If
                 ElseIf inSection Then
                     line = RewriteLine(line, targetKey, newValue, matched, changed)
@@ -633,7 +172,8 @@ Sub Main()
         updated = updated &amp; line &amp; ending
     Loop
 
-    If matched = 0 Then Fail "No active " &amp; targetKey &amp; "= token found in [" &amp; targetSection &amp; "]. No file was changed."
+    If Not foundSection Then Fail "E201: Target section not found. No file was changed."
+    If matched = 0 Then Fail "E202: No matching active value. In Database mode, Database must be the final attribute. No file was changed."
     If changed = 0 Then
         WScript.Echo "No change needed. " &amp; matched &amp; " value(s) already match."
         Exit Sub
@@ -642,28 +182,28 @@ Sub Main()
     stage = "preparing the updated file"
     outputBytes = EncodeText(updated, charset, hasBom)
     If DecodeBytes(outputBytes, charset) &lt;&gt; updated Then
-        Fail "The new value cannot be represented in INI_CHARSET=" &amp; charset &amp; "."
+        Fail "E301: The new value cannot be represented in INI_CHARSET=" &amp; charset &amp; "."
     End If
     tempPath = fso.BuildPath(fso.GetParentFolderName(path), "ini_edit_" &amp; fso.GetTempName)
     WriteBytes tempPath, outputBytes, adSaveCreateNotExist
     checkBytes = ReadBytes(tempPath)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Temporary file verification failed."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "E304: Temporary file verification failed."
 
     'stage = "creating a backup"
     'candidateBackup = NextBackupPath(path)
     'fso.CopyFile path, candidateBackup, False
     'backupPath = candidateBackup
     'checkBytes = ReadBytes(backupPath)
-    'If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+    'If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
     checkBytes = ReadBytes(path)
-    If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+    If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
 
     ' Keep the existing pathname and file permissions by writing to that file.
     ' No backup is created (the backup steps above are disabled).
     stage = "writing the INI"
     WriteBytes path, outputBytes, adSaveCreateOverWrite
     checkBytes = ReadBytes(path)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "E303: Updated file verification failed."
     fso.DeleteFile tempPath, True
     tempPath = ""
 
@@ -681,12 +221,12 @@ Function DecodeUnicodeEscapes(ByVal value)
     result = ""
     Do While i &lt;= Len(value)
         If Mid(value, i, 2) = "\u" Then
-            If i + 5 &gt; Len(value) Then Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+            If i + 5 &gt; Len(value) Then Fail "E004: Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
             digits = Mid(value, i + 2, 4)
             For j = 1 To 4
                 ch = UCase(Mid(digits, j, 1))
                 If InStr(1, "0123456789ABCDEF", ch, vbBinaryCompare) = 0 Then
-                    Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+                    Fail "E004: Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
                 End If
             Next
             result = result &amp; ChrW(CLng("&amp;H" &amp; digits))
@@ -701,7 +241,7 @@ End Function
 
 Sub ValidateKey(ByVal keyName)
     Dim i, ch, charCode
-    If Len(keyName) = 0 Then Fail "TARGET_KEY must not be empty."
+    If Len(keyName) = 0 Then Fail "E002: TARGET_KEY must not be empty."
     For i = 1 To Len(keyName)
         ch = Mid(keyName, i, 1)
         charCode = AscW(ch)
@@ -723,6 +263,10 @@ End Sub
 
 Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched, ByRef changed)
     Dim i, n, ch, boundary, eqPos, valueStart, valueEnd, quoteEnd, copied, result
+    If StrComp(targetKey, "Database", vbTextCompare) = 0 Then
+        RewriteLine = RewriteDatabaseTail(line, newValue, matched, changed)
+        Exit Function
+    End If
     i = 1
     n = Len(line)
     copied = 1
@@ -780,6 +324,93 @@ Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched,
         End If
     Loop
     RewriteLine = result &amp; Mid(line, copied)
+End Function
+
+' Update only the final non-empty Database attribute in an active ODBC line.
+' Do not treat semicolons inside braced or quoted values as separators.
+Function RewriteDatabaseTail(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
+    Dim i, n, ch, closing, atValueStart, partStart, lastStart, lastEnd
+    Dim eqPos, valueStart, valueEnd, keyName, trimmed, wrapper
+    RewriteDatabaseTail = line
+    trimmed = Trim(Replace(line, vbTab, " "))
+    If Len(trimmed) = 0 Then Exit Function
+    If Left(trimmed, 1) = ";" Or Left(trimmed, 1) = "#" Then Exit Function
+
+    n = Len(line)
+    i = 1
+    partStart = 1
+    lastStart = 0
+    lastEnd = 0
+    closing = ""
+    atValueStart = False
+    Do While i &lt;= n
+        ch = Mid(line, i, 1)
+        If closing &lt;&gt; "" Then
+            If ch = closing Then
+                If Mid(line, i + 1, 1) = closing Then
+                    i = i + 1
+                Else
+                    closing = ""
+                End If
+            End If
+        ElseIf ch = ";" Then
+            If Len(Trim(Replace(Mid(line, partStart, i - partStart), vbTab, " "))) &gt; 0 Then
+                lastStart = partStart
+                lastEnd = i
+            End If
+            partStart = i + 1
+            atValueStart = False
+        ElseIf ch = "=" Then
+            atValueStart = True
+        ElseIf atValueStart And (ch = "{" Or ch = """" Or ch = "'") Then
+            If ch = "{" Then
+                closing = "}"
+            Else
+                closing = ch
+            End If
+            atValueStart = False
+        ElseIf Not IsBlank(ch) Then
+            atValueStart = False
+        End If
+        i = i + 1
+    Loop
+    If closing &lt;&gt; "" Then Fail "E203: Unclosed brace or quote in a connection line. No file was changed."
+
+    If Len(Trim(Replace(Mid(line, partStart), vbTab, " "))) &gt; 0 Then
+        lastStart = partStart
+        lastEnd = n + 1
+    End If
+    If lastStart = 0 Then Exit Function
+    eqPos = InStr(lastStart, line, "=")
+    If eqPos = 0 Or eqPos &gt;= lastEnd Then Exit Function
+    keyName = Trim(Replace(Mid(line, lastStart, eqPos - lastStart), vbTab, " "))
+    If StrComp(keyName, "Database", vbTextCompare) &lt;&gt; 0 Then Exit Function
+
+    valueStart = eqPos + 1
+    Do While valueStart &lt; lastEnd
+        If Not IsBlank(Mid(line, valueStart, 1)) Then Exit Do
+        valueStart = valueStart + 1
+    Loop
+    valueEnd = lastEnd
+    Do While valueEnd &gt; valueStart
+        If Not IsBlank(Mid(line, valueEnd - 1, 1)) Then Exit Do
+        valueEnd = valueEnd - 1
+    Loop
+    If valueStart &lt; valueEnd Then
+        ch = Mid(line, valueStart, 1)
+        wrapper = ""
+        If ch = "{" Then wrapper = "}"
+        If ch = """" Or ch = "'" Then wrapper = ch
+        If wrapper &lt;&gt; "" Then
+            If Mid(line, valueEnd - 1, 1) &lt;&gt; wrapper Then Fail "E203: Invalid Database value wrapper. No file was changed."
+            valueStart = valueStart + 1
+            valueEnd = valueEnd - 1
+        End If
+    End If
+
+    matched = matched + 1
+    If Mid(line, valueStart, valueEnd - valueStart) &lt;&gt; newValue Then changed = changed + 1
+    RewriteDatabaseTail = Left(line, valueStart - 1) &amp; newValue &amp; Mid(line, valueEnd)
 End Function
 
 Sub SplitNextLine(ByRef text, ByRef position, ByRef line, ByRef ending)
@@ -906,36 +537,5 @@ End Function
 Sub Fail(ByVal message)
     Err.Raise vbObjectError + 1000, "set_ini_test.vbs", message
 End Sub
-</code></pre></div>
-      <div class="source-bottom">set_ini_test.vbs ／ スクロールで全体を閲覧できます。右上のボタンからコピーまたは元ファイルの取得ができます。</div>
-    </section></main><footer>このHTMLは閲覧・コピー用です。INIを更新する際は、BATとVBSをWindows上で実行してください。</footer>
-<script>
-(function(){
-  'use strict';
-  window.copySource = async function(id, statusId){
-    var node = document.getElementById(id);
-    var status = document.getElementById(statusId);
-    if(!node || !status) return;
-    var text = node.textContent;
-    try {
-      if(navigator.clipboard && window.isSecureContext){
-        await navigator.clipboard.writeText(text);
-      } else {
-        var field = document.createElement('textarea');
-        field.value = text;
-        field.setAttribute('readonly', '');
-        field.style.position = 'fixed';
-        field.style.top = '-9999px';
-        document.body.appendChild(field);
-        field.select();
-        var ok = document.execCommand('copy');
-        document.body.removeChild(field);
-        if (!ok) throw new Error('copy failed');
-      }
-      status.textContent = 'コピーしました';
-    } catch(err){
-      status.textContent = 'コピーできませんでした。コード部分を選択してコピーしてください。';
-    }
-  };
-})();
-</script></body></html>
+</code></pre></section><p><small>実際の職場のINI・サーバー名・認証情報は含めていません。</small></p></main>
+<script>async function copyCode(id,statusId){const s=document.getElementById(statusId),text=document.getElementById(id).textContent;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text)}else{const t=document.createElement('textarea');t.value=text;document.body.appendChild(t);t.select();const ok=document.execCommand('copy');t.remove();if(!ok)throw Error('copy')}s.textContent='コピーしました'}catch(e){s.textContent='コードを選択してコピーしてください'}}</script></body></html>

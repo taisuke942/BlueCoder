@@ -1,6 +1,7 @@
 Option Explicit
 
-' Version 3: a single VBS for all INI sections, keys, and values.
+' Version 4: Database mode updates only the final ODBC Database attribute.
+' Other keys retain the version 3 standalone-token behavior.
 
 ' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" "charset" "section" "key"
 ' charset: utf-8, shift_jis, or unicode (UTF-16 LE with BOM).
@@ -17,7 +18,7 @@ tempPath = ""
 backupPath = ""
 stage = "initialization"
 
-WScript.Echo "INI updater v3"
+WScript.Echo "INI updater v4 (ODBC Database tail)"
 
 On Error Resume Next
 Main
@@ -38,10 +39,10 @@ WScript.Quit 0
 Sub Main()
     Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
     Dim hasBom, targetSection, targetKey, position, ending, line, trimmed, closePos, inSection
-    Dim matched, changed, fileInfo, checkBytes, candidateBackup
+    Dim matched, changed, fileInfo, checkBytes, candidateBackup, foundSection
 
     If WScript.Arguments.Count <> 2 And WScript.Arguments.Count <> 3 And WScript.Arguments.Count <> 5 Then
-        Fail "Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
+        Fail "E001: Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
     End If
 
     Set fso = CreateObject("Scripting.FileSystemObject")
@@ -57,8 +58,8 @@ Sub Main()
         targetSection = ChrW(&H8A2D) & ChrW(&H5B9A) & "1"
         targetKey = "test"
     End If
-    If Len(targetSection) = 0 Then Fail "TARGET_SECTION must not be empty."
-    If InStr(targetSection, "]") > 0 Then Fail "TARGET_SECTION must not contain ]."
+    If Len(targetSection) = 0 Then Fail "E002: TARGET_SECTION must not be empty."
+    If InStr(targetSection, "]") > 0 Then Fail "E002: TARGET_SECTION must not contain ]."
     ValidateKey targetKey
     Select Case charset
         Case "utf8": charset = "utf-8"
@@ -69,10 +70,15 @@ Sub Main()
     End Select
 
     ValidateValue newValue
-    If Not fso.FileExists(path) Then Fail "INI file not found: " & path
+    If StrComp(targetKey, "Database", vbTextCompare) = 0 Then
+        If InStr(newValue, "{") > 0 Or InStr(newValue, "}") > 0 Or InStr(newValue, "'") > 0 Then
+            Fail "E003: Database name must not contain braces or quotes."
+        End If
+    End If
+    If Not fso.FileExists(path) Then Fail "E101: INI file not found: " & path
     Set fileInfo = fso.GetFile(path)
-    If fileInfo.Size = 0 Then Fail "The INI file is empty."
-    If (fileInfo.Attributes And 1) <> 0 Then Fail "The INI file is read-only."
+    If fileInfo.Size = 0 Then Fail "E104: The INI file is empty."
+    If (fileInfo.Attributes And 1) <> 0 Then Fail "E103: The INI file is read-only."
 
     stage = "reading the INI"
     raw = ReadBytes(path)
@@ -80,16 +86,17 @@ Sub Main()
     hasBom = CheckBom(raw, charset)
     stage = "decoding the INI"
     original = DecodeBytes(raw, charset)
-    If InStr(original, ChrW(0)) > 0 Then Fail "NUL character found; check INI_CHARSET."
+    If InStr(original, ChrW(0)) > 0 Then Fail "E102: NUL character found; check INI_CHARSET."
 
     ' Refuse a charset mismatch or a conversion that would alter other bytes.
     stage = "checking the original encoding"
     roundTrip = EncodeText(original, charset, hasBom)
     If Not SameBytes(raw, roundTrip) Then
-        Fail "The file cannot be preserved with INI_CHARSET=" & charset & ". Check its encoding."
+        Fail "E102: The file cannot be preserved with INI_CHARSET=" & charset & ". Check its encoding."
     End If
 
     stage = "parsing the INI"
+    foundSection = False
     inSection = False
     matched = 0
     changed = 0
@@ -107,6 +114,7 @@ Sub Main()
                     closePos = InStr(2, trimmed, "]")
                     If closePos > 0 Then
                         inSection = (Trim(Mid(trimmed, 2, closePos - 2)) = targetSection)
+                        If inSection Then foundSection = True
                     End If
                 ElseIf inSection Then
                     line = RewriteLine(line, targetKey, newValue, matched, changed)
@@ -116,7 +124,8 @@ Sub Main()
         updated = updated & line & ending
     Loop
 
-    If matched = 0 Then Fail "No active " & targetKey & "= token found in [" & targetSection & "]. No file was changed."
+    If Not foundSection Then Fail "E201: Target section not found. No file was changed."
+    If matched = 0 Then Fail "E202: No matching active value. In Database mode, Database must be the final attribute. No file was changed."
     If changed = 0 Then
         WScript.Echo "No change needed. " & matched & " value(s) already match."
         Exit Sub
@@ -125,28 +134,28 @@ Sub Main()
     stage = "preparing the updated file"
     outputBytes = EncodeText(updated, charset, hasBom)
     If DecodeBytes(outputBytes, charset) <> updated Then
-        Fail "The new value cannot be represented in INI_CHARSET=" & charset & "."
+        Fail "E301: The new value cannot be represented in INI_CHARSET=" & charset & "."
     End If
     tempPath = fso.BuildPath(fso.GetParentFolderName(path), "ini_edit_" & fso.GetTempName)
     WriteBytes tempPath, outputBytes, adSaveCreateNotExist
     checkBytes = ReadBytes(tempPath)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Temporary file verification failed."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "E304: Temporary file verification failed."
 
     'stage = "creating a backup"
     'candidateBackup = NextBackupPath(path)
     'fso.CopyFile path, candidateBackup, False
     'backupPath = candidateBackup
     'checkBytes = ReadBytes(backupPath)
-    'If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+    'If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
     checkBytes = ReadBytes(path)
-    If Not SameBytes(raw, checkBytes) Then Fail "The INI changed while this script was running. Update cancelled."
+    If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
 
     ' Keep the existing pathname and file permissions by writing to that file.
     ' No backup is created (the backup steps above are disabled).
     stage = "writing the INI"
     WriteBytes path, outputBytes, adSaveCreateOverWrite
     checkBytes = ReadBytes(path)
-    If Not SameBytes(outputBytes, checkBytes) Then Fail "Updated file verification failed."
+    If Not SameBytes(outputBytes, checkBytes) Then Fail "E303: Updated file verification failed."
     fso.DeleteFile tempPath, True
     tempPath = ""
 
@@ -164,12 +173,12 @@ Function DecodeUnicodeEscapes(ByVal value)
     result = ""
     Do While i <= Len(value)
         If Mid(value, i, 2) = "\u" Then
-            If i + 5 > Len(value) Then Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+            If i + 5 > Len(value) Then Fail "E004: Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
             digits = Mid(value, i + 2, 4)
             For j = 1 To 4
                 ch = UCase(Mid(digits, j, 1))
                 If InStr(1, "0123456789ABCDEF", ch, vbBinaryCompare) = 0 Then
-                    Fail "Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
+                    Fail "E004: Invalid Unicode escape in TARGET_SECTION. Use \uXXXX."
                 End If
             Next
             result = result & ChrW(CLng("&H" & digits))
@@ -184,7 +193,7 @@ End Function
 
 Sub ValidateKey(ByVal keyName)
     Dim i, ch, charCode
-    If Len(keyName) = 0 Then Fail "TARGET_KEY must not be empty."
+    If Len(keyName) = 0 Then Fail "E002: TARGET_KEY must not be empty."
     For i = 1 To Len(keyName)
         ch = Mid(keyName, i, 1)
         charCode = AscW(ch)
@@ -206,6 +215,10 @@ End Sub
 
 Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched, ByRef changed)
     Dim i, n, ch, boundary, eqPos, valueStart, valueEnd, quoteEnd, copied, result
+    If StrComp(targetKey, "Database", vbTextCompare) = 0 Then
+        RewriteLine = RewriteDatabaseTail(line, newValue, matched, changed)
+        Exit Function
+    End If
     i = 1
     n = Len(line)
     copied = 1
@@ -263,6 +276,93 @@ Function RewriteLine(ByVal line, ByVal targetKey, ByVal newValue, ByRef matched,
         End If
     Loop
     RewriteLine = result & Mid(line, copied)
+End Function
+
+' Update only the final non-empty Database attribute in an active ODBC line.
+' Do not treat semicolons inside braced or quoted values as separators.
+Function RewriteDatabaseTail(ByVal line, ByVal newValue, ByRef matched, ByRef changed)
+    Dim i, n, ch, closing, atValueStart, partStart, lastStart, lastEnd
+    Dim eqPos, valueStart, valueEnd, keyName, trimmed, wrapper
+    RewriteDatabaseTail = line
+    trimmed = Trim(Replace(line, vbTab, " "))
+    If Len(trimmed) = 0 Then Exit Function
+    If Left(trimmed, 1) = ";" Or Left(trimmed, 1) = "#" Then Exit Function
+
+    n = Len(line)
+    i = 1
+    partStart = 1
+    lastStart = 0
+    lastEnd = 0
+    closing = ""
+    atValueStart = False
+    Do While i <= n
+        ch = Mid(line, i, 1)
+        If closing <> "" Then
+            If ch = closing Then
+                If Mid(line, i + 1, 1) = closing Then
+                    i = i + 1
+                Else
+                    closing = ""
+                End If
+            End If
+        ElseIf ch = ";" Then
+            If Len(Trim(Replace(Mid(line, partStart, i - partStart), vbTab, " "))) > 0 Then
+                lastStart = partStart
+                lastEnd = i
+            End If
+            partStart = i + 1
+            atValueStart = False
+        ElseIf ch = "=" Then
+            atValueStart = True
+        ElseIf atValueStart And (ch = "{" Or ch = """" Or ch = "'") Then
+            If ch = "{" Then
+                closing = "}"
+            Else
+                closing = ch
+            End If
+            atValueStart = False
+        ElseIf Not IsBlank(ch) Then
+            atValueStart = False
+        End If
+        i = i + 1
+    Loop
+    If closing <> "" Then Fail "E203: Unclosed brace or quote in a connection line. No file was changed."
+
+    If Len(Trim(Replace(Mid(line, partStart), vbTab, " "))) > 0 Then
+        lastStart = partStart
+        lastEnd = n + 1
+    End If
+    If lastStart = 0 Then Exit Function
+    eqPos = InStr(lastStart, line, "=")
+    If eqPos = 0 Or eqPos >= lastEnd Then Exit Function
+    keyName = Trim(Replace(Mid(line, lastStart, eqPos - lastStart), vbTab, " "))
+    If StrComp(keyName, "Database", vbTextCompare) <> 0 Then Exit Function
+
+    valueStart = eqPos + 1
+    Do While valueStart < lastEnd
+        If Not IsBlank(Mid(line, valueStart, 1)) Then Exit Do
+        valueStart = valueStart + 1
+    Loop
+    valueEnd = lastEnd
+    Do While valueEnd > valueStart
+        If Not IsBlank(Mid(line, valueEnd - 1, 1)) Then Exit Do
+        valueEnd = valueEnd - 1
+    Loop
+    If valueStart < valueEnd Then
+        ch = Mid(line, valueStart, 1)
+        wrapper = ""
+        If ch = "{" Then wrapper = "}"
+        If ch = """" Or ch = "'" Then wrapper = ch
+        If wrapper <> "" Then
+            If Mid(line, valueEnd - 1, 1) <> wrapper Then Fail "E203: Invalid Database value wrapper. No file was changed."
+            valueStart = valueStart + 1
+            valueEnd = valueEnd - 1
+        End If
+    End If
+
+    matched = matched + 1
+    If Mid(line, valueStart, valueEnd - valueStart) <> newValue Then changed = changed + 1
+    RewriteDatabaseTail = Left(line, valueStart - 1) & newValue & Mid(line, valueEnd)
 End Function
 
 Sub SplitNextLine(ByRef text, ByRef position, ByRef line, ByRef ending)
