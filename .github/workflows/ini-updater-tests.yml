@@ -1,0 +1,27 @@
+name: INI updater Windows tests
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'ini_git_html_package/**'
+      - '.github/workflows/ini-updater-tests.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows-tests:
+    runs-on: windows-2022
+    timeout-minutes: 6
+    defaults:
+      run:
+        shell: cmd
+    steps:
+      - name: Read the exact public commit (no stored credentials)
+        run: |
+          git init .
+          git fetch --no-tags --depth=1 https://github.com/taisuke942/BlueCoder.git %GITHUB_SHA%
+          if errorlevel 1 exit /b 1
+          git -c core.autocrlf=false checkout --detach FETCH_HEAD
+          if errorlevel 1 exit /b 1
+      - name: Execute real BAT and VBScript against temporary fake INIs
+        run: python ini_git_html_package/tests/test_windows.py

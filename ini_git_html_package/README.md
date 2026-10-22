@@ -1,60 +1,36 @@
-# INI updater v4 — ODBC Database更新
+# INI updater v5 — 全角Database名を直接書けるBAT雛形
 
-2026-10-21 更新。先に配布したv4の共通VBSを反映しています。
+2026-10-22。BATと共通VBSを両方とも差し替えてください。職場で重ねた部分修正・診断用MsgBox・WScript.Quitの追加は不要です。
 
-## 今回の設定
+## ファイル
 
-```bat
-set "INI_FILE=%~dp0test.ini"
-set "TARGET_SECTION=ODBC\u63A5\u7D9A\u6587\u5B57\u5217"
-set "TARGET_KEY=Database"
-set "NEW_VALUE=99DB"
-set "INI_CHARSET=shift_jis"
-```
+- `set_A2.bat`: `NEW_VALUE=Ａ２テストＤＢ`
+- `set_B7.bat`: `NEW_VALUE=Ｂ７テストＤＢ`
+- `set_test_7777DB.bat`: 既存名を維持。設定値は従来どおり99DB。
+- `set_ini_test.vbs`: 全BAT共通のv5。
+- `index.html`: 使い方とソース閲覧ページ。
+- `.txt`: UTF-8の閲覧用ソース。実行用BATの代用ではありません。
 
-`INI_FILE` は実際のINIパス、`NEW_VALUE` は希望の共通Database名に変更してください。
-`TARGET_SECTION` は [ODBC接続文字列] を指定します（角括弧は引数に含めません）。
-ファイル名は従来の `set_test_7777DB.bat` のままですが、実際の値は `NEW_VALUE` に従います。
+実行用BATはShift_JIS（CP932）・CRLFで保存済み。編集後も同じ形式で保存します。VBSはASCII・CRLF。BATとVBSを同じフォルダーに置き、INI_FILEを実際のパスに変更してください。
 
-## 2行の接続情報
+## パターンの増やし方
 
-指定セクション内で、コメントアウトされていない各行の最後の項目が `Database=` なら、その値だけを共通の `NEW_VALUE` に変更します。2行ある場合は2行とも処理します。
-2行限定ではなく、同じ条件の有効行が3行あれば3行とも対象です。
-`;` または `#` で始まるコメント行（先頭の空白・タブも許容）、別セクション、Database以外の項目は保持する処理です。
-2か所とも書き換われば `Updated: 2 value(s).` と表示します。既に同じ値の箇所は変更件数に含めません。
+BATをコピーして `set "NEW_VALUE=Ｂ７テストＤＢ"` のように名前をそのまま変更します。値のUnicodeエスケープ化は不要です。INIの場所などが同じなら、パターン別に変えるのはNEW_VALUEだけです。
 
-## 閲覧と実行
+## 修正内容
 
-- [使い方・BAT・VBS全文](index.html)
-- [BATソース](set_test_7777DB.html)
-- [VBSソース](set_ini_test.html)
+v5は `--env` 指定で、プロセス環境変数を名前で受け取ります。INI_FILE・NEW_VALUE・INI_CHARSET・TARGET_SECTION・TARGET_KEYが対象です。５番目の位置引数への依存を解消し、必須値の空チェックは維持しました。旧BATの2・3・5引数形式との互換性も残しています。
 
-詳細ページの旧URLは、一覧ページ内の最新ソースへ移動します。コードはHTML内に直接収録しているので、閲覧に外部ライブラリやソース取得処理は不要です。
+今回の対象は `[ODBC接続文字列]` 内のコメントアウトされていない２行で、各行最後のDatabaseの値です。両方を同じNEW_VALUEにします。EXPECTED_MATCHES=2が既定で、２件そろわなければ書き込みません。意図的に件数を変える場合だけ変更してください（0は制限なし）。
 
-実行用のBATと `set_ini_test.vbs` は同じフォルダーに置きます。PowerShellは使用しません。
-開始時の表示は `INI updater v4 (ODBC Database tail)` です。
-GitHubの更新だけでは職場のローカルファイルは更新されません。BAT・VBSの両方を反映してください。
+`set_A2.bat /check` は読取・解析だけを行い、書き込みません。`/nopause` を付けると停止待ちを省略します。２件とも変更すると `Matched: 2 value(s).` と `Updated: 2 value(s).` を表示します。
 
-## 対応範囲と注意
+## 注意
 
-接続情報が1行で、Databaseが最後の項目である形式向けです。末尾セミコロンの有無に対応します。
-接続文字列全体を引用符で囲む形式、複数行形式、Databaseより後に別項目がある形式は対象外です。
-新しいDatabase名に空白・制御文字・引用符・波括弧・セミコロン・#は使用できません。
-Database以外のキーは従来処理を維持します。2～3引数で呼ぶ旧BATは [設定1] の test= を対象とする互換動作になります。
+バックアップは自動生成しません。最初はINIのコピーで確認してください。検証用の一時ファイルは処理後に削除しますが、書き込み途中の障害時に元へ戻す保証はありません。
 
-**バックアップは自動生成しません。最初はINIのコピーで試してください。**
-Shift_JISは `INI_CHARSET=shift_jis` で読み書きします。文字コード往復変換と更新直前・書き込み後のバイト検証を維持しています。
-WindowsのVBS本体・ADODB.Stream・職場AWS環境での通し試験は未実施です。
-スクリプトはサーバーへ接続せず、SQLも実行しません。
-職場のINI・実際の接続先・認証情報はこのフォルダーに含めていません。
+１設定１行・Databaseが最後の属性という形式が対象です。接続文字列全体の引用符囲み、複数行、Database以降の別属性・行末コメントは対象外です。更新値の空白・制御文字・引用符・波括弧・セミコロン・#・BATで展開される%を使う例は対象外です。
 
-## エラー識別子
+短いエラー識別子: E011=INI_FILE、E012=NEW_VALUE、E013=TARGET_SECTION、E014=TARGET_KEY、E102=文字コード、E201/E202=対象なし、E204=件数不一致。
 
-E004: セクション名のUnicodeエスケープ
-E101: INIパス
-E102: 文字コード・元バイト保持
-E201: 指定セクションなし
-E202: 対象となる末尾Databaseなし
-E203: 接続情報の括弧・引用符の不整合
-
-識別子が表示された場合は、実際の接続情報を送らずに切り分けできます。
+`tests/test_windows.py` はWindowsで実際のBATとVBSを実行する15件の試験です。架空のINIを一時フォルダーへ作り、全角名・2行更新・コメント保持・チェックモード・失敗時の未更新を確認します。最新結果はGitHub Actionsの `INI updater Windows tests` を参照してください。職場AWS環境の実行確認とは別です。

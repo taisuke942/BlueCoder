@@ -1,9 +1,10 @@
 Option Explicit
 
-' Version 4: Database mode updates only the final ODBC Database attribute.
+' Version 5: read named process-environment settings; preserve Unicode names.
 ' Other keys retain the version 3 standalone-token behavior.
 
-' Usage: cscript //nologo set_ini_test.vbs "file.ini" "new-value" "charset" "section" "key"
+' Usage: cscript //nologo set_ini_test.vbs --env | --check
+' Legacy 2, 3, and 5 positional arguments are also supported.
 ' charset: utf-8, shift_jis, or unicode (UTF-16 LE with BOM).
 ' This source is ASCII-only. Section names can contain Unicode escapes: \uXXXX.
 ' Only standalone key= tokens in active lines of the requested section are edited.
@@ -13,12 +14,11 @@ Const adTypeText = 2
 Const adSaveCreateNotExist = 1
 Const adSaveCreateOverWrite = 2
 
-Dim fso, tempPath, backupPath, stage, errorNumber, errorText
+Dim fso, tempPath, stage, errorNumber, errorText
 tempPath = ""
-backupPath = ""
 stage = "initialization"
 
-WScript.Echo "INI updater v4 (ODBC Database tail)"
+WScript.Echo "INI updater v5 (environment / ODBC Database tail)"
 
 On Error Resume Next
 Main
@@ -28,7 +28,6 @@ On Error GoTo 0
 
 If errorNumber <> 0 Then
     WScript.Echo "ERROR during " & stage & ": " & errorText & " (0x" & Hex(errorNumber) & ")"
-    If backupPath <> "" Then WScript.Echo "Backup: " & backupPath
     On Error Resume Next
     If tempPath <> "" Then fso.DeleteFile tempPath, True
     On Error GoTo 0
@@ -39,28 +38,55 @@ WScript.Quit 0
 Sub Main()
     Dim path, newValue, charset, raw, original, updated, roundTrip, outputBytes
     Dim hasBom, targetSection, targetKey, position, ending, line, trimmed, closePos, inSection
-    Dim matched, changed, fileInfo, checkBytes, candidateBackup, foundSection
+    Dim matched, changed, fileInfo, checkBytes, foundSection
+    Dim shell, env, mode, dryRun, expected, countText, expectedText, i
 
-    If WScript.Arguments.Count <> 2 And WScript.Arguments.Count <> 3 And WScript.Arguments.Count <> 5 Then
-        Fail "E001: Usage: cscript //nologo set_ini_test.vbs ""file.ini"" ""new-value"" [charset [section key]]"
-    End If
-
+    stage = "reading settings"
     Set fso = CreateObject("Scripting.FileSystemObject")
-    path = fso.GetAbsolutePathName(WScript.Arguments(0))
-    newValue = WScript.Arguments(1)
-    charset = "utf-8"
-    If WScript.Arguments.Count >= 3 Then charset = LCase(Trim(WScript.Arguments(2)))
-    If WScript.Arguments.Count = 5 Then
-        targetSection = DecodeUnicodeEscapes(Trim(WScript.Arguments(3)))
-        targetKey = Trim(WScript.Arguments(4))
+    dryRun = False
+    expected = 0
+    mode = ""
+    If WScript.Arguments.Count = 1 Then mode = LCase(WScript.Arguments(0))
+    If mode = "--env" Or mode = "--check" Then
+        Set shell = CreateObject("WScript.Shell")
+        Set env = shell.Environment("PROCESS")
+        path = env.Item("INI_FILE")
+        newValue = env.Item("NEW_VALUE")
+        charset = LCase(Trim(env.Item("INI_CHARSET")))
+        targetSection = DecodeUnicodeEscapes(Trim(env.Item("TARGET_SECTION")))
+        targetKey = Trim(env.Item("TARGET_KEY"))
+        expectedText = Trim(env.Item("EXPECTED_MATCHES"))
+        dryRun = (mode = "--check")
+        If charset = "" Then charset = "shift_jis"
+        If expectedText <> "" Then
+            If Len(expectedText) > 6 Then Fail "E015: EXPECTED_MATCHES is too large."
+            For i = 1 To Len(expectedText)
+                If InStr("0123456789", Mid(expectedText, i, 1)) = 0 Then Fail "E015: EXPECTED_MATCHES must be a nonnegative integer."
+            Next
+            expected = CLng(expectedText)
+        End If
     Else
-        ' Backward compatibility: existing BAT files with two or three arguments.
-        targetSection = ChrW(&H8A2D) & ChrW(&H5B9A) & "1"
-        targetKey = "test"
+        If WScript.Arguments.Count <> 2 And WScript.Arguments.Count <> 3 And WScript.Arguments.Count <> 5 Then
+            Fail "E001: Run the v5 BAT, or use --env / --check."
+        End If
+        path = WScript.Arguments(0)
+        newValue = WScript.Arguments(1)
+        charset = "utf-8"
+        If WScript.Arguments.Count >= 3 Then charset = LCase(Trim(WScript.Arguments(2)))
+        If WScript.Arguments.Count = 5 Then
+            targetSection = DecodeUnicodeEscapes(Trim(WScript.Arguments(3)))
+            targetKey = Trim(WScript.Arguments(4))
+        Else
+            targetSection = ChrW(&H8A2D) & ChrW(&H5B9A) & "1"
+            targetKey = "test"
+        End If
     End If
-    If Len(targetSection) = 0 Then Fail "E002: TARGET_SECTION must not be empty."
-    If InStr(targetSection, "]") > 0 Then Fail "E002: TARGET_SECTION must not contain ]."
+    If Len(path) = 0 Then Fail "E011: INI_FILE is empty. Run the v5 BAT."
+    If Len(newValue) = 0 Then Fail "E012: NEW_VALUE is empty."
+    If Len(targetSection) = 0 Then Fail "E013: TARGET_SECTION is empty."
+    If InStr(targetSection, "[") > 0 Or InStr(targetSection, "]") > 0 Then Fail "E013: Do not include brackets in TARGET_SECTION."
     ValidateKey targetKey
+    path = fso.GetAbsolutePathName(path)
     Select Case charset
         Case "utf8": charset = "utf-8"
         Case "sjis", "cp932", "shift-jis": charset = "shift_jis"
@@ -126,6 +152,15 @@ Sub Main()
 
     If Not foundSection Then Fail "E201: Target section not found. No file was changed."
     If matched = 0 Then Fail "E202: No matching active value. In Database mode, Database must be the final attribute. No file was changed."
+    If expected > 0 Then
+        If matched <> expected Then Fail "E204: Expected " & expected & " matching values, found " & matched & ". No file was changed."
+    End If
+    WScript.Echo "Matched: " & matched & " value(s)."
+    If dryRun Then
+        WScript.Echo "Would update: " & changed & " value(s)."
+        WScript.Echo "CHECK ONLY: no files written."
+        Exit Sub
+    End If
     If changed = 0 Then
         WScript.Echo "No change needed. " & matched & " value(s) already match."
         Exit Sub
@@ -141,17 +176,11 @@ Sub Main()
     checkBytes = ReadBytes(tempPath)
     If Not SameBytes(outputBytes, checkBytes) Then Fail "E304: Temporary file verification failed."
 
-    'stage = "creating a backup"
-    'candidateBackup = NextBackupPath(path)
-    'fso.CopyFile path, candidateBackup, False
-    'backupPath = candidateBackup
-    'checkBytes = ReadBytes(backupPath)
-    'If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
     checkBytes = ReadBytes(path)
     If Not SameBytes(raw, checkBytes) Then Fail "E302: The INI changed while this script was running. Update cancelled."
 
     ' Keep the existing pathname and file permissions by writing to that file.
-    ' No backup is created (the backup steps above are disabled).
+    ' No backup is created. The temporary file contains new data, not a backup.
     stage = "writing the INI"
     WriteBytes path, outputBytes, adSaveCreateOverWrite
     checkBytes = ReadBytes(path)
@@ -161,7 +190,6 @@ Sub Main()
 
     WScript.Echo "Updated: " & changed & " value(s)."
     WScript.Echo "File: " & path
-    'WScript.Echo "Backup: " & backupPath
 End Sub
 
 
@@ -193,23 +221,23 @@ End Function
 
 Sub ValidateKey(ByVal keyName)
     Dim i, ch, charCode
-    If Len(keyName) = 0 Then Fail "E002: TARGET_KEY must not be empty."
+    If Len(keyName) = 0 Then Fail "E014: TARGET_KEY is empty. Set it to Database in the BAT."
     For i = 1 To Len(keyName)
         ch = Mid(keyName, i, 1)
         charCode = AscW(ch)
         If (charCode >= 0 And charCode <= 32) Or ch = "=" Or ch = ";" Or ch = "#" Or ch = """" Then
-            Fail "TARGET_KEY must not contain spaces, =, ;, #, or double quotes."
+            Fail "E014: TARGET_KEY must not contain spaces, =, ;, #, or quotes."
         End If
     Next
 End Sub
 
 Sub ValidateValue(ByVal value)
     Dim i, ch
-    If Len(value) = 0 Then Fail "The new value must not be empty."
+    If Len(value) = 0 Then Fail "E012: NEW_VALUE must not be empty."
     For i = 1 To Len(value)
         ch = Mid(value, i, 1)
-        If AscW(ch) >= 0 And AscW(ch) <= 32 Then Fail "The new value must not contain spaces or control characters."
-        If ch = ";" Or ch = "#" Or ch = """" Then Fail "The new value must not contain semicolons, #, or double quotes."
+        If AscW(ch) >= 0 And AscW(ch) <= 32 Then Fail "E012: NEW_VALUE must not contain spaces or control characters."
+        If ch = ";" Or ch = "#" Or ch = """" Then Fail "E012: NEW_VALUE must not contain semicolons, #, or double quotes."
     Next
 End Sub
 
@@ -467,23 +495,6 @@ Function SameBytes(ByRef first, ByRef second)
         If AscB(MidB(first, i, 1)) <> AscB(MidB(second, i, 1)) Then Exit Function
     Next
     SameBytes = True
-End Function
-
-Function NextBackupPath(ByVal path)
-    Dim stamp, candidate, counter, t
-    t = Now
-    stamp = Year(t) & Pad2(Month(t)) & Pad2(Day(t)) & "_" & Pad2(Hour(t)) & Pad2(Minute(t)) & Pad2(Second(t))
-    candidate = path & ".bak_" & stamp
-    counter = 1
-    Do While fso.FileExists(candidate)
-        candidate = path & ".bak_" & stamp & "_" & counter
-        counter = counter + 1
-    Loop
-    NextBackupPath = candidate
-End Function
-
-Function Pad2(ByVal value)
-    Pad2 = Right("0" & CStr(value), 2)
 End Function
 
 Sub Fail(ByVal message)

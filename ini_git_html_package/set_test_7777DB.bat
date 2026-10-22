@@ -1,17 +1,41 @@
 @echo off
-setlocal DisableDelayedExpansion
+setlocal EnableExtensions DisableDelayedExpansion
+set "_OLD_CP="
+for /f "tokens=2 delims=:" %%G in ('chcp') do set "_OLD_CP=%%G"
+chcp 932 >nul
+if errorlevel 1 goto :codepage_error
 
-rem Set the real INI path and the desired database name below.
+rem Save this BAT as Shift_JIS (CP932), CRLF. Do not save it as UTF-8.
+rem Edit INI_FILE and NEW_VALUE. Copy this BAT for other database names.
 set "INI_FILE=%~dp0test.ini"
 set "TARGET_SECTION=ODBC\u63A5\u7D9A\u6587\u5B57\u5217"
 set "TARGET_KEY=Database"
 set "NEW_VALUE=99DB"
 set "INI_CHARSET=shift_jis"
+set "EXPECTED_MATCHES=2"
 
-"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" "%INI_FILE%" "%NEW_VALUE%" "%INI_CHARSET%" "%TARGET_SECTION%" "%TARGET_KEY%"
+set "_INI_MODE=--env"
+if /i "%~1"=="/check" set "_INI_MODE=--check"
+if not exist "%~dp0set_ini_test.vbs" goto :missing_vbs
+"%SystemRoot%\System32\cscript.exe" //nologo "%~dp0set_ini_test.vbs" %_INI_MODE%
 set "RESULT=%ERRORLEVEL%"
+goto :finish
 
+:missing_vbs
+echo ERROR: set_ini_test.vbs must be beside this BAT.
+set "RESULT=1"
+goto :finish
+
+:codepage_error
+echo ERROR: Cannot select code page 932. No INI was changed.
+set "RESULT=1"
+
+:finish
 echo.
 if "%RESULT%"=="0" (echo SUCCESS) else (echo FAILED - see the error above.)
-if /i not "%~1"=="/nopause" pause
+if /i "%~1"=="/nopause" goto :return
+if /i "%~2"=="/nopause" goto :return
+pause
+:return
+if defined _OLD_CP chcp %_OLD_CP% >nul
 exit /b %RESULT%
