@@ -294,7 +294,7 @@ Private Function IsValidV84Row(ByVal line As String) As Boolean
     ' HULFT V84 fixed-width: DATE starts at byte 122 (0-based),
     ' START TIME at 134, END TIME at 144, STATUS at 194.
     ' The prefix uses ASCII, so byte and VBA character offsets agree.
-    If Len(line) &lt; 211 Then Exit Function
+    If Len(line) &lt; 213 Then Exit Function
     If Mid$(line, 137, 1) &lt;&gt; &quot;:&quot; Then Exit Function
     If Mid$(line, 140, 1) &lt;&gt; &quot;:&quot; Then Exit Function
     If Mid$(line, 147, 1) &lt;&gt; &quot;:&quot; Then Exit Function
