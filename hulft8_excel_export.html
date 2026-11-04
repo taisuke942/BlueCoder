@@ -22,7 +22,7 @@ table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1p
 <ol>
 <li>前回の取込VBAで作成したExcelブック（「配信管理」「集信管理」シート）を開き、必要な設定値を修正します。</li>
 <li>Excelで <strong>Alt + F11</strong> → ［挿入］→［標準モジュール］を選択し、下の「VBA全文をコピー」で取得したコードを貼り付けます。</li>
-<li><strong>Alt + F8</strong> → <code>HULFT_ExportCardsForImport</code> を実行し、空の出力用フォルダを選びます。</li>
+<li><strong>Alt + F8</strong> → <code>HULFT_ExportCardsForImport</code> を実行します。Excelに<code>[MASKED]</code>が含まれる場合は、暗号キーの補完用に元の<code>utligen</code>出力TXTを選択します。その後、空の出力先フォルダを選びます。</li>
 <li><code>hulft_snd.txt</code> と <code>hulft_rcv.txt</code> が作成されます。テキストエディタで内容を確認します。</li>
 <li>移行先のWindows版HULFT8のテスト環境で、別の下記BATを同じフォルダに置き、実行します。<code>utliupdt -f</code> を使い、同じIDの上書きはしません。</li>
 <li>HULFTの管理画面または再エクスポートで、件数・設定値・ログを必ず照合してください。</li>
