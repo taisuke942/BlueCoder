@@ -24,6 +24,8 @@ Private Const RCV_REQUIRED As String = _
 Public Sub HULFT_ExportCardsForImport()
     Dim sndSheet As Worksheet, rcvSheet As Worksheet
     Dim sndLines As Collection, rcvLines As Collection
+    Dim sndSecrets As Object, rcvSecrets As Object
+    Dim sourceFile As String
     Dim sndCount As Long, rcvCount As Long
     Dim folder As String, sndPath As String, rcvPath As String
     Dim collisions As String, outText As String
@@ -39,14 +41,32 @@ Public Sub HULFT_ExportCardsForImport()
         Exit Sub
     End If
 
+    ' The previous import VBA deliberately masked PASSWORD values.
+    ' When needed, read each original utligen TXT *locally* and restore
+    ' PASSWORD in memory only. Never put secrets back into worksheet cells.
+    If Not sndSheet Is Nothing Then
+        If HasMaskedPasswords(sndSheet) Then
+            sourceFile = PickOriginalText("配信管理")
+            If Len(sourceFile) = 0 Then Exit Sub
+            Set sndSecrets = ReadOriginalPasswords(sourceFile, "SNDFILE")
+        End If
+    End If
+    If Not rcvSheet Is Nothing Then
+        If HasMaskedPasswords(rcvSheet) Then
+            sourceFile = PickOriginalText("集信管理")
+            If Len(sourceFile) = 0 Then Exit Sub
+            Set rcvSecrets = ReadOriginalPasswords(sourceFile, "RCVFILE")
+        End If
+    End If
+
     ' Validate all data before asking for an output location or writing files.
     If Not sndSheet Is Nothing Then
         Set sndLines = CompileHulftCards(sndSheet, "SNDFILE", _
-                                          SND_COLUMNS, SND_REQUIRED, sndCount)
+                                   SND_COLUMNS, SND_REQUIRED, sndSecrets, sndCount)
     End If
     If Not rcvSheet Is Nothing Then
         Set rcvLines = CompileHulftCards(rcvSheet, "RCVFILE", _
-                                          RCV_COLUMNS, RCV_REQUIRED, rcvCount)
+                                   RCV_COLUMNS, RCV_REQUIRED, rcvSecrets, rcvCount)
     End If
 
     folder = ChooseExportFolder()
@@ -101,7 +121,7 @@ End Function
 Private Function CompileHulftCards( _
     ByVal ws As Worksheet, ByVal cardType As String, _
     ByVal allowedList As String, ByVal requiredList As String, _
-    ByRef cardCount As Long) As Collection
+    ByVal secretMap As Object, ByRef cardCount As Long) As Collection
 
     Dim lastCol As Long, lastRow As Long
     Dim headers() As String, c As Long, r As Long
@@ -177,16 +197,6 @@ Private Function CompileHulftCards( _
 
             If Len(Trim$(value)) > 0 Then hasAnyValue = True
 
-            If k = "PASSWORD" Then
-                If UCase$(Trim$(value)) = "[MASKED]" Or _
-                   UCase$(Trim$(value)) = "%ERROR" Then
-                    Err.Raise vbObjectError + 9237, , _
-                        ws.Name & "!" & ws.Cells(r, c).Address(False, False) & _
-                        " の暗号キーは復元できません。" & vbCrLf & _
-                        "実際の暗号キーを設定するか、元の定義カードを参照してください。"
-                End If
-            End If
-
             rowValues.Add k, value
         Next c
 
@@ -210,6 +220,24 @@ Private Function CompileHulftCards( _
                 ws.Name & "シートに重複FILEIDがあります: " & id
         End If
         seenIDs.Add id, True
+
+        If rowValues.Exists("PASSWORD") Then
+            value = CStr(rowValues("PASSWORD"))
+            If UCase$(Trim$(value)) = "[MASKED]" Then
+                If secretMap Is Nothing Then
+                    Err.Raise vbObjectError + 9237, , _
+                        ws.Name & "シートのFILEID=" & id & _
+                        " の元の暗号キーがありません。"
+                End If
+                If Not secretMap.Exists(id) Then
+                    Err.Raise vbObjectError + 9237, , _
+                        ws.Name & "シートのFILEID=" & id & _
+                        " に対応する暗号キーが元のTXTにありません。" & _
+                        vbCrLf & "出力元の定義カードを確認してください。"
+                End If
+                rowValues("PASSWORD") = CStr(secretMap(id))
+            End If
+        End If
 
         For Each tag In Split(requiredList, " ")
             k = CStr(tag)
@@ -246,6 +274,137 @@ NextDataRow:
     End If
 
     Set CompileHulftCards = lines
+End Function
+
+
+Private Function HasMaskedPasswords(ByVal ws As Worksheet) As Boolean
+    Dim lastCol As Long, lastRow As Long, c As Long, r As Long
+    Dim v As Variant
+
+    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
+    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+
+    For c = 1 To lastCol
+        v = ws.Cells(1, c).Value2
+        If Not IsError(v) Then
+            If UCase$(Trim$(CStr(v))) = "PASSWORD" Then
+                For r = 2 To lastRow
+                    v = ws.Cells(r, c).Value2
+                    If Not IsError(v) Then
+                        If UCase$(Trim$(CStr(v))) = "[MASKED]" Then
+                            HasMaskedPasswords = True
+                            Exit Function
+                        End If
+                    End If
+                Next r
+                Exit Function
+            End If
+        End If
+    Next c
+End Function
+
+Private Function PickOriginalText(ByVal sheetName As String) As String
+    Dim picked As Variant
+
+    MsgBox sheetName & "のPASSWORD欄に[MASKED]があります。" & vbCrLf & _
+           "元のutligen出力TXTを指定してください。" & vbCrLf & _
+           "暗号キーはExcelには書き戻さず、一時的にメモリ上で補完します。", _
+           vbInformation, "暗号キーの補完"
+
+    picked = Application.GetOpenFilename( _
+        "HULFT texts (*.txt;*.prm;*.dat),*.txt;*.prm;*.dat,All files (*.*),*.*", _
+        1, "元の " & sheetName & " utligenテキストを選択", , False)
+    If VarType(picked) <> vbBoolean Then PickOriginalText = CStr(picked)
+End Function
+
+Private Function ReadOriginalPasswords(ByVal filePath As String, _
+                                       ByVal cardType As String) As Object
+    Dim secrets As Object, stm As Object
+    Dim line As String, key As String, value As String
+    Dim currentID As String, currentType As String
+    Dim pwd As String, hasPassword As Boolean, eq As Long
+
+    Set secrets = CreateObject("Scripting.Dictionary")
+    secrets.CompareMode = vbTextCompare
+    Set stm = OpenOriginalText(filePath)
+
+    Do Until stm.EOS
+        line = Trim$(stm.ReadText(-2))
+        If Left$(line, 1) = "#" Or Left$(line, 1) = ";" Then GoTo NextSecretLine
+        If UCase$(line) = "END" Then
+            If currentType = cardType And Len(currentID) > 0 And _
+                hasPassword Then
+                secrets(currentID) = pwd
+            End If
+            currentID = ""
+            currentType = ""
+            pwd = ""
+            hasPassword = False
+            GoTo NextSecretLine
+        End If
+
+        eq = InStr(1, line, "=", vbBinaryCompare)
+        If eq < 2 Then GoTo NextSecretLine
+
+        key = UCase$(Trim$(Left$(line, eq - 1)))
+        value = Trim$(Mid$(line, eq + 1))
+
+        If key = "SNDFILE" Or key = "RCVFILE" Then
+            If currentType = cardType And Len(currentID) > 0 And _
+                hasPassword Then
+                secrets(currentID) = pwd
+            End If
+            currentType = key
+            currentID = value
+            hasPassword = False
+            pwd = ""
+        ElseIf key = "PASSWORD" And currentType = cardType Then
+            pwd = value
+            hasPassword = True
+        End If
+
+NextSecretLine:
+    Loop
+
+    If currentType = cardType And Len(currentID) > 0 And hasPassword Then
+        secrets(currentID) = pwd
+    End If
+    stm.Close
+    Set ReadOriginalPasswords = secrets
+End Function
+
+Private Function OpenOriginalText(ByVal filePath As String) As Object
+    Dim raw As Object, stm As Object
+    Dim bytes As Variant, first As Long, length As Long
+    Dim charset As String
+
+    charset = "shift_jis"
+    Set raw = CreateObject("ADODB.Stream")
+    raw.Type = 1
+    raw.Open
+    raw.LoadFromFile filePath
+    length = CLng(raw.Size)
+    If length >= 2 Then
+        bytes = raw.Read(IIf(length >= 3, 3, 2))
+        first = LBound(bytes)
+        If UBound(bytes) >= first + 2 Then
+            If bytes(first) = 239 And bytes(first + 1) = 187 _
+                                  And bytes(first + 2) = 191 Then
+                charset = "utf-8"
+            End If
+        End If
+        If bytes(first) = 255 And bytes(first + 1) = 254 Then
+            charset = "unicode"
+        End If
+    End If
+    raw.Close
+
+    Set stm = CreateObject("ADODB.Stream")
+    stm.Type = 2
+    stm.Charset = charset
+    stm.Open
+    stm.LoadFromFile filePath
+    Set OpenOriginalText = stm
 End Function
 
 Private Function NewKeywordDictionary(ByVal words As String) As Object
