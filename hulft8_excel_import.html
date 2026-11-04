@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HULFT8 配信・集信管理情報／履歴 Excel VBA取込</title>
+<style>
+:root{font-family:system-ui,"Yu Gothic",Meiryo,sans-serif;color:#1e293b;background:#f1f5f9}
+body{max-width:1100px;margin:0 auto;padding:28px 18px 60px}
+h1{font-size:1.7rem;line-height:1.5}
+h2{margin-top:32px}p,li{line-height:1.8}
+header,section{background:white;border:1px solid #d9e2ee;border-radius:12px;padding:22px;margin:14px 0}
+table{border-collapse:collapse;width:100%}th,td{border-bottom:1px solid #e2e8f0;text-align:left;padding:10px}
+th{background:#edf2f7}button{padding:12px 22px;background:#164e83;color:white;border:0;border-radius:8px;font-size:1rem;cursor:pointer}
+button:hover{background:#0b385f}pre{padding:18px;overflow:auto;white-space:pre;tab-size:4;background:#111827;color:#e5e7eb;border-radius:9px;font-size:13px;line-height:1.48}
+code{font-family:Consolas,"Courier New",monospace}
+.small{color:#475569;font-size:.93rem} .warning{border-left:4px solid #c78c10;padding-left:14px}
+</style></head><body>
+<header><h1>HULFT8 配信・集信管理情報／履歴をExcelへ一括取込</h1>
+<p class="small">対象：HULFT8 Ver.08.05.02a（Windows）／Excel VBA。2026年11月4日作成。</p>
+<p>4種類のTXTを選択し、Excelの別シートに表形式で読み込むマクロです。<strong>HULFT Managerは不要</strong>。HULFTの設定自体は変更しません。</p>
+<table><thead><tr><th>出力元コマンド</th><th>選択するファイル例</th><th>Excelシート</th></tr></thead><tbody>
+<tr><td>utligen -i snd</td><td>hulft_snd.txt</td><td>配信管理</td></tr>
+<tr><td>utligen -i rcv</td><td>hulft_rcv.txt</td><td>集信管理</td></tr>
+<tr><td>utllist -s -v84</td><td>hulft_snd_history.txt</td><td>配信履歴</td></tr>
+<tr><td>utllist -r -v84</td><td>hulft_rcv_history.txt</td><td>集信履歴</td></tr>
+</tbody></table></header>
+<section><h2>使い方</h2><ol>
+<li>Windows版Excelで新規ブックを作成し、<strong>Alt + F11</strong> を押してVBAエディタを開きます。</li>
+<li>［挿入］→［標準モジュール］を選び、下の「VBAコードをコピー」でコピーした全文を貼り付けます。</li>
+<li>Excelに戻って <strong>Alt + F8</strong> を押し、<code>HULFT_4Files_Import</code> を実行します。</li>
+<li>配信管理→集信管理→配信履歴→集信履歴の順に、対応するTXTファイルを選択します。必要のないファイルは［キャンセル］でスキップできます。</li>
+<li>Excelの各シートに一覧ができます。マクロを保存する場合は<strong>Excelマクロ有効ブック（.xlsm）</strong>で保存します。</li>
+</ol></section>
+<section><h2>VBAコード</h2>
+<button id="copy" type="button" onclick="copyVba()">VBAコードをコピー</button>
+<span id="feedback" aria-live="polite" class="small"></span>
+<pre><code id="vbacode">Option Explicit
+
+' HULFT8 for Windows / Excel VBA
+' Source: utligen cards (snd/rcv), utllist -s/-r -v84 histories.
+' Paste ALL lines into one standard module (Alt+F11 &gt; Insert &gt; Module).
+' Execute: HULFT_4Files_Import
+' Windows Excel only. No references required (late binding).
+
+Private Const DEFAULT_TEXT_CHARSET As String = &quot;shift_jis&quot;
+Private Const MASK_SECRET_VALUES As Boolean = True
+Private Const HISTORY_BATCH_SIZE As Long = 2000
+Private Const EXCEL_MAX_ROW As Long = 1048576
+
+Public Sub HULFT_4Files_Import()
+    Dim oldScreen As Boolean, oldEvents As Boolean
+    Dim report As String
+
+    oldScreen = Application.ScreenUpdating
+    oldEvents = Application.EnableEvents
+
+    On Error GoTo FatalError
+    Application.ScreenUpdating = False
+    Application.EnableEvents = False
+
+    report = &quot;HULFT import results&quot; &amp; vbCrLf &amp; String$(24, &quot;-&quot;) &amp; vbCrLf
+    report = report &amp; ImportWithDialog(&quot;配信管理&quot;, &quot;SNDFILE&quot;, False) &amp; vbCrLf
+    report = report &amp; ImportWithDialog(&quot;集信管理&quot;, &quot;RCVFILE&quot;, False) &amp; vbCrLf
+    report = report &amp; ImportWithDialog(&quot;配信履歴&quot;, &quot;&quot;, True) &amp; vbCrLf
+    report = report &amp; ImportWithDialog(&quot;集信履歴&quot;, &quot;&quot;, True)
+
+    Application.ScreenUpdating = oldScreen
+    Application.EnableEvents = oldEvents
+
+    MsgBox report &amp; vbCrLf &amp; vbCrLf &amp; _
+           &quot;Save the workbook as .xlsm to keep this macro.&quot;, _
+           vbInformation, &quot;HULFT text import&quot;
+    Exit Sub
+
+FatalError:
+    Application.ScreenUpdating = oldScreen
+    Application.EnableEvents = oldEvents
+    MsgBox &quot;Import stopped: &quot; &amp; Err.Description, vbExclamation
+End Sub
+
+Private Function ImportWithDialog(ByVal sheetName As String, _
+                                  ByVal cardTag As String, _
+                                  ByVal isHistory As Boolean) As String
+    Dim picked As Variant
+    Dim count As Long, invalidLines As Long
+    Dim suffix As String
+
+    On Error GoTo ImportError
+
+    picked = Application.GetOpenFilename( _
+        &quot;Text files (*.txt;*.prm;*.dat),*.txt;*.prm;*.dat,All files (*.*),*.*&quot;, _
+        1, &quot;Choose HULFT file for: &quot; &amp; sheetName, , False)
+
+    If VarType(picked) = vbBoolean Then
+        ImportWithDialog = sheetName &amp; &quot;: skipped&quot;
+        Exit Function
+    End If
+
+    If isHistory Then
+        count = ImportHistoryV84(CStr(picked), sheetName, invalidLines)
+        If invalidLines &gt; 0 Then
+            suffix = &quot; (ignored &quot; &amp; CStr(invalidLines) &amp; &quot; non-V84 lines)&quot;
+        End If
+    Else
+        count = ImportDefinitionCards(CStr(picked), sheetName, cardTag)
+    End If
+
+    ImportWithDialog = sheetName &amp; &quot;: &quot; &amp; CStr(count) &amp; &quot; rows&quot; &amp; suffix
+    Exit Function
+
+ImportError:
+    ImportWithDialog = sheetName &amp; &quot;: ERROR - &quot; &amp; Err.Description
+End Function
+
+Private Function ImportDefinitionCards(ByVal filePath As String, _
+                                       ByVal sheetName As String, _
+                                       ByVal expectedTag As String) As Long
+    Dim stm As Object, colIndex As Object, card As Object
+    Dim records As Collection
+    Dim line As String, key As String, value As String
+    Dim eq As Long, rowNum As Long, colNum As Long
+    Dim keys As Variant, matrix() As Variant
+    Dim ws As Worksheet
+
+    Set records = New Collection
+    Set colIndex = CreateObject(&quot;Scripting.Dictionary&quot;)
+    colIndex.CompareMode = vbTextCompare
+    colIndex.Add &quot;FILEID&quot;, True
+
+    Set stm = OpenHulftText(filePath)
+
+    Do Until stm.EOS
+        line = Trim$(stm.ReadText(-2))
+        line = StripBom(line)
+        If Len(line) = 0 Then GoTo NextCardLine
+        If Left$(line, 1) = &quot;#&quot; Or Left$(line, 1) = &quot;;&quot; Then GoTo NextCardLine
+
+        If UCase$(line) = &quot;END&quot; Then
+            If Not card Is Nothing Then
+                If Len(CStr(card(&quot;FILEID&quot;))) &gt; 0 Then records.Add card
+                Set card = Nothing
+            End If
+            GoTo NextCardLine
+        End If
+
+        eq = InStr(1, line, &quot;=&quot;, vbBinaryCompare)
+        If eq &lt;= 1 Then GoTo NextCardLine
+
+        key = UCase$(Trim$(Left$(line, eq - 1)))
+        value = Trim$(Mid$(line, eq + 1))
+
+        If key = &quot;SNDFILE&quot; Or key = &quot;RCVFILE&quot; Then
+            ' Accept a new card even if a previous card had no END.
+            If Not card Is Nothing Then
+                If Len(CStr(card(&quot;FILEID&quot;))) &gt; 0 Then records.Add card
+            End If
+            Set card = Nothing
+
+            If key = expectedTag And Len(value) &gt; 0 Then
+                Set card = CreateObject(&quot;Scripting.Dictionary&quot;)
+                card.CompareMode = vbTextCompare
+                card.Add &quot;FILEID&quot;, value
+            End If
+        ElseIf Not card Is Nothing Then
+            If MASK_SECRET_VALUES And IsSecretParameter(key) Then
+                value = &quot;[MASKED]&quot;
+            End If
+
+            If card.Exists(key) Then
+                card(key) = value
+            Else
+                card.Add key, value
+            End If
+
+            If Not colIndex.Exists(key) Then colIndex.Add key, True
+        End If
+
+NextCardLine:
+    Loop
+
+    If Not card Is Nothing Then
+        If Len(CStr(card(&quot;FILEID&quot;))) &gt; 0 Then records.Add card
+    End If
+    stm.Close
+
+    If records.Count = 0 Then
+        Err.Raise vbObjectError + 8101, , _
+            &quot;No valid &quot; &amp; expectedTag &amp; &quot; cards found. Select utligen output.&quot;
+    End If
+    If records.Count &gt;= EXCEL_MAX_ROW Then
+        Err.Raise vbObjectError + 8102, , &quot;Too many rows for one Excel sheet.&quot;
+    End If
+
+    keys = colIndex.Keys
+    ReDim matrix(1 To records.Count + 1, 1 To colIndex.Count)
+
+    For colNum = 0 To UBound(keys)
+        matrix(1, colNum + 1) = CStr(keys(colNum))
+    Next colNum
+
+    For rowNum = 1 To records.Count
+        Set card = records(rowNum)
+        For colNum = 0 To UBound(keys)
+            key = CStr(keys(colNum))
+            If card.Exists(key) Then
+                matrix(rowNum + 1, colNum + 1) = _
+                    SafeCellString(CStr(card(key)))
+            Else
+                matrix(rowNum + 1, colNum + 1) = &quot;&quot;
+            End If
+        Next colNum
+    Next rowNum
+
+    Set ws = PrepareOutputSheet(sheetName)
+    With ws.Cells(1, 1).Resize(records.Count + 1, colIndex.Count)
+        .NumberFormat = &quot;@&quot;
+        .Value2 = matrix
+    End With
+    StyleOutputSheet ws, records.Count + 1, colIndex.Count
+
+    ImportDefinitionCards = records.Count
+End Function
+
+Private Function ImportHistoryV84(ByVal filePath As String, _
+                                  ByVal sheetName As String, _
+                                  ByRef invalidLines As Long) As Long
+    Dim stm As Object, ws As Worksheet
+    Dim line As String
+    Dim batch() As Variant
+    Dim found As Long, buffered As Long
+    Dim firstRow As Long
+
+    ReDim batch(1 To HISTORY_BATCH_SIZE, 1 To 10)
+    Set stm = OpenHulftText(filePath)
+
+    Do Until stm.EOS
+        line = StripBom(stm.ReadText(-2))
+
+        If IsValidV84Row(line) Then
+            If ws Is Nothing Then
+                Set ws = PrepareOutputSheet(sheetName)
+                ws.Range(&quot;A:J&quot;).NumberFormat = &quot;@&quot;
+                WriteHistoryHeaders ws
+            End If
+
+            If found &gt;= EXCEL_MAX_ROW - 1 Then
+                Err.Raise vbObjectError + 8103, , _
+                    &quot;History exceeds the Excel row limit.&quot;
+            End If
+
+            found = found + 1
+            buffered = buffered + 1
+
+            ' The positions below are 1-based character offsets.
+            ' For HULFT V84, all fields before FILENAME are ASCII.
+            batch(buffered, 1) = SafeCellString(Trim$(Mid$(line, 1, 50)))
+            batch(buffered, 2) = SafeCellString(Trim$(Mid$(line, 53, 68)))
+            batch(buffered, 3) = Trim$(Mid$(line, 123, 10))
+            batch(buffered, 4) = Trim$(Mid$(line, 135, 8))
+            batch(buffered, 5) = Trim$(Mid$(line, 145, 8))
+            batch(buffered, 6) = Trim$(Mid$(line, 155, 18))
+            batch(buffered, 7) = Trim$(Mid$(line, 175, 18))
+            batch(buffered, 8) = Trim$(Mid$(line, 195, 12))
+            batch(buffered, 9) = Trim$(Mid$(line, 209, 3))
+            batch(buffered, 10) = SafeCellString(Trim$(Mid$(line, 214)))
+
+            If buffered = HISTORY_BATCH_SIZE Then
+                firstRow = 2 + found - buffered
+                WriteHistoryBatch ws, batch, buffered, firstRow
+                buffered = 0
+                Erase batch
+                ReDim batch(1 To HISTORY_BATCH_SIZE, 1 To 10)
+            End If
+        ElseIf Len(Trim$(line)) &gt; 0 Then
+            invalidLines = invalidLines + 1
+        End If
+    Loop
+
+    stm.Close
+
+    If found = 0 Then
+        Err.Raise vbObjectError + 8104, , _
+            &quot;No HULFT -v84 history rows found. Export with utllist -s/-r -v84.&quot;
+    End If
+
+    If buffered &gt; 0 Then
+        firstRow = 2 + found - buffered
+        WriteHistoryBatch ws, batch, buffered, firstRow
+    End If
+
+    StyleOutputSheet ws, found + 1, 10
+    ImportHistoryV84 = found
+End Function
+
+Private Function IsValidV84Row(ByVal line As String) As Boolean
+    ' HULFT V84 fixed-width: DATE starts at byte 122 (0-based),
+    ' START TIME at 134, END TIME at 144, STATUS at 194.
+    ' The prefix uses ASCII, so byte and VBA character offsets agree.
+    If Len(line) &lt; 211 Then Exit Function
+    If Mid$(line, 137, 1) &lt;&gt; &quot;:&quot; Then Exit Function
+    If Mid$(line, 140, 1) &lt;&gt; &quot;:&quot; Then Exit Function
+    If Mid$(line, 147, 1) &lt;&gt; &quot;:&quot; Then Exit Function
+    If Mid$(line, 150, 1) &lt;&gt; &quot;:&quot; Then Exit Function
+    If Mid$(line, 201, 1) &lt;&gt; &quot;-&quot; Then Exit Function
+    If Trim$(Mid$(line, 1, 50)) = &quot;&quot; Then Exit Function
+    IsValidV84Row = True
+End Function
+
+Private Sub WriteHistoryHeaders(ByVal ws As Worksheet)
+    Dim hdr(1 To 1, 1 To 10) As Variant
+    hdr(1, 1) = &quot;FILEID&quot;
+    hdr(1, 2) = &quot;HOST&quot;
+    hdr(1, 3) = &quot;開始日&quot;
+    hdr(1, 4) = &quot;開始時刻&quot;
+    hdr(1, 5) = &quot;終了時刻&quot;
+    hdr(1, 6) = &quot;レコード件数&quot;
+    hdr(1, 7) = &quot;データサイズ&quot;
+    hdr(1, 8) = &quot;ステータス&quot;
+    hdr(1, 9) = &quot;接続形態&quot;
+    hdr(1, 10) = &quot;ファイル名&quot;
+    ws.Range(&quot;A1&quot;).Resize(1, 10).Value2 = hdr
+End Sub
+
+Private Sub WriteHistoryBatch(ByVal ws As Worksheet, _
+                              ByRef batch() As Variant, _
+                              ByVal usedRows As Long, _
+                              ByVal firstRow As Long)
+    Dim small() As Variant, r As Long, c As Long
+
+    If usedRows = HISTORY_BATCH_SIZE Then
+        ws.Cells(firstRow, 1).Resize(usedRows, 10).Value2 = batch
+    Else
+        ReDim small(1 To usedRows, 1 To 10)
+        For r = 1 To usedRows
+            For c = 1 To 10
+                small(r, c) = batch(r, c)
+            Next c
+        Next r
+        ws.Cells(firstRow, 1).Resize(usedRows, 10).Value2 = small
+    End If
+End Sub
+
+Private Function OpenHulftText(ByVal filePath As String) As Object
+    Dim raw As Object, result As Object
+    Dim bytes As Variant, encoding As String
+    Dim lo As Long, size As Long
+
+    encoding = DEFAULT_TEXT_CHARSET
+
+    Set raw = CreateObject(&quot;ADODB.Stream&quot;)
+    raw.Type = 1 ' adTypeBinary
+    raw.Open
+    raw.LoadFromFile filePath
+    size = CLng(raw.Size)
+
+    If size &gt;= 2 Then
+        bytes = raw.Read(IIf(size &gt;= 3, 3, 2))
+        lo = LBound(bytes)
+
+        If UBound(bytes) - lo &gt;= 2 Then
+            If bytes(lo) = 239 And bytes(lo + 1) = 187 _
+                             And bytes(lo + 2) = 191 Then
+                encoding = &quot;utf-8&quot;
+            End If
+        End If
+
+        If bytes(lo) = 255 And bytes(lo + 1) = 254 Then
+            encoding = &quot;unicode&quot;
+        ElseIf bytes(lo) = 254 And bytes(lo + 1) = 255 Then
+            encoding = &quot;unicodeFFFE&quot;
+        End If
+    End If
+    raw.Close
+
+    Set result = CreateObject(&quot;ADODB.Stream&quot;)
+    result.Type = 2 ' adTypeText
+    result.Charset = encoding
+    result.Open
+    result.LoadFromFile filePath
+    Set OpenHulftText = result
+End Function
+
+Private Function PrepareOutputSheet(ByVal sheetName As String) As Worksheet
+    Dim ws As Worksheet
+    On Error Resume Next
+    Set ws = ThisWorkbook.Worksheets(sheetName)
+    On Error GoTo 0
+
+    If ws Is Nothing Then
+        Set ws = ThisWorkbook.Worksheets.Add( _
+                     After:=ThisWorkbook.Worksheets(ThisWorkbook.Worksheets.Count))
+        ws.Name = sheetName
+    Else
+        ' Only these four target sheets are cleared on successful parsing.
+        ws.Cells.Clear
+    End If
+
+    Set PrepareOutputSheet = ws
+End Function
+
+Private Sub StyleOutputSheet(ByVal ws As Worksheet, _
+                             ByVal lastRow As Long, _
+                             ByVal lastCol As Long)
+    Dim c As Long
+
+    With ws.Range(ws.Cells(1, 1), ws.Cells(lastRow, lastCol))
+        .AutoFilter
+    End With
+
+    With ws.Range(ws.Cells(1, 1), ws.Cells(1, lastCol))
+        .Font.Bold = True
+        .Font.Color = RGB(255, 255, 255)
+        .Interior.Color = RGB(35, 60, 92)
+        .RowHeight = 23
+    End With
+
+    For c = 1 To lastCol
+        ws.Columns(c).AutoFit
+        If ws.Columns(c).ColumnWidth &gt; 55 Then
+            ws.Columns(c).ColumnWidth = 55
+        End If
+    Next c
+End Sub
+
+Private Function StripBom(ByVal value As String) As String
+    If Len(value) &gt; 0 Then
+        If AscW(Left$(value, 1)) = -257 Or _
+           AscW(Left$(value, 1)) = 65279 Then
+            value = Mid$(value, 2)
+        End If
+    End If
+    StripBom = value
+End Function
+
+Private Function SafeCellString(ByVal value As String) As String
+    value = Replace$(value, Chr$(0), &quot;&quot;)
+    If Len(value) &gt; 32767 Then value = Left$(value, 32767)
+    SafeCellString = value
+End Function
+
+Private Function IsSecretParameter(ByVal name As String) As Boolean
+    Select Case UCase$(name)
+        Case &quot;PASSWORD&quot;, &quot;PW&quot;, &quot;PASS&quot;, &quot;PASSPHRASE&quot;, _
+             &quot;SECRET&quot;, &quot;SECRETKEY&quot;, &quot;ENCRYPTKEY&quot;, &quot;ENCRYPTION_KEY&quot;
+            IsSecretParameter = True
+        Case Else
+            IsSecretParameter = False
+    End Select
+End Function
+</code></pre>
+</section>
+<section><h2>注意事項</h2><ul>
+<li><strong>履歴は必ず <code>-v84</code> で出力</strong>してください。フォーマットが異なる履歴は誤認防止のため読み込みません。</li>
+<li>文字コードはWindows日本語環境のShift-JIS（CP932）を標準に、BOM付きUTF-8・UTF-16にも対応しています。BOMなしUTF-8は必要に応じて<code>DEFAULT_TEXT_CHARSET</code>を<code>utf-8</code>に変更してください。</li>
+<li>管理情報は<code>SNDFILE=</code>/<code>RCVFILE=</code>から<code>END</code>までを1行にまとめます。定義カードの<code>#</code>行は無視します。</li>
+<li>履歴のファイルID、レコード件数、ステータスなどは文字列として読み込みます。ゼロ埋めは保持されます。</li>
+<li class="warning"><code>PASSWORD</code>などの秘密情報は初期設定では<code>[MASKED]</code>として取り込みます。TXT原本には機密情報が残る可能性があります。社外・公開リポジトリへのデータアップロードは避けてください。</li>
+<li>同名の4つのシートがある場合、対象シートの内容を置き換えます。バックアップを取ってください。</li>
+<li>実際の職場環境のTXTでは未検証です。まず少量のサンプルで列位置・日本語・件数を確認してください。</li>
+</ul>
+<p class="small">参照：<a href="https://www.hulft.com/help/ja-jp/HULFT-V8/WIN-OPE/Content/HULFT_OPE/HULFTOpeCmd/MngmntInfoBatchReg.htm">HULFT8 管理情報バッチ登録コマンド（定義カード形式）</a> ／ <a href="https://www.hulft.com/help/ja-jp/HULFT-V8/WIN-OPE/Content/HULFT_OPE/HULFTOpeCmd/SndLog_RcvLogListDipCmd.htm">HULFT8 履歴リスト表示コマンド（V84固定長形式）</a></p>
+</section>
+<script>
+async function copyVba(){
+  const src = document.getElementById('vbacode').textContent;
+  const output = document.getElementById('feedback');
+  try{
+    await navigator.clipboard.writeText(src);
+    output.textContent=' コピーしました';
+  }catch(e){
+    const selection=window.getSelection();
+    const range=document.createRange();
+    range.selectNodeContents(document.getElementById('vbacode'));
+    selection.removeAllRanges(); selection.addRange(range);
+    output.textContent=' コードを選択しました。Ctrl+Cでコピーしてください。';
+  }
+}
+</script>
+</body></html>
