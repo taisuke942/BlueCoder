@@ -266,6 +266,7 @@ Private Function PatchUsingOriginal( _
     Dim visitedIDs As Object, allowed As Object
     Dim currentID As String, name As String, oldValue As String
     Dim newValue As String, line As String, key As Variant
+    Dim inactiveName As String, inactiveValue As String
     Dim i As Long, rowNumber As Long, eq As Long
     Dim inside As Boolean, isField As Boolean, startTag As String
     Dim normalized As String, required As String
@@ -326,22 +327,19 @@ Private Function PatchUsingOriginal( _
         End If
 
         If inside And UCase$(normalized) = "END" Then
-            ' A new optional Excel column can be added before END, while
-            ' leaving the original commented parameter in its old position.
+            ' Do not silently insert a setting not present in the template.
+            ' A field may be edited only if active in the original, or
+            ' explicitly present as a commented-out KEY=value line.
             For Each key In row.Keys
                 name = CStr(key)
                 If name <> "FILEID" And Not touched.Exists(name) Then
                     newValue = CStr(row(name))
-                    If UCase$(Trim$(newValue)) = "[MASKED]" Then
+                    If Len(newValue) > 0 Then
                         Err.Raise vbObjectError + 8245, , _
                             currentID & " / " & name & _
-                            ": 元のTXTに該当する有効な項目がありません。" & _
-                            vbCrLf & "[MASKED]をそのまま書き出せません。"
-                    End If
-                    If Len(newValue) > 0 Then
-                        outputLines.Add name & "=" & newValue
-                        finalValues(name) = newValue
-                        editCount = editCount + 1
+                            ": 元TXTに該当項目がありません。" & vbCrLf & _
+                            "元TXTにない新規項目の追加は行いません。" & _
+                            "項目とファイルIDを確認してください。"
                     End If
                 End If
             Next key
@@ -351,6 +349,28 @@ Private Function PatchUsingOriginal( _
             inside = False
             currentID = ""
             GoTo NextSourceLine
+        End If
+
+        If inside And Not isField Then
+            ' An optional parameter already commented in utligen is
+            ' activated IN PLACE, rather than appended out of order.
+            If ParseCommentedField(line, inactiveName, inactiveValue) Then
+                If allowed.Exists(inactiveName) And row.Exists(inactiveName) _
+                   And Not touched.Exists(inactiveName) Then
+                    newValue = CStr(row(inactiveName))
+                    If Len(newValue) > 0 Then
+                        If UCase$(Trim$(newValue)) = "[MASKED]" Then
+                            Err.Raise vbObjectError + 8253, , _
+                                currentID & " / " & inactiveName & _
+                                ": コメント行を[MASKED]で有効化できません。"
+                        End If
+                        line = inactiveName & "=" & newValue
+                        touched.Add inactiveName, True
+                        finalValues(inactiveName) = newValue
+                        editCount = editCount + 1
+                    End If
+                End If
+            End If
         End If
 
         If inside And isField Then
@@ -470,6 +490,23 @@ Private Function ParseActiveField(ByVal line As String, _
     name = UCase$(Trim$(Left$(s, p - 1)))
     value = Mid$(s, p + 1)
     ParseActiveField = True
+End Function
+
+Private Function ParseCommentedField(ByVal line As String, _
+                                     ByRef name As String, _
+                                     ByRef value As String) As Boolean
+    Dim s As String, p As Long
+    name = ""
+    value = ""
+    s = Trim$(line)
+    If Len(s) = 0 Then Exit Function
+    If Left$(s, 1) <> "#" Then Exit Function
+    s = Trim$(Mid$(s, 2))
+    p = InStr(1, s, "=", vbBinaryCompare)
+    If p < 2 Then Exit Function
+    name = UCase$(Trim$(Left$(s, p - 1)))
+    value = Mid$(s, p + 1)
+    ParseCommentedField = True
 End Function
 
 Private Function GetAllowedParameters(ByVal cardType As String) As Object
