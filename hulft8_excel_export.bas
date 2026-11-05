@@ -1,19 +1,30 @@
 Option Explicit
 
-' HULFT8 Windows: Excel 配信管理 / 集信管理 -> utliupdt definition cards.
-' Add this as a NEW standard module to the workbook that contains the import VBA.
-' Run HULFT_ExportCardsForImport. The export does not execute HULFT.
-' Output is Shift-JIS (CP932) / CRLF, one parameter per line.
-' Only the 2 management-information sheets are exported. Histories are not.
+' HULFT8 for Windows - Excel management list -> edited definition cards.
+' Version 2: TEMPLATE-PRESERVING exporter, 2026-11-05
+'
+' REQUIRED: Keep the original utligen output TXT for each sheet.
+' On export, select the ORIGINAL TXT. The program changes only Excel-edited
+' fields; other lines, comments, inactive parameters, and ordering stay.
+'
+' Replace the PREVIOUS export VBA module with this ENTIRE module.
+' Keep the separate import VBA module as-is.
+' Run: HULFT_ExportCardsForImport
+'
+' Scope: only SNDFILE / RCVFILE cards. Histories are never imported into HULFT.
+' Safety: no new/deleted/renamed FILEIDs, no overwrite of original/output files.
+' Source text defaults to Japanese Windows CP932 (Shift-JIS). UTF-8 BOM and
+' UTF-16LE BOM are detected. Output uses the same detected encoding.
+' This tool has not been run against the user's actual HULFT environment.
 
-Private Const SND_COLUMNS As String = _
-    "FILENAME INTERVAL BLOCKLEN BLOCKCNT COMP COMPSIZE DEFLATELEVEL TRANSPRTY " & _
-    "TRANSTYPE CODESET KJCHNGE SHIFTTRANSACT CLEAR PREJOBID JOBID EJOBID " & _
-    "DBID MAILID GRPID FMTID PASSWORD COMMENT"
+Private Const SND_ALLOWED As String = _
+    "FILENAME INTERVAL BLOCKLEN BLOCKCNT COMP COMPSIZE DEFLATELEVEL " & _
+    "TRANSPRTY TRANSTYPE CODESET KJCHNGE SHIFTTRANSACT CLEAR PREJOBID " & _
+    "JOBID EJOBID DBID MAILID GRPID FMTID PASSWORD COMMENT"
 
-Private Const RCV_COLUMNS As String = _
-    "FILENAME CODESET TRANSMODE ABNORMAL RCVTYPE GENCTL GENMNGNO JOBID " & _
-    "EJOBID GRPID PASSWORD MAILID JOBWAIT DATAVERIFY COMMENT"
+Private Const RCV_ALLOWED As String = _
+    "FILENAME CODESET TRANSMODE ABNORMAL RCVTYPE GENCTL GENMNGNO " & _
+    "JOBID EJOBID GRPID PASSWORD MAILID JOBWAIT DATAVERIFY COMMENT"
 
 Private Const SND_REQUIRED As String = _
     "FILENAME COMP TRANSTYPE KJCHNGE GRPID"
@@ -22,454 +33,574 @@ Private Const RCV_REQUIRED As String = _
     "FILENAME TRANSMODE ABNORMAL RCVTYPE GENCTL"
 
 Public Sub HULFT_ExportCardsForImport()
-    Dim sndSheet As Worksheet, rcvSheet As Worksheet
-    Dim sndLines As Collection, rcvLines As Collection
-    Dim sndSecrets As Object, rcvSecrets As Object
-    Dim sourceFile As String
-    Dim sndCount As Long, rcvCount As Long
-    Dim folder As String, sndPath As String, rcvPath As String
-    Dim collisions As String, outText As String
+    Dim src(1 To 2) As String
+    Dim dst(1 To 2) As String
+    Dim encoding(1 To 2) As String
+    Dim generated(1 To 2) As String
+    Dim cardCount(1 To 2) As Long
+    Dim editCount(1 To 2) As Long
+    Dim selected(1 To 2) As Boolean
+    Dim names(1 To 2) As String
+    Dim types(1 To 2) As String
+    Dim baseFolder As String, report As String
+    Dim ws As Worksheet, rows As Object
+    Dim idx As Long, total As Long
 
-    On Error GoTo ExportError
+    On Error GoTo Fail
 
-    Set sndSheet = FindHulftSheet("配信管理")
-    Set rcvSheet = FindHulftSheet("集信管理")
+    names(1) = "配信管理"
+    names(2) = "集信管理"
+    types(1) = "SNDFILE"
+    types(2) = "RCVFILE"
 
-    If sndSheet Is Nothing And rcvSheet Is Nothing Then
+    For idx = 1 To 2
+        Set ws = GetTargetSheet(names(idx))
+        If Not ws Is Nothing Then
+            selected(idx) = True
+            total = total + 1
+
+            Set rows = ReadExcelRecords(ws, types(idx))
+
+            src(idx) = AskOriginalFile(names(idx))
+            If Len(src(idx)) = 0 Then Exit Sub
+
+            generated(idx) = PatchUsingOriginal( _
+                src(idx), types(idx), rows, encoding(idx), _
+                cardCount(idx), editCount(idx))
+        End If
+    Next idx
+
+    If total = 0 Then
         MsgBox "配信管理・集信管理シートが見つかりません。" & vbCrLf & _
                "先に取込VBAで管理情報を読み込んでください。", vbExclamation
         Exit Sub
     End If
 
-    ' The previous import VBA deliberately masked PASSWORD values.
-    ' When needed, read each original utligen TXT *locally* and restore
-    ' PASSWORD in memory only. Never put secrets back into worksheet cells.
-    If Not sndSheet Is Nothing Then
-        If HasMaskedPasswords(sndSheet) Then
-            sourceFile = PickOriginalText("配信管理")
-            If Len(sourceFile) = 0 Then Exit Sub
-            Set sndSecrets = ReadOriginalPasswords(sourceFile, "SNDFILE")
+    baseFolder = AskOutputFolder()
+    If Len(baseFolder) = 0 Then Exit Sub
+
+    dst(1) = baseFolder & "\hulft_snd.txt"
+    dst(2) = baseFolder & "\hulft_rcv.txt"
+
+    ' Validate BOTH targets before writing either one.
+    For idx = 1 To 2
+        If selected(idx) Then
+            If StrComp(dst(idx), src(idx), vbTextCompare) = 0 Then
+                Err.Raise vbObjectError + 8201, , _
+                    "元のTXTと出力先が同じです。別フォルダを選んでください。"
+            End If
+            If FileExists(dst(idx)) Then
+                Err.Raise vbObjectError + 8202, , _
+                    "出力先ファイルがすでに存在します: " & dst(idx) & vbCrLf & _
+                    "元のTXTや以前の結果の上書き防止のため、" & _
+                    "新しい空フォルダを選んでください。"
+            End If
         End If
-    End If
-    If Not rcvSheet Is Nothing Then
-        If HasMaskedPasswords(rcvSheet) Then
-            sourceFile = PickOriginalText("集信管理")
-            If Len(sourceFile) = 0 Then Exit Sub
-            Set rcvSecrets = ReadOriginalPasswords(sourceFile, "RCVFILE")
+    Next idx
+
+    If MsgBox("Excelの内容を元のutligenテキストへ反映します。" & vbCrLf & _
+              "元のTXTは変更せず、別フォルダへ出力します。" & vbCrLf & vbCrLf & _
+              "配信管理: " & cardCount(1) & "件 / 変更 " & editCount(1) & "項目" & vbCrLf & _
+              "集信管理: " & cardCount(2) & "件 / 変更 " & editCount(2) & "項目" & vbCrLf & vbCrLf & _
+              "出力を実行しますか？", vbYesNo + vbQuestion + vbDefaultButton2, _
+              "HULFT定義カード出力") <> vbYes Then Exit Sub
+
+    For idx = 1 To 2
+        If selected(idx) Then
+            SaveTextFile dst(idx), generated(idx), encoding(idx)
         End If
-    End If
+    Next idx
 
-    ' Validate all data before asking for an output location or writing files.
-    If Not sndSheet Is Nothing Then
-        Set sndLines = CompileHulftCards(sndSheet, "SNDFILE", _
-                                   SND_COLUMNS, SND_REQUIRED, sndSecrets, sndCount)
-    End If
-    If Not rcvSheet Is Nothing Then
-        Set rcvLines = CompileHulftCards(rcvSheet, "RCVFILE", _
-                                   RCV_COLUMNS, RCV_REQUIRED, rcvSecrets, rcvCount)
-    End If
-
-    folder = ChooseExportFolder()
-    If Len(folder) = 0 Then Exit Sub
-
-    sndPath = folder & "\hulft_snd.txt"
-    rcvPath = folder & "\hulft_rcv.txt"
-
-    If Not sndLines Is Nothing Then
-        If PathAlreadyExists(sndPath) Then collisions = collisions & sndPath & vbCrLf
-    End If
-    If Not rcvLines Is Nothing Then
-        If PathAlreadyExists(rcvPath) Then collisions = collisions & rcvPath & vbCrLf
-    End If
-
-    If Len(collisions) > 0 Then
-        If MsgBox("次のファイルがすでに存在します。" & vbCrLf & vbCrLf & _
-                  collisions & vbCrLf & _
-                  "元のutligenエクスポートを上書きする危険があります。" & _
-                  vbCrLf & "バックアップを確認のうえ上書きしますか？", _
-                  vbYesNo + vbExclamation + vbDefaultButton2, _
-                  "既存ファイルの上書き確認") <> vbYes Then Exit Sub
-    End If
-
-    If Not sndLines Is Nothing Then WriteShiftJisFile sndPath, sndLines
-    If Not rcvLines Is Nothing Then WriteShiftJisFile rcvPath, rcvLines
-
-    outText = "定義カードを出力しました。" & vbCrLf & vbCrLf
-    If Not sndLines Is Nothing Then
-        outText = outText & "配信管理: " & sndCount & "件" & vbCrLf & sndPath & vbCrLf
-    End If
-    If Not rcvLines Is Nothing Then
-        outText = outText & "集信管理: " & rcvCount & "件" & vbCrLf & rcvPath & vbCrLf
-    End If
-    outText = outText & vbCrLf & _
-              "内容を確認してから、移行先のテスト用HULFTでutliupdtを実行してください。"
-    MsgBox outText, vbInformation, "HULFT定義カード出力"
+    report = "テキストの出力が完了しました。" & vbCrLf
+    For idx = 1 To 2
+        If selected(idx) Then
+            report = report & vbCrLf & names(idx) & ": " & cardCount(idx) & _
+                     "件 / Excel編集 " & editCount(idx) & "項目" & _
+                     vbCrLf & dst(idx)
+        End If
+    Next idx
+    MsgBox report & vbCrLf & vbCrLf & _
+           "HULFTへの登録前に、元ファイルとの比較と" & _
+           "テスト環境での検証を行ってください。", vbInformation
     Exit Sub
 
-ExportError:
-    MsgBox "出力を中止しました。" & vbCrLf & Err.Description & vbCrLf & _
-           "途中でエラーになった場合、出力先のファイルを確認してください。", _
-           vbCritical, "HULFT定義カード出力"
+Fail:
+    MsgBox "安全のため処理を中止しました。" & vbCrLf & _
+           Err.Description & vbCrLf & vbCrLf & _
+           "※エラーが出力中に発生した場合は出力先も確認してください。", _
+           vbExclamation, "HULFT定義カード出力"
 End Sub
 
-Private Function FindHulftSheet(ByVal name As String) As Worksheet
+Private Function GetTargetSheet(ByVal sheetName As String) As Worksheet
     On Error Resume Next
-    Set FindHulftSheet = ThisWorkbook.Worksheets(name)
+    Set GetTargetSheet = ThisWorkbook.Worksheets(sheetName)
     On Error GoTo 0
 End Function
 
-Private Function CompileHulftCards( _
-    ByVal ws As Worksheet, ByVal cardType As String, _
-    ByVal allowedList As String, ByVal requiredList As String, _
-    ByVal secretMap As Object, ByRef cardCount As Long) As Collection
+Private Function ReadExcelRecords(ByVal ws As Worksheet, _
+                                  ByVal cardType As String) As Object
+    Dim result As Object, row As Object, allowed As Object
+    Dim seenHeaders As Object, found As Range
+    Dim hdr() As String, v As String, fileID As String
+    Dim colCount As Long, rowCount As Long
+    Dim r As Long, c As Long, anyData As Boolean
 
-    Dim lastCol As Long, lastRow As Long
-    Dim headers() As String, c As Long, r As Long
-    Dim allowed As Object, seenHeaders As Object, seenIDs As Object
-    Dim rowValues As Object, lines As Collection
-    Dim tag As Variant, value As String, id As String, k As String
-    Dim hasAnyValue As Boolean
-    Dim tagList As Variant
+    Set result = NewTextDictionary()
+    Set allowed = GetAllowedParameters(cardType)
+    Set seenHeaders = NewTextDictionary()
 
-    Set allowed = NewKeywordDictionary(allowedList)
-    Set seenHeaders = CreateObject("Scripting.Dictionary")
-    seenHeaders.CompareMode = vbTextCompare
-    Set seenIDs = CreateObject("Scripting.Dictionary")
-    seenIDs.CompareMode = vbTextCompare
-    Set lines = New Collection
-
-    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
-
-    If lastRow < 2 Then
-        Err.Raise vbObjectError + 9230, , _
-            ws.Name & "シートにデータ行がありません。"
+    Set found = ws.Cells.Find(What:="*", LookIn:=xlFormulas, _
+                             LookAt:=xlPart, SearchOrder:=xlByRows, _
+                             SearchDirection:=xlPrevious, MatchCase:=False)
+    If found Is Nothing Then
+        Err.Raise vbObjectError + 8210, , ws.Name & "シートが空です。"
     End If
-    If lastCol < 2 Then
-        Err.Raise vbObjectError + 9231, , _
-            ws.Name & "シートの項目列が不足しています。"
+    rowCount = found.Row
+
+    Set found = ws.Cells.Find(What:="*", LookIn:=xlFormulas, _
+                             LookAt:=xlPart, SearchOrder:=xlByColumns, _
+                             SearchDirection:=xlPrevious, MatchCase:=False)
+    colCount = found.Column
+
+    If rowCount < 2 Or colCount < 2 Then
+        Err.Raise vbObjectError + 8211, , _
+            ws.Name & "シートにヘッダとデータが必要です。"
     End If
 
-    ReDim headers(1 To lastCol)
-
-    For c = 1 To lastCol
-        k = UCase$(Trim$(ReadCellText(ws.Cells(1, c), ws.Name, 1, c)))
-        If Len(k) = 0 Then
-            Err.Raise vbObjectError + 9232, , _
-                ws.Name & "シートの1行目に空欄の見出しがあります。列=" & c
+    ReDim hdr(1 To colCount)
+    For c = 1 To colCount
+        v = UCase$(Trim$(CellText(ws.Cells(1, c))))
+        If Len(v) = 0 Then
+            Err.Raise vbObjectError + 8212, , _
+                ws.Name & ": 1行目の見出しが空欄です（" & c & "列）。"
         End If
-        If seenHeaders.Exists(k) Then
-            Err.Raise vbObjectError + 9233, , _
-                ws.Name & "シートで見出しが重複しています: " & k
+        If seenHeaders.Exists(v) Then
+            Err.Raise vbObjectError + 8213, , _
+                ws.Name & ": 項目名が重複しています: " & v
         End If
-        If k <> "FILEID" And Not allowed.Exists(k) Then
-            Err.Raise vbObjectError + 9234, , _
-                ws.Name & "シートの列「" & k & "」はHULFTの定義カード項目ではありません。" & _
-                vbCrLf & "この列は削除するか、対応項目名にしてください。"
+        If v <> "FILEID" And Not allowed.Exists(v) Then
+            Err.Raise vbObjectError + 8214, , _
+                ws.Name & ": 不明な列名: " & v & vbCrLf & _
+                "HULFTの管理情報項目のみ指定してください。"
         End If
-        seenHeaders.Add k, True
-        headers(c) = k
+        seenHeaders.Add v, True
+        hdr(c) = v
     Next c
 
-    If headers(1) <> "FILEID" Then
-        Err.Raise vbObjectError + 9235, , _
-            ws.Name & "シートのA1はFILEIDである必要があります。"
+    If hdr(1) <> "FILEID" Then
+        Err.Raise vbObjectError + 8215, , _
+            ws.Name & "シートのA1はFILEIDにしてください。"
     End If
 
-    tagList = Split(allowedList, " ")
-    cardCount = 0
+    For r = 2 To rowCount
+        Set row = NewTextDictionary()
+        anyData = False
 
-    For r = 2 To lastRow
-        Set rowValues = CreateObject("Scripting.Dictionary")
-        rowValues.CompareMode = vbTextCompare
-        hasAnyValue = False
-
-        For c = 1 To lastCol
-            k = headers(c)
-            value = ReadCellText(ws.Cells(r, c), ws.Name, r, c)
-
-            If InStr(value, vbCr) > 0 Or InStr(value, vbLf) > 0 _
-               Or InStr(value, Chr$(0)) > 0 Then
-                Err.Raise vbObjectError + 9236, , _
+        For c = 1 To colCount
+            v = CellText(ws.Cells(r, c))
+            If HasUnsafeLineBreak(v) Then
+                Err.Raise vbObjectError + 8216, , _
                     ws.Name & "!" & ws.Cells(r, c).Address(False, False) & _
-                    " に改行またはNUL文字があります。"
+                    " に改行・NUL文字があります。"
             End If
-
-            If Len(Trim$(value)) > 0 Then hasAnyValue = True
-
-            rowValues.Add k, value
+            If Len(v) > 0 Then anyData = True
+            row.Add hdr(c), v
         Next c
 
-        id = CStr(rowValues("FILEID"))
-        If Len(Trim$(id)) = 0 Then
-            If hasAnyValue Then
-                Err.Raise vbObjectError + 9238, , _
-                    ws.Name & "シート " & r & "行目のFILEIDが空欄です。"
+        fileID = CStr(row("FILEID"))
+        If Len(fileID) = 0 Then
+            If anyData Then
+                Err.Raise vbObjectError + 8217, , _
+                    ws.Name & "の" & r & "行目はFILEIDが空欄です。"
             End If
-            GoTo NextDataRow
+        Else
+            If Trim$(fileID) <> fileID Or InStr(fileID, "=") > 0 _
+               Or UCase$(fileID) = "_INSTANT_TRANSFER_" _
+               Or LenB(StrConv(fileID, vbFromUnicode)) > 50 Then
+                Err.Raise vbObjectError + 8218, , _
+                    ws.Name & "の" & r & "行目のFILEIDが不正です: " & fileID
+            End If
+            If result.Exists(fileID) Then
+                Err.Raise vbObjectError + 8219, , _
+                    ws.Name & ": FILEIDが重複しています: " & fileID
+            End If
+            result.Add fileID, row
         End If
-
-        If Trim$(id) <> id Or InStr(id, "=") > 0 Or _
-            UCase$(id) = "_INSTANT_TRANSFER_" Then
-            Err.Raise vbObjectError + 9239, , _
-                ws.Name & "シート " & r & "行目のFILEIDが不正です: " & id
-        End If
-
-        If seenIDs.Exists(id) Then
-            Err.Raise vbObjectError + 9240, , _
-                ws.Name & "シートに重複FILEIDがあります: " & id
-        End If
-        seenIDs.Add id, True
-
-        If rowValues.Exists("PASSWORD") Then
-            value = CStr(rowValues("PASSWORD"))
-            If UCase$(Trim$(value)) = "[MASKED]" Then
-                If secretMap Is Nothing Then
-                    Err.Raise vbObjectError + 9237, , _
-                        ws.Name & "シートのFILEID=" & id & _
-                        " の元の暗号キーがありません。"
-                End If
-                If Not secretMap.Exists(id) Then
-                    Err.Raise vbObjectError + 9237, , _
-                        ws.Name & "シートのFILEID=" & id & _
-                        " に対応する暗号キーが元のTXTにありません。" & _
-                        vbCrLf & "出力元の定義カードを確認してください。"
-                End If
-                rowValues("PASSWORD") = CStr(secretMap(id))
-            End If
-        End If
-
-        For Each tag In Split(requiredList, " ")
-            k = CStr(tag)
-            If Not rowValues.Exists(k) Then
-                Err.Raise vbObjectError + 9241, , _
-                    ws.Name & "シートの必須項目 " & k & " がありません。"
-            End If
-            If Len(Trim$(CStr(rowValues(k)))) = 0 Then
-                Err.Raise vbObjectError + 9242, , _
-                    ws.Name & "シート " & r & "行目の必須項目 " & k & " が空欄です。"
-            End If
-        Next tag
-
-        lines.Add cardType & "=" & id
-
-        ' Use the official order, even if the user reorders Excel columns.
-        For Each tag In tagList
-            k = CStr(tag)
-            If rowValues.Exists(k) Then
-                value = CStr(rowValues(k))
-                If Len(value) > 0 Then lines.Add k & "=" & value
-            End If
-        Next tag
-
-        lines.Add "END"
-        cardCount = cardCount + 1
-
-NextDataRow:
     Next r
 
-    If cardCount = 0 Then
-        Err.Raise vbObjectError + 9243, , _
-            ws.Name & "シートに出力可能な管理情報がありません。"
+    If result.Count = 0 Then
+        Err.Raise vbObjectError + 8220, , _
+            ws.Name & "に出力可能な管理情報がありません。"
     End If
-
-    Set CompileHulftCards = lines
+    Set ReadExcelRecords = result
 End Function
 
+Private Function CellText(ByVal cell As Range) As String
+    Dim raw As Variant
+    If cell.HasFormula Then
+        Err.Raise vbObjectError + 8221, , _
+            cell.Worksheet.Name & "!" & cell.Address(False, False) & _
+            " は数式です。値に変換してから出力してください。"
+    End If
+    raw = cell.Value2
+    If IsError(raw) Then
+        Err.Raise vbObjectError + 8222, , _
+            cell.Worksheet.Name & "!" & cell.Address(False, False) & _
+            " にExcelのエラー値があります。"
+    End If
+    If IsEmpty(raw) Then
+        CellText = ""
+    Else
+        CellText = CStr(raw)
+    End If
+End Function
 
-Private Function HasMaskedPasswords(ByVal ws As Worksheet) As Boolean
-    Dim lastCol As Long, lastRow As Long, c As Long, r As Long
-    Dim v As Variant
+Private Function PatchUsingOriginal( _
+    ByVal originalPath As String, ByVal cardType As String, _
+    ByVal excelRecords As Object, ByRef encoding As String, _
+    ByRef cardCount As Long, ByRef editCount As Long) As String
 
-    lastCol = ws.Cells(1, ws.Columns.Count).End(xlToLeft).Column
-    lastRow = ws.Cells(ws.Rows.Count, 1).End(xlUp).Row
+    Dim originalText As String, eol As String
+    Dim sourceLines() As String, outputLines As Collection
+    Dim row As Object, touched As Object, finalValues As Object
+    Dim visitedIDs As Object, allowed As Object
+    Dim currentID As String, name As String, oldValue As String
+    Dim newValue As String, line As String, key As Variant
+    Dim i As Long, rowNumber As Long, eq As Long
+    Dim inside As Boolean, isField As Boolean, startTag As String
+    Dim normalized As String, required As String
 
-    For c = 1 To lastCol
-        v = ws.Cells(1, c).Value2
-        If Not IsError(v) Then
-            If UCase$(Trim$(CStr(v))) = "PASSWORD" Then
-                For r = 2 To lastRow
-                    v = ws.Cells(r, c).Value2
-                    If Not IsError(v) Then
-                        If UCase$(Trim$(CStr(v))) = "[MASKED]" Then
-                            HasMaskedPasswords = True
-                            Exit Function
-                        End If
+    originalText = LoadTextFile(originalPath, encoding)
+    eol = DetectLineEnding(originalText)
+    sourceLines = Split(originalText, eol)
+    Set outputLines = New Collection
+    Set visitedIDs = NewTextDictionary()
+    Set allowed = GetAllowedParameters(cardType)
+
+    If cardType = "SNDFILE" Then
+        required = SND_REQUIRED
+    Else
+        required = RCV_REQUIRED
+    End If
+
+    For i = LBound(sourceLines) To UBound(sourceLines)
+        line = sourceLines(i)
+        normalized = Trim$(line)
+        rowNumber = i + 1
+
+        ' Only an active start tag begins a card. # comments are untouched.
+        isField = ParseActiveField(line, name, oldValue)
+        If isField Then
+            If name = "SNDFILE" Or name = "RCVFILE" Then
+                If inside Then
+                    Err.Raise vbObjectError + 8240, , _
+                        "元TXTのENDが不足しています。行=" & rowNumber
+                End If
+                If name <> cardType Then
+                    Err.Raise vbObjectError + 8241, , _
+                        "元TXTに異なる管理情報種別があります。行=" & rowNumber & _
+                        " / 種別=" & name
+                End If
+                currentID = Trim$(oldValue)
+                If Len(currentID) = 0 Then
+                    Err.Raise vbObjectError + 8242, , _
+                        "元TXTにFILEID空欄の定義があります。行=" & rowNumber
+                End If
+                If visitedIDs.Exists(currentID) Then
+                    Err.Raise vbObjectError + 8243, , _
+                        "元TXT内にFILEIDが重複しています: " & currentID
+                End If
+                If Not excelRecords.Exists(currentID) Then
+                    Err.Raise vbObjectError + 8244, , _
+                        "元TXTに存在しExcelに存在しないFILEIDです: " & currentID & vbCrLf & _
+                        "削除・ID変更には対応しません。元データとExcelを照合してください。"
+                End If
+
+                Set row = excelRecords(currentID)
+                Set touched = NewTextDictionary()
+                Set finalValues = NewTextDictionary()
+                visitedIDs.Add currentID, True
+                cardCount = cardCount + 1
+                inside = True
+            End If
+        End If
+
+        If inside And UCase$(normalized) = "END" Then
+            ' A new optional Excel column can be added before END, while
+            ' leaving the original commented parameter in its old position.
+            For Each key In row.Keys
+                name = CStr(key)
+                If name <> "FILEID" And Not touched.Exists(name) Then
+                    newValue = CStr(row(name))
+                    If UCase$(Trim$(newValue)) = "[MASKED]" Then
+                        Err.Raise vbObjectError + 8245, , _
+                            currentID & " / " & name & _
+                            ": 元のTXTに該当する有効な項目がありません。" & _
+                            vbCrLf & "[MASKED]をそのまま書き出せません。"
                     End If
-                Next r
-                Exit Function
-            End If
-        End If
-    Next c
-End Function
+                    If Len(newValue) > 0 Then
+                        outputLines.Add name & "=" & newValue
+                        finalValues(name) = newValue
+                        editCount = editCount + 1
+                    End If
+                End If
+            Next key
 
-Private Function PickOriginalText(ByVal sheetName As String) As String
-    Dim picked As Variant
-
-    MsgBox sheetName & "のPASSWORD欄に[MASKED]があります。" & vbCrLf & _
-           "元のutligen出力TXTを指定してください。" & vbCrLf & _
-           "暗号キーはExcelには書き戻さず、一時的にメモリ上で補完します。", _
-           vbInformation, "暗号キーの補完"
-
-    picked = Application.GetOpenFilename( _
-        "HULFT texts (*.txt;*.prm;*.dat),*.txt;*.prm;*.dat,All files (*.*),*.*", _
-        1, "元の " & sheetName & " utligenテキストを選択", , False)
-    If VarType(picked) <> vbBoolean Then PickOriginalText = CStr(picked)
-End Function
-
-Private Function ReadOriginalPasswords(ByVal filePath As String, _
-                                       ByVal cardType As String) As Object
-    Dim secrets As Object, stm As Object
-    Dim line As String, key As String, value As String
-    Dim currentID As String, currentType As String
-    Dim pwd As String, hasPassword As Boolean, eq As Long
-
-    Set secrets = CreateObject("Scripting.Dictionary")
-    secrets.CompareMode = vbTextCompare
-    Set stm = OpenOriginalText(filePath)
-
-    Do Until stm.EOS
-        line = Trim$(stm.ReadText(-2))
-        If Left$(line, 1) = "#" Or Left$(line, 1) = ";" Then GoTo NextSecretLine
-        If UCase$(line) = "END" Then
-            If currentType = cardType And Len(currentID) > 0 And _
-                hasPassword Then
-                secrets(currentID) = pwd
-            End If
+            CheckRequiredFields finalValues, required, currentID
+            outputLines.Add line
+            inside = False
             currentID = ""
-            currentType = ""
-            pwd = ""
-            hasPassword = False
-            GoTo NextSecretLine
+            GoTo NextSourceLine
         End If
 
-        eq = InStr(1, line, "=", vbBinaryCompare)
-        If eq < 2 Then GoTo NextSecretLine
+        If inside And isField Then
+            If name <> cardType Then
+                If Not allowed.Exists(name) Then
+                    ' Unknown original parameters are preserved, not discarded.
+                    ' They are not made editable by this macro.
+                    outputLines.Add line
+                    GoTo NextSourceLine
+                End If
 
-        key = UCase$(Trim$(Left$(line, eq - 1)))
-        value = Trim$(Mid$(line, eq + 1))
+                If touched.Exists(name) Then
+                    Err.Raise vbObjectError + 8246, , _
+                        currentID & ": 元TXTで項目が重複しています: " & name
+                End If
+                touched.Add name, True
 
-        If key = "SNDFILE" Or key = "RCVFILE" Then
-            If currentType = cardType And Len(currentID) > 0 And _
-                hasPassword Then
-                secrets(currentID) = pwd
+                If row.Exists(name) Then
+                    newValue = CStr(row(name))
+                    If UCase$(Trim$(newValue)) = "[MASKED]" Then
+                        If name <> "PASSWORD" Then
+                            Err.Raise vbObjectError + 8247, , _
+                                currentID & " / " & name & _
+                                ": [MASKED] はPASSWORD列以外では使用できません。"
+                        End If
+                        If UCase$(Trim$(oldValue)) = "%ERROR" Then
+                            Err.Raise vbObjectError + 8248, , _
+                                currentID & ": 元TXTにPASSWORD=%ERRORがあります。" & _
+                                vbCrLf & "実際の暗号キーをExcel側で設定してください。"
+                        End If
+                        ' Preserve the original password line in place.
+                        finalValues(name) = oldValue
+                    ElseIf StrComp(Trim$(newValue), Trim$(oldValue), _
+                                  vbBinaryCompare) = 0 Then
+                        ' Unchanged: keep original spaces and full line.
+                        finalValues(name) = oldValue
+                    ElseIf Len(newValue) = 0 Then
+                        ' Clearing an optional field comments it out.
+                        If IsRequired(name, required) Then
+                            Err.Raise vbObjectError + 8249, , _
+                                currentID & ": 必須項目 " & name & " を空欄にできません。"
+                        End If
+                        line = "#" & line
+                        editCount = editCount + 1
+                    Else
+                        eq = InStr(1, line, "=", vbBinaryCompare)
+                        line = Left$(line, eq) & newValue
+                        finalValues(name) = newValue
+                        editCount = editCount + 1
+                    End If
+                Else
+                    finalValues(name) = oldValue
+                End If
             End If
-            currentType = key
-            currentID = value
-            hasPassword = False
-            pwd = ""
-        ElseIf key = "PASSWORD" And currentType = cardType Then
-            pwd = value
-            hasPassword = True
         End If
 
-NextSecretLine:
-    Loop
+        outputLines.Add line
 
-    If currentType = cardType And Len(currentID) > 0 And hasPassword Then
-        secrets(currentID) = pwd
+NextSourceLine:
+    Next i
+
+    If inside Then
+        Err.Raise vbObjectError + 8250, , _
+            "元TXTの最終定義にEND行がありません。"
     End If
-    stm.Close
-    Set ReadOriginalPasswords = secrets
+    If cardCount = 0 Then
+        Err.Raise vbObjectError + 8251, , _
+            "元TXTに" & cardType & "の定義カードが見つかりません。"
+    End If
+    If visitedIDs.Count <> excelRecords.Count Then
+        For Each key In excelRecords.Keys
+            If Not visitedIDs.Exists(CStr(key)) Then
+                Err.Raise vbObjectError + 8252, , _
+                    "Excelには存在するが元TXTに存在しないFILEIDです: " & CStr(key) & _
+                    vbCrLf & "新規IDの追加・FILEID変更には対応しません。"
+            End If
+        Next key
+    End If
+
+    PatchUsingOriginal = JoinLines(outputLines, eol)
 End Function
 
-Private Function OpenOriginalText(ByVal filePath As String) As Object
-    Dim raw As Object, stm As Object
-    Dim bytes As Variant, first As Long, length As Long
-    Dim charset As String
+Private Sub CheckRequiredFields( _
+    ByVal actual As Object, ByVal required As String, _
+    ByVal fileID As String)
+    Dim field As Variant, name As String
+    For Each field In Split(required, " ")
+        name = CStr(field)
+        If Not actual.Exists(name) Then
+            Err.Raise vbObjectError + 8260, , _
+                fileID & ": 必須項目 " & name & " がありません。"
+        End If
+        If Len(Trim$(CStr(actual(name)))) = 0 Then
+            Err.Raise vbObjectError + 8261, , _
+                fileID & ": 必須項目 " & name & " が空欄です。"
+        End If
+    Next field
+End Sub
+
+Private Function IsRequired(ByVal name As String, _
+                            ByVal required As String) As Boolean
+    IsRequired = (InStr(1, " " & required & " ", _
+                         " " & name & " ", vbTextCompare) > 0)
+End Function
+
+Private Function ParseActiveField(ByVal line As String, _
+                                  ByRef name As String, _
+                                  ByRef value As String) As Boolean
+    Dim s As String, p As Long
+    name = ""
+    value = ""
+    s = Trim$(line)
+    If Len(s) = 0 Then Exit Function
+    If Left$(s, 1) = "#" Then Exit Function
+    p = InStr(1, s, "=", vbBinaryCompare)
+    If p < 2 Then Exit Function
+    name = UCase$(Trim$(Left$(s, p - 1)))
+    value = Mid$(s, p + 1)
+    ParseActiveField = True
+End Function
+
+Private Function GetAllowedParameters(ByVal cardType As String) As Object
+    Dim d As Object, item As Variant, allNames As String
+    Set d = NewTextDictionary()
+    If cardType = "SNDFILE" Then
+        allNames = SND_ALLOWED
+    Else
+        allNames = RCV_ALLOWED
+    End If
+    For Each item In Split(allNames, " ")
+        d.Add CStr(item), True
+    Next item
+    Set GetAllowedParameters = d
+End Function
+
+Private Function NewTextDictionary() As Object
+    Dim d As Object
+    Set d = CreateObject("Scripting.Dictionary")
+    d.CompareMode = vbTextCompare
+    Set NewTextDictionary = d
+End Function
+
+Private Function HasUnsafeLineBreak(ByVal s As String) As Boolean
+    HasUnsafeLineBreak = (InStr(s, vbCr) > 0 Or _
+                          InStr(s, vbLf) > 0 Or InStr(s, Chr$(0)) > 0)
+End Function
+
+Private Function AskOriginalFile(ByVal sheetName As String) As String
+    Dim picked As Variant
+    picked = Application.GetOpenFilename( _
+        "Text files (*.txt;*.prm;*.dat),*.txt;*.prm;*.dat,All files (*.*),*.*", _
+        1, "元のutligen出力TXTを選択: " & sheetName, , False)
+    If VarType(picked) <> vbBoolean Then AskOriginalFile = CStr(picked)
+End Function
+
+Private Function AskOutputFolder() As String
+    Dim d As Object
+    Set d = Application.FileDialog(4) ' Folder picker.
+    With d
+        .Title = "元のTXTとは別の空フォルダを指定"
+        .AllowMultiSelect = False
+        If .Show = -1 Then AskOutputFolder = .SelectedItems(1)
+    End With
+End Function
+
+Private Function FileExists(ByVal filePath As String) As Boolean
+    Dim fso As Object
+    Set fso = CreateObject("Scripting.FileSystemObject")
+    FileExists = fso.FileExists(filePath)
+End Function
+
+Private Function LoadTextFile(ByVal filePath As String, _
+                              ByRef charset As String) As String
+    Dim raw As Object, txt As Object
+    Dim bytes As Variant, pos As Long
+    Dim s As String
 
     charset = "shift_jis"
     Set raw = CreateObject("ADODB.Stream")
     raw.Type = 1
     raw.Open
     raw.LoadFromFile filePath
-    length = CLng(raw.Size)
-    If length >= 2 Then
-        bytes = raw.Read(IIf(length >= 3, 3, 2))
-        first = LBound(bytes)
-        If UBound(bytes) >= first + 2 Then
-            If bytes(first) = 239 And bytes(first + 1) = 187 _
-                                  And bytes(first + 2) = 191 Then
+
+    If raw.Size = 0 Then
+        raw.Close
+        Err.Raise vbObjectError + 8270, , "元のTXTが空です: " & filePath
+    End If
+    If raw.Size >= 2 Then
+        bytes = raw.Read(IIf(raw.Size >= 3, 3, 2))
+        pos = LBound(bytes)
+        If bytes(pos) = 255 And bytes(pos + 1) = 254 Then
+            charset = "unicode"
+        ElseIf bytes(pos) = 254 And bytes(pos + 1) = 255 Then
+            raw.Close
+            Err.Raise vbObjectError + 8271, , _
+                "UTF-16BEは未対応です。元TXTをShift-JISで取得してください。"
+        ElseIf UBound(bytes) >= pos + 2 Then
+            If bytes(pos) = 239 And bytes(pos + 1) = 187 _
+                                 And bytes(pos + 2) = 191 Then
                 charset = "utf-8"
             End If
-        End If
-        If bytes(first) = 255 And bytes(first + 1) = 254 Then
-            charset = "unicode"
         End If
     End If
     raw.Close
 
-    Set stm = CreateObject("ADODB.Stream")
-    stm.Type = 2
-    stm.Charset = charset
-    stm.Open
-    stm.LoadFromFile filePath
-    Set OpenOriginalText = stm
-End Function
+    Set txt = CreateObject("ADODB.Stream")
+    txt.Type = 2
+    txt.Charset = charset
+    txt.Open
+    txt.LoadFromFile filePath
+    s = txt.ReadText(-1)
+    txt.Close
 
-Private Function NewKeywordDictionary(ByVal words As String) As Object
-    Dim dict As Object, item As Variant
-    Set dict = CreateObject("Scripting.Dictionary")
-    dict.CompareMode = vbTextCompare
-    For Each item In Split(words, " ")
-        dict.Add CStr(item), True
-    Next item
-    Set NewKeywordDictionary = dict
-End Function
-
-Private Function ReadCellText( _
-    ByVal cell As Range, ByVal sheetName As String, _
-    ByVal row As Long, ByVal col As Long) As String
-
-    If cell.HasFormula Then
-        Err.Raise vbObjectError + 9250, , _
-            sheetName & "!" & cell.Address(False, False) & _
-            " は数式です。値に変換してから出力してください。"
+    If Len(s) > 0 Then
+        If AscW(Left$(s, 1)) = -257 Then s = Mid$(s, 2)
     End If
-
-    If IsError(cell.Value2) Then
-        Err.Raise vbObjectError + 9251, , _
-            sheetName & "!" & cell.Address(False, False) & _
-            " がExcelエラー値になっています。"
-    End If
-
-    If IsEmpty(cell.Value2) Then
-        ReadCellText = ""
-    Else
-        ReadCellText = CStr(cell.Value2)
-    End If
+    LoadTextFile = s
 End Function
 
-Private Function ChooseExportFolder() As String
-    Dim dlg As Object
-    Set dlg = Application.FileDialog(4) ' msoFileDialogFolderPicker
-    With dlg
-        .Title = "HULFT定義カードTXTの出力先フォルダを選択"
-        .AllowMultiSelect = False
-        If .Show <> -1 Then Exit Function
-        ChooseExportFolder = .SelectedItems(1)
-    End With
-End Function
-
-Private Function PathAlreadyExists(ByVal path As String) As Boolean
-    PathAlreadyExists = (Len(Dir$(path, vbNormal Or vbReadOnly Or vbHidden)) > 0)
-End Function
-
-Private Sub WriteShiftJisFile(ByVal path As String, ByVal lines As Collection)
+Private Sub SaveTextFile(ByVal filePath As String, _
+                         ByVal textData As String, ByVal charset As String)
     Dim stream As Object
-    Dim allLines() As String
-    Dim n As Long
-
-    ReDim allLines(0 To lines.Count - 1)
-    For n = 1 To lines.Count
-        allLines(n - 1) = CStr(lines(n))
-    Next n
-
     Set stream = CreateObject("ADODB.Stream")
-    stream.Type = 2 ' adTypeText
-    stream.Charset = "shift_jis"
+    stream.Type = 2
+    stream.Charset = charset
     stream.Open
-    stream.WriteText Join(allLines, vbCrLf) & vbCrLf
-    stream.SaveToFile path, 2 ' adSaveCreateOverWrite
+    stream.WriteText textData
+    stream.SaveToFile filePath, 1 ' Create new; fail if it exists.
     stream.Close
 End Sub
+
+Private Function DetectLineEnding(ByVal textData As String) As String
+    If InStr(1, textData, vbCrLf, vbBinaryCompare) > 0 Then
+        DetectLineEnding = vbCrLf
+    ElseIf InStr(1, textData, vbLf, vbBinaryCompare) > 0 Then
+        DetectLineEnding = vbLf
+    ElseIf InStr(1, textData, vbCr, vbBinaryCompare) > 0 Then
+        DetectLineEnding = vbCr
+    Else
+        Err.Raise vbObjectError + 8280, , _
+            "元TXTに改行がありません。utligen出力を選択してください。"
+    End If
+End Function
+
+Private Function JoinLines(ByVal entries As Collection, _
+                           ByVal eol As String) As String
+    Dim a() As String, i As Long
+    ReDim a(0 To entries.Count - 1)
+    For i = 1 To entries.Count
+        a(i - 1) = CStr(entries(i))
+    Next i
+    JoinLines = Join(a, eol)
+End Function
