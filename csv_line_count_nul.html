@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="PowerShell・VBSを使わず、BATとfindstrでCSVの物理行数を数える回避案。NULを含む場合の想定条件、コード、保存方法、検証状況を掲載。">
+<meta name="color-scheme" content="light">
+<title>CSV行数カウント：NULを含む場合のBAT回避案 | BlueCoder</title>
+<style>
+:root{--ink:#183047;--sub:#516578;--bg:#f4f7fb;--line:#dce5ed;--blue:#1764a5;--pale:#eef6ff;--warn:#fff6df;--warn-line:#d7a44b;--code:#152433}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.85 system-ui,-apple-system,"Segoe UI","Yu Gothic",Meiryo,sans-serif}a{color:var(--blue);text-underline-offset:3px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #dc8d27;outline-offset:4px}.wrap{width:min(1040px,100% - 40px);margin:auto}header{background:#fff;border-bottom:1px solid var(--line);padding:38px 0 30px}.eyebrow{font-weight:750;font-size:13px;letter-spacing:.12em;color:var(--blue)}h1{font-size:clamp(25px,4vw,37px);line-height:1.45;letter-spacing:-.02em;margin:12px 0}h2{font-size:23px;line-height:1.5;margin:0 0 18px}h3{font-size:18px;margin:24px 0 10px}p{margin:10px 0 16px}.lede{max-width:800px;color:var(--sub);margin-bottom:12px}.meta{font-size:13px;color:var(--sub)}.tags{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 0}.tag{font-size:12px;padding:4px 10px;border-radius:5px;background:var(--pale);font-weight:650}.tag.warn{background:var(--warn)}main{padding:26px 0 52px}section,.notice{background:#fff;border:1px solid var(--line);border-radius:12px;padding:26px;margin:0 0 22px}.notice{background:var(--warn);border-left:5px solid var(--warn-line)}.notice p:last-child,section p:last-child{margin-bottom:0}.notice strong{font-weight:750}.number{display:inline-block;font-size:13px;font-weight:700;color:var(--blue);margin-right:9px}.code-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#eaf0f6;border:1px solid var(--line);border-radius:9px 9px 0 0;padding:12px 15px}.code-title{font:600 13px/1.5 ui-monospace,Consolas,monospace}.buttons{display:flex;gap:8px;flex-wrap:wrap}button{font:600 14px/1.4 inherit;font-family:inherit;border:1px solid #b8cbdc;border-radius:6px;padding:9px 14px;background:#fff;color:var(--blue);cursor:pointer}button.primary{background:var(--blue);border-color:var(--blue);color:#fff}button:hover{filter:brightness(.96)}pre{margin:0 0 16px;background:var(--code);color:#eef5fc;padding:20px;overflow:auto;border-radius:0 0 9px 9px;font:13px/1.8 ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;tab-size:4}pre.small{border-radius:8px;margin-top:10px}code{font-family:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace}p code,li code,td code{font-size:.9em;background:#edf2f6;padding:2px 5px;border-radius:4px}pre code{padding:0;background:none;font-size:inherit}.status{min-height:1.6em;margin:5px 0 12px;color:var(--blue);font-size:14px}.muted{font-size:14px;color:var(--sub)}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;font-size:14px;margin-top:10px}th,td{text-align:left;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}th{background:#f2f6fa}th:first-child,td:first-child{min-width:140px}ol,ul{padding-left:1.6em}li{margin:8px 0}.flow{font-weight:650;background:var(--pale);padding:16px;border-radius:8px;line-height:1.9}.source{font-size:14px}footer{padding:24px 0;background:#fff;border-top:1px solid var(--line);font-size:13px;color:var(--sub)}footer .wrap{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}.nojs{padding:12px;background:var(--warn)}@media(max-width:600px){.wrap{width:calc(100% - 24px)}header{padding:25px 0}section,.notice{padding:19px}pre{padding:15px;font-size:12px}h2{font-size:21px}.buttons{width:100%}.buttons button{flex:1}.code-head{padding:12px}.flow{font-size:14px}}@media print{body{background:#fff}.buttons,.status,footer{display:none}.wrap{width:100%}section,.notice{break-inside:avoid;border-radius:0}pre{white-space:pre-wrap;overflow:visible;background:#f4f4f4;color:#000;font-size:9px}a{color:inherit}header{padding:0 0 15px}main{padding-top:15px}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<div class="eyebrow">BLUECODER / WINDOWS BAT</div>
+<h1>CSVの行数をBATで数える<br>NULを含む場合の回避案</h1>
+<p class="lede">前回提示した、<code>find</code>を使わずに目印の行番号を取得する方法です。PowerShell・VBS・追加ソフトは使いません。</p>
+<div class="meta">作成日：2026年11月10日（日本時間） ／ v1.0</div>
+<div class="tags"><span class="tag">BAT + Windows標準コマンド</span><span class="tag">元CSVへの書き込みなし</span><span class="tag warn">Windows実行・実データ検証は未実施</span></div>
+</div></header>
+<main class="wrap">
+<aside class="notice" aria-label="検証状況と前提">
+<strong>最初に：実データで正しい件数との照合が必要です。</strong>
+<p>現在のBATとCSVは未確認で、このコードもWindows上では実行検証していません。「NULL」が実際のNULバイト（<code>0x00</code>）なのかも未確認です。<strong>倍になる原因が特定できた、または解決済みという意味ではありません。</strong>まず、正しい行数が分かっている小さなCSVで試してください。</p>
+</aside>
+<section id="usage">
+<h2><span class="number">01</span>使い方</h2>
+<ol>
+<li>下の「BATを保存」を押し、<code>csv_line_count_nul.bat</code>を保存します。コードをコピーして作成しても構いません。</li>
+<li>メモ帳などでBATを開き、<code>set "CSV_FILE=C:\work\data.csv"</code>のパスを、対象CSVのフルパスに変更します。</li>
+<li>コマンドプロンプトからBATを実行し、表示された<code>Rows=</code>の数値を確認します。</li>
+</ol>
+<p class="muted">例：BATを <code>C:\work</code> に置いた場合は、コマンドプロンプトで次を実行します。画面を残して確認できるよう、ダブルクリックではなくコマンドプロンプトから実行してください。</p>
+<pre class="small"><code>"C:\work\csv_line_count_nul.bat"</code></pre>
+<p class="muted">保存ボタンのBATは英数字のみ・BOMなし・CRLFです。日本語のパスへ書き換える場合は、実行環境のコードページと保存時の文字コードを合わせてください。日本語Windowsの一般的なCP932環境ではANSI（CP932）で保存します。CSV自体の文字コードとは別です。</p>
+</section>
+<section id="code">
+<h2><span class="number">02</span>BATコード</h2>
+<p>変更箇所は冒頭の<code>CSV_FILE</code>です。ヘッダーと空行も含む、物理的な行数を数える想定です。</p>
+<div class="code-head"><span class="code-title">csv_line_count_nul.bat</span><div class="buttons"><button id="copy" type="button">コードをコピー</button><button id="save" type="button" class="primary">BATを保存</button></div></div>
+<pre tabindex="0" aria-label="BATコード"><code id="bat-code">@echo off
+setlocal EnableExtensions DisableDelayedExpansion
+
+set "CSV_FILE=C:\work\data.csv"
+
+if not exist "%CSV_FILE%" (
+    echo ERROR: File not found.
+    exit /b 1
+)
+
+rem Empty file
+for %%F in ("%CSV_FILE%") do if %%~zF EQU 0 (
+    echo Rows=0
+    exit /b 0
+)
+
+set "COUNT="
+
+rem Add markers to the command output only, not to the CSV.
+rem Read only the first marker's line number.
+for /f "tokens=1 delims=:" %%N in ('^(findstr /n "^" "%CSV_FILE%" ^&amp;^&amp; echo __CSV_COUNT_END__^&amp;^&amp; echo __CSV_COUNT_END__^) ^| findstr /n /x /l /c:"__CSV_COUNT_END__"') do (
+    if not defined COUNT set /a "COUNT=%%N-1" &gt;nul
+)
+
+if not defined COUNT (
+    echo ERROR: Could not determine the line count.
+    exit /b 1
+)
+
+echo Rows=%COUNT%
+
+endlocal
+</code></pre>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+<noscript><p class="nojs">JavaScriptが無効です。上のコードを選択し、手動でコピーしてください。CSVの集計処理自体はBATで行います。</p></noscript>
+<p class="muted">表示例：<code>Rows=101</code>。これは表示形式の例であり、実行テストの結果ではありません。空のファイルでは<code>Rows=0</code>を表示する分岐を設けています。</p>
+<h3>ヘッダー1行を除外する場合</h3>
+<p>ヘッダーが必ず1行あるときだけ、最後の<code>echo Rows=%COUNT%</code>の直前に次の処理を追加します。</p>
+<pre class="small"><code>rem Insert immediately before: echo Rows=%COUNT%
+if %COUNT% GTR 0 set /a "COUNT-=1" &gt;nul</code></pre>
+</section>
+<section id="logic">
+<h2><span class="number">03</span>処理の考え方</h2>
+<div class="flow">CSVをfindstrで読み取り、全行に番号を付ける<br>→ 出力の末尾に目印を2行付ける<br>→ 目印だけを取り出して、その行番号 − 1 を取得する</div>
+<p>最初の<code>findstr /n "^"</code>は、各行の先頭に<code>1:</code>のような番号を付けます。後段の<code>findstr /n /x /l</code>は、目印と完全一致する行だけを取り出します。<code>/n</code>は行番号、<code>/x</code>は行全体の一致を指定します。<a href="#ref-findstr">[1]</a></p>
+<p><code>for /f</code>にはCSV本文を渡さず、目印の行番号だけを渡す設計です。<code>tokens=1 delims=:</code>で、コロンより前の番号を取得します。<a href="#ref-for">[2]</a> 元CSVへ追記する処理はありません。</p>
+<p>目印を2回出すのは、最終行に改行がなく、1つ目の目印が最終行へつながる場合にも備えるためです。CSV本文には先に番号を付けるので、本文中に同じ目印の文字列があっても、そのままの目印行とは区別する設計です。</p>
+<p class="muted">これは処理意図の説明です。NULを含む実ファイルでこの意図どおり動作することは未確認です。</p>
+</section>
+<section id="limits">
+<h2><span class="number">04</span>前提・制約</h2>
+<div class="table-wrap"><table>
+<thead><tr><th scope="col">項目</th><th scope="col">この回避案での扱い</th></tr></thead>
+<tbody>
+<tr><th scope="row">想定するCSV</th><td>Shift-JIS（CP932）またはUTF-8、CRLFまたはLF改行。実データでの確認を前提とします。</td></tr>
+<tr><th scope="row">行の長さ</th><td>前回案と同じく、1行8,000バイト以下を対象範囲とします。この範囲内なら必ず成功するという保証ではありません。</td></tr>
+<tr><th scope="row">対象外</th><td>UTF-16・UTF-32、CRのみの改行、長大な行、任意のバイナリデータ。これらを汎用的に処理するコードではありません。</td></tr>
+<tr><th scope="row">「NULL」の意味</th><td>文字列の<code>NULL</code>、空欄の<code>,,</code>、実際のNULバイト<code>0x00</code>は別物です。データベースのNULLがCSVへどう出力されているかは未確認です。</td></tr>
+<tr><th scope="row">行数とデータ件数</th><td>CSVの引用符で囲まれた項目に改行がある場合、物理行数とデータ件数は一致しません。このBATはCSVの引用符構造を解析しません。<a href="#ref-csv">[3]</a></td></tr>
+<tr><th scope="row">エラーが出た場合</th><td><code>File not found</code>は指定先を確認してください。<code>Could not determine the line count</code>やfindstrのエラー、既知の件数との不一致がある場合は、その結果を採用しないでください。</td></tr>
+</tbody></table></div>
+<h3>最低限の確認</h3>
+<p>同じ出力元で作った「NULLがない少量データ」と「NULLがある少量データ」の双方を、あらかじめ分かっている件数と比較してください。ヘッダーの有無、空行、最終行の改行の有無も確認対象です。確認が済むまでは、本番処理の件数判定に組み込まないでください。</p>
+</section>
+<section class="source" id="references">
+<h2><span class="number">05</span>参考資料</h2>
+<p id="ref-findstr">[1] <a href="https://learn.microsoft.com/ja-jp/windows-server/administration/windows-commands/findstr" target="_blank" rel="noopener noreferrer">Microsoft Learn：findstr</a> — オプションと正規表現の仕様。</p>
+<p id="ref-for">[2] <a href="https://learn.microsoft.com/ja-jp/windows-server/administration/windows-commands/for" target="_blank" rel="noopener noreferrer">Microsoft Learn：for</a> — コマンド出力の解析、tokens / delims。</p>
+<p id="ref-csv">[3] <a href="https://www.rfc-editor.org/rfc/rfc4180" target="_blank" rel="noopener noreferrer">RFC 4180：CSV形式の記述</a> — フィールド内の改行、最終行の改行。</p>
+<p class="muted">これらはコマンドや形式の参考資料です。Microsoft等がこのBATのNUL対応を保証しているという意味ではありません。</p>
+</section>
+</main>
+<footer><div class="wrap"><span>BlueCoder · CSV行数カウント / 2026-11-10</span><a href="https://github.com/taisuke942/BlueCoder/blob/master/csv_line_count_nul.html" target="_blank" rel="noopener noreferrer">GitHubでHTMLソースを確認</a></div></footer>
+<script>
+'use strict';
+const codeNode = document.getElementById('bat-code');
+const statusNode = document.getElementById('status');
+function batText() { return codeNode.textContent.replace(/\r\n?/g, '\n').replace(/\n/g, '\r\n'); }
+document.getElementById('copy').addEventListener('click', async () => {
+  try {
+    if (!navigator.clipboard || !window.isSecureContext) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText(batText());
+    statusNode.textContent = 'コードをコピーしました。CSV_FILEのパスを変更してから実行してください。';
+  } catch (_) {
+    const field = document.createElement('textarea');
+    field.value = batText();
+    field.style.position = 'fixed'; field.style.top = '0'; field.style.left = '-9999px';
+    document.body.appendChild(field); field.focus(); field.select();
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch (_) {}
+    field.remove();
+    statusNode.textContent = copied ? 'コードをコピーしました。' : '自動コピーできませんでした。コード欄を選択して手動でコピーしてください。';
+  }
+});
+document.getElementById('save').addEventListener('click', () => {
+  const blob = new Blob([batText()], {type: 'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url; link.download = 'csv_line_count_nul.bat';
+  document.body.appendChild(link); link.click(); link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  statusNode.textContent = 'BATの保存を開始しました。CSV_FILEのパスを変更してから実行してください。';
+});
+</script>
+</body>
+</html>
