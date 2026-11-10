@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="スプレッドシートのB1に入力した文字で、Google共有ドライブ内のファイル名・フォルダ名を部分一致検索するGAS。設定手順、コード全文、コピーとダウンロード、途中再開の使い方を掲載。">
+  <meta name="color-scheme" content="light">
+  <title>共有ドライブの部分一致検索｜GASコードと使い方</title>
+  <style>
+    :root{--ink:#183349;--muted:#546979;--paper:#f4f7fa;--line:#dbe5ec;--accent:#087f76;--pale:#e9f6f3;--navy:#102b40;--white:#fff;--radius:16px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;font-size:16px;line-height:1.9}a{color:#086d8b;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #e3a323;outline-offset:4px}button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.hero{background:var(--navy);color:var(--white);padding:48px 0 42px}.eyebrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px;color:#a8d5d4;font-size:13px;font-weight:700;letter-spacing:.06em}.eyebrow time{color:#bbccd7;letter-spacing:0;font-weight:400}.tag{border:1px solid #487382;border-radius:6px;padding:2px 9px}h1{font-size:clamp(28px,4.6vw,43px);line-height:1.45;letter-spacing:.01em;margin:0 0 16px;font-weight:750}.lead{max-width:760px;margin:0;color:#d7e5ec;font-size:17px;line-height:1.95}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.button{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:46px;padding:9px 20px;border:1px solid transparent;border-radius:9px;text-decoration:none;font-size:15px;line-height:1.6;font-weight:700}.button.primary{color:#fff;background:var(--accent)}.button.primary:hover{background:#06665e}.button.secondary{color:var(--ink);background:#fff;border-color:#c8d7e1}.hero .button.secondary{background:transparent;color:#fff;border-color:#71899a}.button.small{min-height:40px;font-size:14px;padding:8px 15px}.menu{display:flex;gap:22px;flex-wrap:wrap;padding:18px 0;font-size:14px;border-bottom:1px solid var(--line)}.menu a{color:var(--muted);text-decoration:none;font-weight:600}.menu a:hover{color:var(--accent)}main{padding-bottom:54px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:28px 0}.fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}.fact span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.fact strong{display:block;font-size:20px;line-height:1.6}.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;margin-top:24px;min-width:0}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.section-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;background:var(--pale);color:var(--accent);border-radius:10px;font-size:14px;font-weight:750}h2{font-size:23px;line-height:1.5;margin:0}h3{font-size:18px;line-height:1.7;margin:24px 0 8px}p{margin:0 0 14px}p:last-child{margin-bottom:0}ul,ol{padding-left:1.5em;margin:10px 0 18px}li+li{margin-top:8px}strong{font-weight:700}code{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:.92em;overflow-wrap:anywhere}p code,li code,td code,dd code{color:#13596d;background:#eef4f7;border-radius:4px;padding:2px 5px}.note{background:#f0f7fb;border-left:4px solid #4c8eab;padding:15px 18px;border-radius:0 9px 9px 0;font-size:14px;margin:18px 0 0}.note.calm{background:#eef8f4;border-left-color:#3b9176}.note strong{display:block;margin-bottom:4px}.table-wrap{overflow:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}tr:last-child td,tr:last-child th{border-bottom:0}thead th{background:#f1f6f9;font-weight:700;color:#446073}tbody th{width:160px;background:#fafcfd;font-weight:600}.sheet-example{min-width:740px}.sheet-example td{white-space:nowrap}.sheet-example .corner,.sheet-example .rownum{background:#f2f5f7;color:#7a8c97;text-align:center;width:42px;font-size:12px}.sheet-example .input{background:#fff0bb;font-weight:700}.sheet-example .head{background:#e4f0f9;font-weight:700}.sheet-example .url{color:#087c92}.caption{font-size:13px;color:var(--muted);margin:8px 0}.steps{counter-reset:step;list-style:none;padding:0;margin:20px 0 0}.steps>li{position:relative;padding:0 0 24px 44px;margin:0;border-left:1px solid var(--line);margin-left:15px}.steps>li:last-child{border:0;padding-bottom:0}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:1px;background:var(--accent);color:white;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}.steps h3{margin:0 0 8px}.config{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:#f7fafc;overflow:auto;line-height:1.8;font-size:13px}.config code{white-space:pre;overflow-wrap:normal}.flow{display:flex;align-items:stretch;gap:12px;margin:20px 0}.flow>div{flex:1;background:#f3f8f9;border:1px solid #dbe9eb;border-radius:11px;padding:15px 17px}.flow small{display:block;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:4px}.flow strong{font-size:16px}.code-card{padding:0;overflow:hidden}.code-intro{padding:27px 30px 20px}.code-intro .section-head{margin-bottom:12px}.code-toolbar{padding:14px 22px;background:#eaf1f5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.filename{font-family:Consolas,"SFMono-Regular",Menlo,monospace;color:#4c6779;font-size:13px}.tools{display:flex;gap:10px;flex-wrap:wrap}.code-view{margin:0;background:#102435;color:#e0edf3;overflow:auto;max-height:720px;padding:24px;tab-size:2;font-size:13px;line-height:1.8}.code-view code{font-size:inherit;white-space:pre;overflow-wrap:normal}.copy-status{padding:9px 24px;background:#f4f8fa;color:#3c6475;min-height:44px;font-size:13px}.code-footer{padding:15px 24px;font-size:13px;color:var(--muted)}details{border-top:1px solid var(--line);padding:16px 0}details:first-of-type{border-top:0}details:last-child{padding-bottom:0}summary{font-size:16px;font-weight:650;cursor:pointer;padding:2px 0}details p{font-size:14px;padding:11px 0 0 20px;line-height:1.9}.refs{font-size:14px;margin-bottom:0}.refs li+li{margin-top:7px}.footer{padding:24px 0 32px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-inner{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.skip{position:absolute;left:10px;top:-70px;background:#fff;padding:10px;z-index:3}.skip:focus{top:10px}.nowrap{white-space:nowrap}
+    @media(max-width:720px){.wrap{width:calc(100% - 28px)}.hero{padding:32px 0}.lead{font-size:15px}.facts{grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0}.fact{padding:14px}.fact strong{font-size:18px}.card{padding:21px 18px;margin-top:18px;border-radius:12px}.code-card{padding:0}.code-intro{padding:22px 18px 18px}.code-toolbar{padding:13px 16px}.code-view{padding:18px;font-size:12px;max-height:560px}.copy-status{padding:9px 16px}.code-footer{padding:14px 16px}.menu{gap:15px;font-size:13px;padding:14px 0}.flow{flex-direction:column;gap:8px}.flow>div{padding:12px 15px}.flow small{display:inline;margin-right:10px}h2{font-size:20px}.steps>li{padding-left:30px;margin-left:14px}tbody th{width:105px}th,td{padding:10px;font-size:13px}.hero-actions .button{flex:1;min-width:155px}.button.small{font-size:13px;padding:8px 12px}.section-head{gap:10px}.section-no{width:30px;height:30px;flex-basis:30px}}
+    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+    @media print{body{background:#fff;font-size:11pt}.wrap{width:100%;max-width:none}.hero{background:#fff;color:#000;padding:0 0 18px}.lead,.eyebrow,.eyebrow time{color:#444}.tag{border-color:#aaa}.hero-actions,.menu,.tools,.copy-status,.skip{display:none}.card,.fact{break-inside:avoid;border-color:#ccc}.code-card{break-inside:auto}.code-view{max-height:none;overflow:visible;background:#fff;color:#111;font-size:8pt;white-space:pre-wrap}.code-view code{white-space:pre-wrap;overflow-wrap:anywhere}.facts{margin:16px 0}.card{padding:18px}.table-wrap{overflow:visible}.sheet-example{min-width:0}.sheet-example td{white-space:normal}.flow{display:block}.flow>div{margin:6px 0}.footer{padding:12px 0}a{color:#222}}
+  </style>
+</head>
+<body>
+<a class="skip" href="#main">本文へ移動</a>
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow"><span class="tag">GOOGLE APPS SCRIPT</span><time datetime="2026-11-10">更新日：2026年11月10日</time></div>
+    <h1>共有ドライブを、<br>B1の文字から検索。</h1>
+    <p class="lead">Googleスプレッドシートから、共有ドライブ内のファイル名・フォルダ名を部分一致検索。結果を3行目から一覧表示するGASコードと、導入・操作の手順です。</p>
+    <div class="hero-actions"><a class="button primary" href="#setup">初回設定を見る</a><a class="button secondary" href="#code">コード全文へ</a></div>
+  </div>
+</header>
+<main id="main" class="wrap">
+  <nav class="menu" aria-label="ページ内メニュー"><a href="./index.html">GASコード一覧</a><a href="#overview">検索の内容</a><a href="#setup">初回設定</a><a href="#usage">使い方</a><a href="#code">コード全文</a><a href="#help">困ったとき</a></nav>
+  <div class="facts" aria-label="基本仕様">
+    <div class="fact"><span>検索語を入力</span><strong>B1セル</strong></div>
+    <div class="fact"><span>結果を表示</span><strong>3行目から</strong></div>
+    <div class="fact"><span>検索対象</span><strong>全階層の名前</strong></div>
+    <div class="fact"><span>長時間の検索</span><strong>途中から再開</strong></div>
+  </div>
+
+  <section id="overview" class="card" aria-labelledby="overview-title">
+    <div class="section-head"><span class="section-no">01</span><h2 id="overview-title">どのように検索するか</h2></div>
+    <p><strong>B1に文字を入力し、メニューの「共有ドライブ検索 → 新しく検索」を実行</strong>します。指定した共有ドライブの全階層から、実行したGoogleアカウントで閲覧できる名前を探します。</p>
+    <p>例えば <code>見積</code> で、<code>見積書.xlsx</code>、<code>2026年度_見積一覧.xlsx</code>、<code>株式会社〇〇_見積資料</code> というフォルダが対象になります。</p>
+    <div class="table-wrap"><table><tbody>
+      <tr><th scope="row">対象</th><td>ファイル名・フォルダ名・ショートカット名。ゴミ箱は除外します。</td></tr>
+      <tr><th scope="row">一致の条件</th><td>検索文字が名前のどこかに含まれる部分一致です。</td></tr>
+      <tr><th scope="row">表記の違い</th><td>英字の大小、全角・半角を正規化します。例：<code>ＡＢＣ</code> と <code>abc</code>、<code>ﾃｽﾄ</code> と <code>テスト</code>。</td></tr>
+      <tr><th scope="row">空白を含む入力</th><td>空白も文字として扱います。複数キーワードのAND検索にはなりません。</td></tr>
+      <tr><th scope="row">検索範囲</th><td>指定した共有ドライブ内の全階層。別ドライブへ向いたショートカットの先はたどりません。</td></tr>
+    </tbody></table></div>
+    <p class="caption">この「あいまい検索」は名前の部分一致です。ファイル本文の検索、誤字の推測、ひらがな・カタカナの同一視は行いません。</p>
+    <aside class="note calm"><strong>PCの「G:」は設定不要です</strong>GASはGoogleドライブ上のデータを読み取ります。コードに設定するのは、Windows上のドライブ文字ではなく、共有ドライブ自体のIDです。</aside>
+    <h3>ファイルが大量にある場合</h3>
+    <p>Drive APIの <code>name contains</code> は、公式仕様では前方一致です。名前の途中も判定するため、このコードは最大1,000件ずつ名前などの情報を取得し、GAS側で部分一致を判定します。ファイルの中身はダウンロードしません。</p>
+    <p><strong>検索のたびに全件の名前を確認するため、件数に応じて時間がかかります。</strong>GASの通常の実行上限は1回6分なので、約4分を目安に処理を区切り、続きの位置を保存します。残りはメニューから手動で再開します。</p>
+    <p class="caption">根拠：<a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">検索演算子の仕様</a> ／ <a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">files.listとページ取得</a> ／ <a href="https://developers.google.com/apps-script/guides/services/quotas">GASの実行時間制限</a></p>
+  </section>
+
+  <section id="setup" class="card" aria-labelledby="setup-title">
+    <div class="section-head"><span class="section-no">02</span><h2 id="setup-title">初回設定</h2></div>
+    <p>検索用のシート名は初期設定で <strong>「検索」</strong>です。初回設定を実行すると、同じスプレッドシート内に作成されます。</p>
+    <ol class="steps">
+      <li><h3>スプレッドシートからApps Scriptを開く</h3><p>検索に使うスプレッドシートで、<strong>「拡張機能 → Apps Script」</strong>を開きます。新しいプロジェクトなら、最初の <code>myFunction</code> を消して、このページの<a href="#code">コード全文</a>を貼り付けます。</p><p>既存コードがある場合は消さずに追加してください。既に <code>onOpen()</code> がある場合は、メニュー追加部分をその関数にまとめます。</p></li>
+      <li><h3>共有ドライブIDを設定する</h3><p>コード冒頭の次の箇所を、お持ちの共有ドライブIDへ変更します。</p><pre class="config"><code>DRIVE_ID: 'ここに共有ドライブIDを入力',</code></pre><p><strong>共有ドライブ自体のID</strong>を指定してください。その中にある下位フォルダのIDや、<code>G:\</code> のようなパスは指定しません。</p><p>既存シートを使う場合は、<code>SHEET_NAME: '検索'</code> の <code>検索</code> を実際のシート名へ変更します。そのシートのA1・C1・2行目に見出しを設定し、A3:Fを出力範囲として使います。</p></li>
+      <li><h3>Google Drive APIを追加する</h3><p>Apps Scriptの左側にある<strong>「サービス」の横の「＋」</strong>から <strong>Google Drive API</strong> を追加します。バージョンは <strong>v3</strong>、識別子は <strong>Drive</strong> にします。</p><p>通常の自動作成されたCloudプロジェクトでは、この操作でAPIも有効になります。自分で標準Google Cloudプロジェクトへ関連付けた場合は、Cloud側でもDrive APIを有効にしてください。<a href="https://developers.google.com/apps-script/guides/services/advanced">Google公式の設定手順</a></p></li>
+      <li><h3>初回設定の関数を実行する</h3><p>保存後、上部の関数選択で <code>setupDriveSearch</code> を選び、<strong>「実行」</strong>をクリックします。権限の確認が表示されたら、共有ドライブへアクセスするGoogleアカウントで許可します。</p></li>
+      <li><h3>スプレッドシートを再読み込みする</h3><p>上部に<strong>「共有ドライブ検索」</strong>メニューが表示されれば準備完了です。<code>setupDriveSearch</code> は初回設定用で、毎回の検索には使いません。</p></li>
+    </ol>
+  </section>
+
+  <section id="usage" class="card" aria-labelledby="usage-title">
+    <div class="section-head"><span class="section-no">03</span><h2 id="usage-title">普段の使い方</h2></div>
+    <div class="flow" aria-label="検索の操作手順"><div><small>STEP 1</small><strong>B1に検索語を入力</strong></div><div><small>STEP 2</small><strong>メニューで「新しく検索」</strong></div><div><small>STEP 3</small><strong>D1の状態と結果を確認</strong></div></div>
+    <p><strong>B1への入力だけでは自動実行しません。</strong>入力後に「共有ドライブ検索 → 新しく検索」を選択してください。</p>
+    <div class="table-wrap"><table class="sheet-example" aria-label="検索シートの表示例"><thead><tr><th class="corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody>
+      <tr><th class="rownum" scope="row">1</th><td>検索語</td><td class="input">見積</td><td>状態</td><td colspan="3">完了 ｜ 確認 12,000件 ／ 該当 2件 ｜ 検索語：見積</td></tr>
+      <tr class="head"><th class="rownum" scope="row">2</th><td>No.</td><td>種類</td><td>名前</td><td>更新日時</td><td>開くURL</td><td>親フォルダURL</td></tr>
+      <tr><th class="rownum" scope="row">3</th><td>1</td><td>ファイル</td><td>2026年度_見積一覧.xlsx</td><td>2026/11/10 09:00:00</td><td class="url">ファイルのURL</td><td class="url">フォルダのURL</td></tr>
+      <tr><th class="rownum" scope="row">4</th><td>2</td><td>フォルダ</td><td>株式会社〇〇_見積資料</td><td>2026/11/09 15:30:00</td><td class="url">フォルダのURL</td><td class="url">フォルダのURL</td></tr>
+    </tbody></table></div>
+    <p class="caption">表示イメージです。実際の出力ではE列とF列にURLを書き出します。更新日時はスプレッドシートのタイムゾーンに従います。</p>
+    <h3>D1の表示と次の操作</h3>
+    <div class="table-wrap"><table><thead><tr><th scope="col">D1の状態</th><th scope="col">次の操作</th></tr></thead><tbody>
+      <tr><th scope="row">検索中</th><td>処理が終わるまで待ちます。途中の結果も順に表示されます。</td></tr>
+      <tr><th scope="row">一時停止</th><td>「共有ドライブ検索 → <strong>続きから検索</strong>」を選択します。完了するまで必要な回数だけ繰り返します。</td></tr>
+      <tr><th scope="row">完了</th><td>検索終了です。「該当0件」で完了する場合もあります。</td></tr>
+      <tr><th scope="row">中断（未完了）</th><td>表示されたエラーを確認します。下の「困ったとき」を参照してください。</td></tr>
+    </tbody></table></div>
+    <aside class="note"><strong>再開する間は、検索条件と結果の行をそのままに</strong>検索中・再開待ちの間は、B1や結果の行を編集・並べ替えないでください。再開は検索を開始したGoogleアカウントで行います。別の文字を探す場合はB1を書き換え、「新しく検索」を選びます。このときA3:Fの前回結果は置き換わります。</aside>
+  </section>
+
+  <section id="code" class="card code-card" aria-labelledby="code-title">
+    <div class="code-intro"><div class="section-head"><span class="section-no">04</span><h2 id="code-title">GASコード全文</h2></div><p>「コードをコピー」で全文をコピーし、Apps Scriptへ貼り付けます。<strong>変更が必須なのは <code>DRIVE_ID</code> の1か所</strong>です。</p></div>
+    <div class="code-toolbar"><span class="filename">shared_drive_search.gs</span><div class="tools"><button class="button primary small" type="button" id="copy-code">コードをコピー</button><button class="button secondary small" type="button" id="download-code">.gsを保存</button></div></div>
+    <pre class="code-view" tabindex="0" aria-label="Google Apps Scriptコード全文"><code id="gas-code">/**
+ * 共有ドライブ内の名前を部分一致検索するGAS（2026-11-10）
+ *
+ * 初回設定:
+ * 1. 検索に使うスプレッドシートの「拡張機能 → Apps Script」に貼り付ける。
+ * 2. 下の DRIVE_ID を、共有ドライブ自体のIDに変更する。
+ * 3. 左側の「サービス +」で Google Drive API（v3 / 識別子 Drive）を追加する。
+ * 4. setupDriveSearch を一度実行し、アクセスを許可する。
+ *
+ * 通常操作:
+ * 「検索」シートのB1に文字を入力 → メニュー「共有ドライブ検索 → 新しく検索」。
+ * D1が「一時停止」なら、同じメニューの「続きから検索」を実行する。
+ * B1入力だけでは自動実行しない。約4分ごとに区切り、必要な回数だけ再開する。
+ * 検索中・再開待ちの間は、検索語や結果の行を編集・並べ替えない。
+ *
+ * 対象: このアカウントから閲覧できる、指定共有ドライブ内の全階層の名前。
+ * ゴミ箱は除外。本文検索・誤字補正・別ドライブへのショートカット追跡は行わない。
+ * 全角半角と英字大小を正規化した部分一致。空白区切りはAND検索にせず文字として扱う。
+ * 毎回、全件の名前などの情報を読み取るため、件数に比例して時間がかかる。
+ * ページトークンが失効した場合は「新しく検索」でやり直す。
+ *
+ * 結果はA3:F以降を使用。新規検索ではこの範囲の前回結果を消去する。
+ * Drive上のファイル操作は読み取りのみ。
+ * 更新日時の表示はスプレッドシートのタイムゾーンに従う。
+ *
+ * 仕様確認:
+ * https://developers.google.com/workspace/drive/api/guides/ref-search-terms
+ * https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list
+ * https://developers.google.com/apps-script/guides/services/quotas
+ */
+
+const DRIVE_SEARCH = {
+  DRIVE_ID: 'ここに共有ドライブIDを入力',
+  SHEET_NAME: '検索',
+  PAGE_SIZE: 1000,
+  RUN_LIMIT_MS: 4 * 60 * 1000,
+  STATE_KEY: 'SHARED_DRIVE_NAME_SEARCH_V1'
+};
+
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('共有ドライブ検索')
+    .addItem('新しく検索', 'startDriveSearch')
+    .addItem('続きから検索', 'continueDriveSearch')
+    .addToUi();
+}
+
+// 初回だけ実行。B1の既存入力は保持する。
+function setupDriveSearch() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
+  if (!sheet) {
+    sheet = ss.insertSheet(DRIVE_SEARCH.SHEET_NAME);
+    // 新規作成した検索専用シートは6列にして、セル数の増加を抑える。
+    if (sheet.getMaxColumns() &gt; 6) {
+      sheet.deleteColumns(7, sheet.getMaxColumns() - 6);
+    }
+  }
+  if (sheet.getMaxColumns() &lt; 6) {
+    sheet.insertColumnsAfter(sheet.getMaxColumns(), 6 - sheet.getMaxColumns());
+  }
+  if (sheet.getMaxRows() &lt; 3) {
+    sheet.insertRowsAfter(sheet.getMaxRows(), 3 - sheet.getMaxRows());
+  }
+  sheet.getRange('A1').setValue('検索語');
+  sheet.getRange('B1').setBackground('#fff2cc');
+  sheet.getRange('C1').setValue('状態');
+  sheet.getRange(2, 1, 1, 6)
+    .setValues([['No.', '種類', '名前', '更新日時', '開くURL', '親フォルダURL']])
+    .setFontWeight('bold').setBackground('#d9eaf7');
+  sheet.setFrozenRows(2);
+  sheet.setColumnWidth(1, 60);
+  sheet.setColumnWidth(2, 180);
+  sheet.setColumnWidth(3, 350);
+  sheet.setColumnWidth(4, 180);
+  sheet.setColumnWidths(5, 2, 300);
+  ss.setActiveSheet(sheet);
+  onOpen();
+}
+
+function startDriveSearch() {
+  runDriveSearch_(true);
+}
+
+function continueDriveSearch() {
+  runDriveSearch_(false);
+}
+
+function runDriveSearch_(restart) {
+  const started = Date.now();
+  const lock = LockService.getDocumentLock();
+  if (!lock || !lock.tryLock(1000)) {
+    throw new Error('別の検索が実行中です。終了後に実行してください。');
+  }
+  let sheet;
+  let processing = false;
+  try {
+    if (typeof Drive === 'undefined') {
+      throw new Error('Apps Scriptの「サービス +」でGoogle Drive API（v3）を追加してください。');
+    }
+    const driveId = DRIVE_SEARCH.DRIVE_ID.trim();
+    if (!/^[A-Za-z0-9_-]+$/.test(driveId)) {
+      throw new Error('DRIVE_IDに共有ドライブ自体のIDを設定してください。');
+    }
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
+    if (!sheet) throw new Error('先にsetupDriveSearchを実行してください。');
+
+    const keyword = sheet.getRange('B1').getDisplayValue().trim();
+    if (!keyword) throw new Error('B1に検索する文字を入力してください。');
+    const key = normalizeDriveName_(keyword);
+    const owner = Session.getTemporaryActiveUserKey();
+    const props = PropertiesService.getDocumentProperties();
+    let state;
+
+    if (restart) {
+      state = {
+        driveId: driveId, sheetId: sheet.getSheetId(), owner: owner,
+        keyword: keyword, key: key, token: '',
+        nextRow: 3, checked: 0, hits: 0, done: false
+      };
+      props.setProperty(DRIVE_SEARCH.STATE_KEY, JSON.stringify(state));
+    } else {
+      const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+      if (!saved) throw new Error('再開する検索がありません。「新しく検索」を実行してください。');
+      state = JSON.parse(saved);
+      if (state.owner !== owner) {
+        throw new Error('検索を開始したGoogleアカウントで再開してください。');
+      }
+      if (state.driveId !== driveId || state.sheetId !== sheet.getSheetId() || state.key !== key) {
+        throw new Error('検索条件が変わっています。「新しく検索」を実行してください。');
+      }
+      if (state.done) {
+        showDriveStatus_(sheet, state, '完了');
+        return;
+      }
+    }
+
+    processing = true;
+    // 前回、書き込み後・進捗保存前に止まった場合も二重追記を防ぐ。
+    clearDriveResultsFrom_(sheet, state.nextRow);
+    showDriveStatus_(sheet, state, '検索中');
+    SpreadsheetApp.flush();
+
+    while (Date.now() - started &lt; DRIVE_SEARCH.RUN_LIMIT_MS) {
+      const options = {
+        corpora: 'drive', driveId: state.driveId,
+        includeItemsFromAllDrives: true, supportsAllDrives: true,
+        spaces: 'drive', q: 'trashed = false', pageSize: DRIVE_SEARCH.PAGE_SIZE,
+        fields: 'nextPageToken,incompleteSearch,files(id,name,mimeType,modifiedTime,webViewLink,parents)'
+      };
+      if (state.token) options.pageToken = state.token;
+      const page = Drive.Files.list(options);
+      if (page.incompleteSearch) {
+        throw new Error('Drive APIが検索未完了を返しました。「新しく検索」でやり直してください。');
+      }
+
+      const files = page.files || [];
+      const rows = files
+        .filter(file =&gt; normalizeDriveName_(file.name).includes(state.key))
+        .map((file, i) =&gt; {
+          const folder = file.mimeType === 'application/vnd.google-apps.folder';
+          const shortcut = file.mimeType === 'application/vnd.google-apps.shortcut';
+          const name = String(file.name || '');
+          return [
+            state.hits + i + 1,
+            folder ? 'フォルダ' : (shortcut ? 'ショートカット' : 'ファイル'),
+            /^[=']/.test(name) ? "'" + name : name,
+            file.modifiedTime ? new Date(file.modifiedTime) : '',
+            file.webViewLink || (folder
+              ? 'https://drive.google.com/drive/folders/' + file.id
+              : 'https://drive.google.com/file/d/' + file.id + '/view'),
+            file.parents &amp;&amp; file.parents.length
+              ? 'https://drive.google.com/drive/folders/' + file.parents[0] : ''
+          ];
+        });
+
+      if (rows.length) {
+        const endRow = state.nextRow + rows.length - 1;
+        if (endRow &gt; sheet.getMaxRows()) {
+          sheet.insertRowsAfter(sheet.getMaxRows(), endRow - sheet.getMaxRows());
+        }
+        sheet.getRange(state.nextRow, 3, rows.length, 1).setNumberFormat('@');
+        sheet.getRange(state.nextRow, 1, rows.length, 6).setValues(rows);
+        sheet.getRange(state.nextRow, 4, rows.length, 1)
+          .setNumberFormat('yyyy/mm/dd hh:mm:ss');
+      }
+
+      state.checked += files.length;
+      state.hits += rows.length;
+      state.nextRow += rows.length;
+      state.token = page.nextPageToken || '';
+      state.done = !state.token;
+      showDriveStatus_(sheet, state, '検索中');
+      // シートへの書き込みを確定してから、次のページ位置を保存する。
+      SpreadsheetApp.flush();
+      props.setProperty(DRIVE_SEARCH.STATE_KEY, JSON.stringify(state));
+      if (state.done) break;
+    }
+
+    showDriveStatus_(sheet, state, state.done
+      ? '完了' : '一時停止：「続きから検索」を実行');
+    SpreadsheetApp.flush();
+    ss.toast(state.done ? '検索が完了しました。' : '続きから検索できます。', '共有ドライブ検索', 8);
+  } catch (error) {
+    if (sheet &amp;&amp; processing) {
+      sheet.getRange('D1').setValue('中断（未完了）：' + error.message);
+    }
+    throw error;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function normalizeDriveName_(value) {
+  return String(value || '').normalize('NFKC').toLowerCase();
+}
+
+function clearDriveResultsFrom_(sheet, row) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow &gt;= row) {
+    sheet.getRange(row, 1, lastRow - row + 1, 6).clearContent();
+  }
+}
+
+function showDriveStatus_(sheet, state, label) {
+  sheet.getRange('D1').setValue(
+    label + ' ｜ 確認 ' + state.checked.toLocaleString('ja-JP') + '件' +
+    ' ／ 該当 ' + state.hits.toLocaleString('ja-JP') + '件' +
+    ' ｜ 検索語：' + state.keyword
+  );
+}
+</code></pre>
+    <div class="copy-status" id="copy-status" role="status" aria-live="polite">コード全体をコピーできます。</div>
+    <div class="code-footer">Drive上のファイル操作は読み取りのみです。書き込み先は検索用スプレッドシートと、この検索の進捗情報です。</div>
+  </section>
+
+  <section id="help" class="card" aria-labelledby="help-title">
+    <div class="section-head"><span class="section-no">05</span><h2 id="help-title">困ったとき</h2></div>
+    <details><summary>「Drive is not defined」など、Driveのエラーが出る</summary><p>「サービス ＋」からGoogle Drive APIを追加し、v3・識別子Driveになっているか確認してください。共有ドライブIDを設定していることと、実行アカウントに対象ドライブの閲覧権限があることも確認します。</p></details>
+    <details><summary>「共有ドライブ検索」メニューが出ない</summary><p>setupDriveSearchを一度実行し、スプレッドシートを再読み込みしてください。既存プロジェクトに追加した場合は、onOpen()が重複していないか確認します。</p></details>
+    <details><summary>一時停止した後、再開するとエラーになる</summary><p>B1、共有ドライブID、シート、Googleアカウントが検索開始時と同じか確認してください。ページトークンは公式仕様で通常数時間有効です。長時間置いた後にpageToken関連のエラーが出た場合は、「新しく検索」で最初から実行してください。APIの一時的なエラーなら、同じ条件のまま「続きから検索」で再試行できます。</p></details>
+    <details><summary>ファイルが見つからない・0件になる</summary><p>検索対象は名前です。本文中だけに含まれる文字はヒットしません。複数語を空白で区切ると、その空白を含めた文字列で検索します。また、Googleアカウントから閲覧できない項目、ゴミ箱内、別ドライブへのショートカットの先は対象外です。</p></details>
+    <details><summary>大量のファイルを毎回もっと速く検索したい</summary><p>このコードは毎回すべての名前を確認する方式です。件数が多く、繰り返しすばやく検索する必要がある場合は、ファイル名の一覧を事前に作成し、その一覧を検索・更新する索引方式が適しています。このコードには索引作成機能は含めていません。</p></details>
+    <details><summary>検索時の結果は、完全な同一時点の一覧か</summary><p>検索中にファイルの追加・削除・名前変更があると、結果に影響することがあります。Drive APIのページ取得は、共有ドライブ全体を固定した同一時点のスナップショットではありません。</p></details>
+  </section>
+
+  <section class="card" aria-labelledby="sources-title"><div class="section-head"><span class="section-no">参考</span><h2 id="sources-title">公式仕様と確認範囲</h2></div><ul class="refs"><li><a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">Google Drive API：検索クエリの用語と演算子</a></li><li><a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">Google Drive API：files.list・ページ取得・ページトークン</a></li><li><a href="https://developers.google.com/apps-script/guides/services/quotas">Google Apps Script：割り当てと実行時間制限</a></li><li><a href="https://developers.google.com/apps-script/guides/services/advanced">Google Apps Script：高度なサービスの有効化</a></li></ul><p class="caption">コードは構文チェックと疑似データによる部分一致・途中再開・重複防止などの確認を実施済みです。実際の共有ドライブへの接続確認は、IDを設定して実行した時点になります。</p></section>
+</main>
+<footer class="footer"><div class="wrap footer-inner"><span>共有ドライブの部分一致検索 / Google Apps Script</span><span>2026年11月10日版 · <a href="#main">ページ上部へ</a></span></div></footer>
+<script>
+(function () {
+  'use strict';
+  var code = document.getElementById('gas-code');
+  var status = document.getElementById('copy-status');
+  var copyButton = document.getElementById('copy-code');
+  function fallbackCopy(text) {
+    var input = document.createElement('textarea');
+    input.value = text;
+    input.setAttribute('readonly', '');
+    input.style.position = 'fixed';
+    input.style.top = '0';
+    input.style.left = '-9999px';
+    input.style.fontSize = '16px';
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+    input.setSelectionRange(0, text.length);
+    var copied = false;
+    try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
+    input.remove();
+    copyButton.focus();
+    return copied;
+  }
+  copyButton.addEventListener('click', async function () {
+    var text = code.textContent;
+    var copied = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(text); copied = true; } catch (error) { copied = false; }
+    }
+    if (!copied) copied = fallbackCopy(text);
+    if (copied) {
+      status.textContent = 'コード全文をコピーしました。Apps Scriptへ貼り付け、DRIVE_IDを設定してください。';
+      copyButton.textContent = 'コピーしました';
+      window.setTimeout(function () { copyButton.textContent = 'コードをコピー'; }, 2200);
+    } else {
+      var selection = window.getSelection();
+      var range = document.createRange();
+      range.selectNodeContents(code);
+      selection.removeAllRanges();
+      selection.addRange(range);
+      status.textContent = '自動コピーができませんでした。コードを選択しましたので、コピー操作を行うか「.gsを保存」を使ってください。';
+    }
+  });
+  document.getElementById('download-code').addEventListener('click', function () {
+    var blob = new Blob([code.textContent], {type: 'text/plain;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = 'shared_drive_search.gs';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+    status.textContent = 'shared_drive_search.gsの保存を開始しました。';
+  });
+})();
+</script>
+</body>
+</html>
