@@ -1,122 +1,68 @@
 <!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="スプレッドシートのB1に入力した文字で、Google共有ドライブ内のファイル名・フォルダ名を部分一致検索するGAS。設定手順、コード全文、コピーとダウンロード、途中再開の使い方を掲載。">
-  <meta name="color-scheme" content="light">
-  <title>共有ドライブの部分一致検索｜GASコードと使い方</title>
-  <style>
-    :root{--ink:#183349;--muted:#546979;--paper:#f4f7fa;--line:#dbe5ec;--accent:#087f76;--pale:#e9f6f3;--navy:#102b40;--white:#fff;--radius:16px}
-    *{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;font-size:16px;line-height:1.9}a{color:#086d8b;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #e3a323;outline-offset:4px}button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.hero{background:var(--navy);color:var(--white);padding:48px 0 42px}.eyebrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:18px;color:#a8d5d4;font-size:13px;font-weight:700;letter-spacing:.06em}.eyebrow time{color:#bbccd7;letter-spacing:0;font-weight:400}.tag{border:1px solid #487382;border-radius:6px;padding:2px 9px}h1{font-size:clamp(28px,4.6vw,43px);line-height:1.45;letter-spacing:.01em;margin:0 0 16px;font-weight:750}.lead{max-width:760px;margin:0;color:#d7e5ec;font-size:17px;line-height:1.95}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}.button{display:inline-flex;justify-content:center;align-items:center;gap:8px;min-height:46px;padding:9px 20px;border:1px solid transparent;border-radius:9px;text-decoration:none;font-size:15px;line-height:1.6;font-weight:700}.button.primary{color:#fff;background:var(--accent)}.button.primary:hover{background:#06665e}.button.secondary{color:var(--ink);background:#fff;border-color:#c8d7e1}.hero .button.secondary{background:transparent;color:#fff;border-color:#71899a}.button.small{min-height:40px;font-size:14px;padding:8px 15px}.menu{display:flex;gap:22px;flex-wrap:wrap;padding:18px 0;font-size:14px;border-bottom:1px solid var(--line)}.menu a{color:var(--muted);text-decoration:none;font-weight:600}.menu a:hover{color:var(--accent)}main{padding-bottom:54px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:28px 0}.fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px}.fact span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}.fact strong{display:block;font-size:20px;line-height:1.6}.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;margin-top:24px;min-width:0}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.section-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;background:var(--pale);color:var(--accent);border-radius:10px;font-size:14px;font-weight:750}h2{font-size:23px;line-height:1.5;margin:0}h3{font-size:18px;line-height:1.7;margin:24px 0 8px}p{margin:0 0 14px}p:last-child{margin-bottom:0}ul,ol{padding-left:1.5em;margin:10px 0 18px}li+li{margin-top:8px}strong{font-weight:700}code{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:.92em;overflow-wrap:anywhere}p code,li code,td code,dd code{color:#13596d;background:#eef4f7;border-radius:4px;padding:2px 5px}.note{background:#f0f7fb;border-left:4px solid #4c8eab;padding:15px 18px;border-radius:0 9px 9px 0;font-size:14px;margin:18px 0 0}.note.calm{background:#eef8f4;border-left-color:#3b9176}.note strong{display:block;margin-bottom:4px}.table-wrap{overflow:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}tr:last-child td,tr:last-child th{border-bottom:0}thead th{background:#f1f6f9;font-weight:700;color:#446073}tbody th{width:160px;background:#fafcfd;font-weight:600}.sheet-example{min-width:740px}.sheet-example td{white-space:nowrap}.sheet-example .corner,.sheet-example .rownum{background:#f2f5f7;color:#7a8c97;text-align:center;width:42px;font-size:12px}.sheet-example .input{background:#fff0bb;font-weight:700}.sheet-example .head{background:#e4f0f9;font-weight:700}.sheet-example .url{color:#087c92}.caption{font-size:13px;color:var(--muted);margin:8px 0}.steps{counter-reset:step;list-style:none;padding:0;margin:20px 0 0}.steps>li{position:relative;padding:0 0 24px 44px;margin:0;border-left:1px solid var(--line);margin-left:15px}.steps>li:last-child{border:0;padding-bottom:0}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:1px;background:var(--accent);color:white;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}.steps h3{margin:0 0 8px}.config{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:#f7fafc;overflow:auto;line-height:1.8;font-size:13px}.config code{white-space:pre;overflow-wrap:normal}.flow{display:flex;align-items:stretch;gap:12px;margin:20px 0}.flow>div{flex:1;background:#f3f8f9;border:1px solid #dbe9eb;border-radius:11px;padding:15px 17px}.flow small{display:block;color:var(--accent);font-size:12px;font-weight:700;margin-bottom:4px}.flow strong{font-size:16px}.code-card{padding:0;overflow:hidden}.code-intro{padding:27px 30px 20px}.code-intro .section-head{margin-bottom:12px}.code-toolbar{padding:14px 22px;background:#eaf1f5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.filename{font-family:Consolas,"SFMono-Regular",Menlo,monospace;color:#4c6779;font-size:13px}.tools{display:flex;gap:10px;flex-wrap:wrap}.code-view{margin:0;background:#102435;color:#e0edf3;overflow:auto;max-height:720px;padding:24px;tab-size:2;font-size:13px;line-height:1.8}.code-view code{font-size:inherit;white-space:pre;overflow-wrap:normal}.copy-status{padding:9px 24px;background:#f4f8fa;color:#3c6475;min-height:44px;font-size:13px}.code-footer{padding:15px 24px;font-size:13px;color:var(--muted)}details{border-top:1px solid var(--line);padding:16px 0}details:first-of-type{border-top:0}details:last-child{padding-bottom:0}summary{font-size:16px;font-weight:650;cursor:pointer;padding:2px 0}details p{font-size:14px;padding:11px 0 0 20px;line-height:1.9}.refs{font-size:14px;margin-bottom:0}.refs li+li{margin-top:7px}.footer{padding:24px 0 32px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-inner{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.skip{position:absolute;left:10px;top:-70px;background:#fff;padding:10px;z-index:3}.skip:focus{top:10px}.nowrap{white-space:nowrap}
-    @media(max-width:720px){.wrap{width:calc(100% - 28px)}.hero{padding:32px 0}.lead{font-size:15px}.facts{grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0}.fact{padding:14px}.fact strong{font-size:18px}.card{padding:21px 18px;margin-top:18px;border-radius:12px}.code-card{padding:0}.code-intro{padding:22px 18px 18px}.code-toolbar{padding:13px 16px}.code-view{padding:18px;font-size:12px;max-height:560px}.copy-status{padding:9px 16px}.code-footer{padding:14px 16px}.menu{gap:15px;font-size:13px;padding:14px 0}.flow{flex-direction:column;gap:8px}.flow>div{padding:12px 15px}.flow small{display:inline;margin-right:10px}h2{font-size:20px}.steps>li{padding-left:30px;margin-left:14px}tbody th{width:105px}th,td{padding:10px;font-size:13px}.hero-actions .button{flex:1;min-width:155px}.button.small{font-size:13px;padding:8px 12px}.section-head{gap:10px}.section-no{width:30px;height:30px;flex-basis:30px}}
-    @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
-    @media print{body{background:#fff;font-size:11pt}.wrap{width:100%;max-width:none}.hero{background:#fff;color:#000;padding:0 0 18px}.lead,.eyebrow,.eyebrow time{color:#444}.tag{border-color:#aaa}.hero-actions,.menu,.tools,.copy-status,.skip{display:none}.card,.fact{break-inside:avoid;border-color:#ccc}.code-card{break-inside:auto}.code-view{max-height:none;overflow:visible;background:#fff;color:#111;font-size:8pt;white-space:pre-wrap}.code-view code{white-space:pre-wrap;overflow-wrap:anywhere}.facts{margin:16px 0}.card{padding:18px}.table-wrap{overflow:visible}.sheet-example{min-width:0}.sheet-example td{white-space:normal}.flow{display:block}.flow>div{margin:6px 0}.footer{padding:12px 0}a{color:#222}}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="B1の検索語とB2のフォルダ指定で、Google共有ドライブの名前を部分一致検索するGAS。フォルダ選択画面、導入手順、Code.gsとFolderPicker.htmlの全文コピーに対応。">
+<title>共有ドライブのフォルダ指定・部分一致検索｜GASコードと使い方</title>
+<style>
+:root{--ink:#183349;--muted:#546979;--paper:#f4f7fa;--line:#dbe5ec;--accent:#087f76;--pale:#e9f6f3;--navy:#102b40}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;font-size:16px;line-height:1.9}a{color:#086d8b;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #e3a323;outline-offset:4px}button{font:inherit;cursor:pointer}button,a{touch-action:manipulation}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.hero{background:var(--navy);color:#fff;padding:45px 0 40px}.eyebrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;color:#a8d5d4;font-size:13px;font-weight:700;letter-spacing:.05em}.eyebrow time{color:#bbccd7;font-weight:400;letter-spacing:0}.tag{border:1px solid #487382;border-radius:6px;padding:2px 9px}h1{font-size:clamp(28px,4.5vw,43px);line-height:1.45;margin:0 0 16px;font-weight:750}.lead{max-width:790px;margin:0;color:#d7e5ec;font-size:17px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}.button{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:9px 19px;border:1px solid transparent;border-radius:9px;text-decoration:none;font-size:15px;line-height:1.6;font-weight:700}.button.primary{color:#fff;background:var(--accent)}.button.primary:hover{background:#06665e}.button.secondary{color:var(--ink);background:#fff;border-color:#c8d7e1}.hero .button.secondary{background:transparent;color:#fff;border-color:#71899a}.button.small{min-height:39px;font-size:13px;padding:8px 13px}.menu{display:flex;gap:20px;flex-wrap:wrap;padding:17px 0;font-size:14px;border-bottom:1px solid var(--line)}.menu a{color:var(--muted);text-decoration:none;font-weight:600}.menu a:hover{color:var(--accent)}main{padding-bottom:50px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0}.fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:17px 19px}.fact span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.fact strong{display:block;font-size:20px;line-height:1.6}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:29px;margin-top:24px;min-width:0}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.section-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;background:var(--pale);color:var(--accent);border-radius:10px;font-size:13px;font-weight:750}h2{font-size:23px;line-height:1.5;margin:0}h3{font-size:18px;line-height:1.7;margin:24px 0 8px}p{margin:0 0 14px}p:last-child{margin-bottom:0}ul,ol{padding-left:1.5em;margin:10px 0 18px}li+li{margin-top:8px}code{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:.91em;overflow-wrap:anywhere}p code,li code,td code{color:#13596d;background:#eef4f7;border-radius:4px;padding:2px 5px}.note{background:#f0f7fb;border-left:4px solid #4c8eab;padding:15px 18px;border-radius:0 9px 9px 0;font-size:14px;margin:18px 0 0}.note.calm{background:#eef8f4;border-left-color:#3b9176}.note strong{display:block;margin-bottom:4px}.table-wrap{overflow:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}tr:last-child td,tr:last-child th{border-bottom:0}thead th{background:#f1f6f9;font-weight:700;color:#446073}tbody th{width:155px;background:#fafcfd;font-weight:600}.caption{font-size:13px;color:var(--muted);margin:8px 0}.steps{counter-reset:step;list-style:none;padding:0;margin:20px 0 0}.steps>li{position:relative;padding:0 0 24px 43px;margin:0 0 0 15px;border-left:1px solid var(--line)}.steps>li:last-child{border:0;padding-bottom:0}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:1px;background:var(--accent);color:#fff;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}.steps h3{margin:0 0 8px}.config{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:#f7fafc;overflow:auto;line-height:1.8;font-size:13px}.config code{white-space:pre;overflow-wrap:normal}.flow{display:flex;gap:11px;margin:20px 0}.flow>div{flex:1;background:#f3f8f9;border:1px solid #dbe9eb;border-radius:11px;padding:14px 16px}.flow small{display:block;color:var(--accent);font-size:11px;font-weight:700;margin-bottom:4px}.flow strong{font-size:16px}.code-card{padding:0;overflow:hidden}.code-intro{padding:26px 29px 18px}.code-toolbar{padding:13px 21px;background:#eaf1f5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.filename{font-family:Consolas,"SFMono-Regular",Menlo,monospace;color:#4c6779;font-size:13px}.tools{display:flex;gap:9px;flex-wrap:wrap}.code-view{margin:0;background:#102435;color:#e0edf3;overflow:auto;max-height:670px;padding:23px;tab-size:2;font-size:12px;line-height:1.8}.code-view code{font-size:inherit;white-space:pre;overflow-wrap:normal}.copy-status{padding:9px 23px;background:#f4f8fa;color:#3c6475;min-height:43px;font-size:13px}.code-footer{padding:14px 23px;font-size:13px;color:var(--muted)}details{border-top:1px solid var(--line);padding:16px 0}details:first-of-type{border-top:0}details:last-child{padding-bottom:0}summary{font-size:16px;font-weight:650;cursor:pointer;padding:2px 0}details p{font-size:14px;padding:11px 0 0 20px}.refs{font-size:14px;margin-bottom:0}.refs li+li{margin-top:6px}.footer{padding:23px 0 30px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-inner{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.skip{position:absolute;left:10px;top:-70px;background:#fff;padding:10px;z-index:3}.skip:focus{top:10px}.sheet-example{min-width:780px}.sheet-example td{white-space:nowrap}.sheet-example .rownum{background:#f2f5f7;color:#7a8c97;text-align:center;width:38px;font-size:12px}.sheet-example .input{background:#fff0bb;font-weight:700}.sheet-example .head{background:#e4f0f9;font-weight:700}.sheet-example .url{color:#087c92}.picker-demo{border:1px solid #ccdce4;border-radius:12px;max-width:720px;margin:18px auto;background:#fff;overflow:hidden;box-shadow:0 8px 26px #1f435010}.demo-head{background:#f7fafb;padding:13px 18px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;display:flex;justify-content:space-between;gap:12px}.demo-head span{font-size:11px;color:var(--muted);font-weight:400}.demo-body{padding:15px 18px}.demo-crumb{font-size:12px;color:#437486;padding-bottom:12px;border-bottom:1px solid #e4edf1}.demo-row{padding:11px 10px;border-bottom:1px solid #edf2f5;font-size:13px;display:flex;align-items:center;gap:11px}.demo-row:before{content:"";width:21px;height:15px;border:1px solid #ccaa4c;background:#fff1bc;border-radius:2px;flex-shrink:0}.demo-row span{margin-left:auto;color:#6f8c9b}.demo-bottom{padding:13px 18px;background:#fafcfd;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;border-top:1px solid var(--line)}.demo-select{background:var(--accent);border-radius:7px;color:white;padding:8px 12px;font-weight:600}.demo-label{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}.file-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.file-tile{border:1px solid var(--line);border-radius:10px;padding:14px 17px;background:#f9fbfc}.file-tile strong{display:block;font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:16px}.file-tile span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
+@media(max-width:720px){.wrap{width:calc(100% - 28px)}.hero{padding:31px 0}.lead{font-size:15px}.facts{grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0}.fact{padding:13px}.fact strong{font-size:18px}.card{padding:21px 18px;margin-top:18px;border-radius:12px}.code-card{padding:0}.code-intro{padding:22px 18px 17px}.code-toolbar{padding:13px 16px}.code-view{padding:17px;font-size:11px;max-height:540px}.copy-status{padding:9px 16px}.code-footer{padding:14px 16px}.menu{gap:14px;font-size:13px;padding:14px 0}.flow{flex-direction:column;gap:8px}.flow>div{padding:11px 14px}.flow small{display:inline;margin-right:10px}h2{font-size:20px}.steps>li{padding-left:29px;margin-left:14px}tbody th{width:105px}th,td{padding:10px;font-size:13px}.hero-actions .button{flex:1;min-width:150px}.section-head{gap:10px}.section-no{width:30px;height:30px;flex-basis:30px}.file-pair{grid-template-columns:1fr}.demo-bottom{align-items:flex-start;flex-direction:column}.demo-select{align-self:flex-end}.demo-head{flex-direction:column;gap:1px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+@media print{body{background:#fff;font-size:11pt}.wrap{width:100%;max-width:none}.hero{background:#fff;color:#000;padding:0 0 18px}.lead,.eyebrow,.eyebrow time{color:#444}.tag{border-color:#aaa}.hero-actions,.menu,.tools,.copy-status,.skip{display:none}.card,.fact{break-inside:avoid;border-color:#ccc}.code-card{break-inside:auto}.code-view{max-height:none;overflow:visible;background:#fff;color:#111;font-size:8pt;white-space:pre-wrap}.code-view code{white-space:pre-wrap;overflow-wrap:anywhere}.facts{margin:16px 0}.card{padding:18px}.table-wrap{overflow:visible}.sheet-example{min-width:0}.sheet-example td{white-space:normal}.flow{display:block}.flow>div{margin:6px 0}.footer{padding:12px 0}a{color:#222}}
+</style>
 </head>
 <body>
 <a class="skip" href="#main">本文へ移動</a>
-<header class="hero">
-  <div class="wrap">
-    <div class="eyebrow"><span class="tag">GOOGLE APPS SCRIPT</span><time datetime="2026-11-10">更新日：2026年11月10日</time></div>
-    <h1>共有ドライブを、<br>B1の文字から検索。</h1>
-    <p class="lead">Googleスプレッドシートから、共有ドライブ内のファイル名・フォルダ名を部分一致検索。結果を3行目から一覧表示するGASコードと、導入・操作の手順です。</p>
-    <div class="hero-actions"><a class="button primary" href="#setup">初回設定を見る</a><a class="button secondary" href="#code">コード全文へ</a></div>
-  </div>
-</header>
+<header class="hero"><div class="wrap"><div class="eyebrow"><span class="tag">GOOGLE APPS SCRIPT · フォルダ指定版</span><time datetime="2026-11-10">更新日：2026年11月10日</time></div><h1>B2でフォルダを選び、<br>B1の文字から検索。</h1><p class="lead">共有ドライブを階層でたどって、検索する場所を選択。スプレッドシートから、指定したフォルダ以下のファイル名・フォルダ名を部分一致検索します。</p><div class="hero-actions"><a class="button primary" href="#setup">導入・更新の手順</a><a class="button secondary" href="#code-gs-section">2つのコード全文へ</a></div></div></header>
 <main id="main" class="wrap">
-  <nav class="menu" aria-label="ページ内メニュー"><a href="./index.html">GASコード一覧</a><a href="#overview">検索の内容</a><a href="#setup">初回設定</a><a href="#usage">使い方</a><a href="#code">コード全文</a><a href="#help">困ったとき</a></nav>
-  <div class="facts" aria-label="基本仕様">
-    <div class="fact"><span>検索語を入力</span><strong>B1セル</strong></div>
-    <div class="fact"><span>結果を表示</span><strong>3行目から</strong></div>
-    <div class="fact"><span>検索対象</span><strong>全階層の名前</strong></div>
-    <div class="fact"><span>長時間の検索</span><strong>途中から再開</strong></div>
-  </div>
+<nav class="menu" aria-label="ページ内メニュー"><a href="./index.html">GASコード一覧</a><a href="#overview">動作</a><a href="#setup">導入・更新</a><a href="#usage">使い方</a><a href="#code-gs-section">Code.gs</a><a href="#code-picker-section">FolderPicker.html</a><a href="#help">困ったとき</a></nav>
+<div class="facts"><div class="fact"><span>検索語</span><strong>B1セル</strong></div><div class="fact"><span>検索するフォルダ</span><strong>B2セル</strong></div><div class="fact"><span>検索結果</span><strong>4行目から</strong></div><div class="fact"><span>フォルダの指定</span><strong>画面から選択</strong></div></div>
 
-  <section id="overview" class="card" aria-labelledby="overview-title">
-    <div class="section-head"><span class="section-no">01</span><h2 id="overview-title">どのように検索するか</h2></div>
-    <p><strong>B1に文字を入力し、メニューの「共有ドライブ検索 → 新しく検索」を実行</strong>します。指定した共有ドライブの全階層から、実行したGoogleアカウントで閲覧できる名前を探します。</p>
-    <p>例えば <code>見積</code> で、<code>見積書.xlsx</code>、<code>2026年度_見積一覧.xlsx</code>、<code>株式会社〇〇_見積資料</code> というフォルダが対象になります。</p>
-    <div class="table-wrap"><table><tbody>
-      <tr><th scope="row">対象</th><td>ファイル名・フォルダ名・ショートカット名。ゴミ箱は除外します。</td></tr>
-      <tr><th scope="row">一致の条件</th><td>検索文字が名前のどこかに含まれる部分一致です。</td></tr>
-      <tr><th scope="row">表記の違い</th><td>英字の大小、全角・半角を正規化します。例：<code>ＡＢＣ</code> と <code>abc</code>、<code>ﾃｽﾄ</code> と <code>テスト</code>。</td></tr>
-      <tr><th scope="row">空白を含む入力</th><td>空白も文字として扱います。複数キーワードのAND検索にはなりません。</td></tr>
-      <tr><th scope="row">検索範囲</th><td>指定した共有ドライブ内の全階層。別ドライブへ向いたショートカットの先はたどりません。</td></tr>
-    </tbody></table></div>
-    <p class="caption">この「あいまい検索」は名前の部分一致です。ファイル本文の検索、誤字の推測、ひらがな・カタカナの同一視は行いません。</p>
-    <aside class="note calm"><strong>PCの「G:」は設定不要です</strong>GASはGoogleドライブ上のデータを読み取ります。コードに設定するのは、Windows上のドライブ文字ではなく、共有ドライブ自体のIDです。</aside>
-    <h3>ファイルが大量にある場合</h3>
-    <p>Drive APIの <code>name contains</code> は、公式仕様では前方一致です。名前の途中も判定するため、このコードは最大1,000件ずつ名前などの情報を取得し、GAS側で部分一致を判定します。ファイルの中身はダウンロードしません。</p>
-    <p><strong>検索のたびに全件の名前を確認するため、件数に応じて時間がかかります。</strong>GASの通常の実行上限は1回6分なので、約4分を目安に処理を区切り、続きの位置を保存します。残りはメニューから手動で再開します。</p>
-    <p class="caption">根拠：<a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">検索演算子の仕様</a> ／ <a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">files.listとページ取得</a> ／ <a href="https://developers.google.com/apps-script/guides/services/quotas">GASの実行時間制限</a></p>
-  </section>
+<section id="overview" class="card"><div class="section-head"><span class="section-no">01</span><h2>検索する場所を、画面から指定</h2></div><p><strong>B1に検索語、B2に検索対象のフォルダを指定</strong>します。フォルダ選択画面では、共有ドライブの中を1クリックずつたどり、目的の場所を選択できます。</p><p>対象は、選んだ場所と、その下の階層にあるファイル名・フォルダ名です。共有ドライブの先頭を選べば、ドライブ全体を検索できます。</p>
+<div class="picker-demo" role="img" aria-label="フォルダ選択画面の静的な表示イメージ。共有ドライブの営業フォルダを開き、見積や契約書などの下位フォルダを選ぶ画面。"><div class="demo-head">検索するフォルダを選択<span>共有ドライブ（例）</span></div><div class="demo-body"><div class="demo-crumb">共有ドライブ　›　営業</div><div class="demo-row">見積<span>›</span></div><div class="demo-row">契約書<span>›</span></div><div class="demo-row">提案資料<span>›</span></div></div><div class="demo-bottom"><span>現在の場所：/営業</span><span class="demo-select">このフォルダを選択</span></div></div><p class="demo-label">画面イメージです。このページから実際の共有ドライブには接続しません。</p>
+<div class="table-wrap"><table><tbody><tr><th scope="row">検索対象</th><td>実行したGoogleアカウントで閲覧できる、指定フォルダ以下の名前。ゴミ箱は除外します。</td></tr><tr><th scope="row">一致の条件</th><td>名前の途中も対象にする部分一致。英字の大小、全角・半角を正規化します。</td></tr><tr><th scope="row">フォルダの選択</th><td>共有ドライブ内のフォルダを一覧表示し、クリックで開きます。現在の場所を選択するとB2に反映します。</td></tr><tr><th scope="row">B2への手入力</th><td>共有ドライブを起点としたパス、GoogleドライブのフォルダURL、フォルダIDを指定できます。</td></tr><tr><th scope="row">対象外</th><td>本文検索、誤字の推測、別ドライブへのショートカットの先。指定した共有ドライブ外のフォルダは受け付けません。</td></tr></tbody></table></div>
+<aside class="note calm"><strong>PCのGドライブのパスは使いません</strong>GASはGoogleドライブ上のデータを検索します。<code>G:\共有ドライブ\営業</code> のようなWindows上のパスではなく、B2には <code>/営業</code> のように共有ドライブの先頭から指定します。</aside>
+<h3>「あいまい検索」の範囲</h3><p>例えばB1が <code>見積</code> なら、<code>見積書.xlsx</code> や <code>2026年度_見積一覧.xlsx</code>、<code>見積資料</code> フォルダなどが対象になります。<code>ＡＢＣ</code> と <code>abc</code>、<code>ﾃｽﾄ</code> と <code>テスト</code> も同じ表記として扱います。ひらがな・カタカナの同一視は行いません。</p><p class="caption">空白も検索する文字として扱います。空白区切りの複数キーワードによるAND検索ではありません。</p>
+</section>
 
-  <section id="setup" class="card" aria-labelledby="setup-title">
-    <div class="section-head"><span class="section-no">02</span><h2 id="setup-title">初回設定</h2></div>
-    <p>検索用のシート名は初期設定で <strong>「検索」</strong>です。初回設定を実行すると、同じスプレッドシート内に作成されます。</p>
-    <ol class="steps">
-      <li><h3>スプレッドシートからApps Scriptを開く</h3><p>検索に使うスプレッドシートで、<strong>「拡張機能 → Apps Script」</strong>を開きます。新しいプロジェクトなら、最初の <code>myFunction</code> を消して、このページの<a href="#code">コード全文</a>を貼り付けます。</p><p>既存コードがある場合は消さずに追加してください。既に <code>onOpen()</code> がある場合は、メニュー追加部分をその関数にまとめます。</p></li>
-      <li><h3>共有ドライブIDを設定する</h3><p>コード冒頭の次の箇所を、お持ちの共有ドライブIDへ変更します。</p><pre class="config"><code>DRIVE_ID: 'ここに共有ドライブIDを入力',</code></pre><p><strong>共有ドライブ自体のID</strong>を指定してください。その中にある下位フォルダのIDや、<code>G:\</code> のようなパスは指定しません。</p><p>既存シートを使う場合は、<code>SHEET_NAME: '検索'</code> の <code>検索</code> を実際のシート名へ変更します。そのシートのA1・C1・2行目に見出しを設定し、A3:Fを出力範囲として使います。</p></li>
-      <li><h3>Google Drive APIを追加する</h3><p>Apps Scriptの左側にある<strong>「サービス」の横の「＋」</strong>から <strong>Google Drive API</strong> を追加します。バージョンは <strong>v3</strong>、識別子は <strong>Drive</strong> にします。</p><p>通常の自動作成されたCloudプロジェクトでは、この操作でAPIも有効になります。自分で標準Google Cloudプロジェクトへ関連付けた場合は、Cloud側でもDrive APIを有効にしてください。<a href="https://developers.google.com/apps-script/guides/services/advanced">Google公式の設定手順</a></p></li>
-      <li><h3>初回設定の関数を実行する</h3><p>保存後、上部の関数選択で <code>setupDriveSearch</code> を選び、<strong>「実行」</strong>をクリックします。権限の確認が表示されたら、共有ドライブへアクセスするGoogleアカウントで許可します。</p></li>
-      <li><h3>スプレッドシートを再読み込みする</h3><p>上部に<strong>「共有ドライブ検索」</strong>メニューが表示されれば準備完了です。<code>setupDriveSearch</code> は初回設定用で、毎回の検索には使いません。</p></li>
-    </ol>
-  </section>
+<section id="setup" class="card"><div class="section-head"><span class="section-no">02</span><h2>導入・旧版からの更新</h2></div><p>スプレッドシートに紐付くApps Scriptへ、次の<strong>2つのファイル</strong>を設定します。フォルダ選択用のGoogle Picker APIキーは必要ありません。</p><p><a class="button primary" href="shared_drive_search_v2.zip" download>2ファイル＋導入手順をZIPでダウンロード</a></p><div class="file-pair"><div class="file-tile"><strong>Code.gs</strong><span>検索処理・B2の解決・フォルダ選択画面の呼び出し</span></div><div class="file-tile"><strong>FolderPicker.html</strong><span>共有ドライブ内のフォルダをたどる選択画面</span></div></div>
+<ol class="steps"><li><h3>Apps Scriptを開く</h3><p>検索に使うスプレッドシートで、<strong>「拡張機能 → Apps Script」</strong>を開きます。既に旧版を使っている場合は、設定済みの <code>DRIVE_ID</code> を控えてください。</p></li>
+<li><h3>検索用のGASコードを置き換える</h3><p><a href="#code-gs-section">Code.gsの全文</a>をコピーし、旧版の共有ドライブ検索コードを置き換えます。初めて導入する場合は、最初の <code>myFunction</code> を消して貼り付けます。</p><p>冒頭の <code>DRIVE_ID</code> に共有ドライブ自体のIDを設定します。旧版からの更新では控えたIDを引き継いでください。検索用のシート名を変えていた場合も、<code>SHEET_NAME</code> を引き継ぎます。</p><pre class="config"><code>DRIVE_ID: 'ここに共有ドライブIDを入力',
+SHEET_NAME: '検索',</code></pre><p>同じ検索用関数を旧版と新版の両方に残さないでください。別の用途のコードは保持し、既に独自の <code>onOpen()</code> がある場合はメニュー追加部分をまとめます。</p></li>
+<li><h3>HTMLファイルを新しく作成する</h3><p>左側の<strong>「ファイル」の「＋」→「HTML」</strong>を選択し、名前を <strong><code>FolderPicker</code></strong> にします。作成されたHTMLの中身を消し、このページの<a href="#code-picker-section">FolderPicker.html全文</a>を貼り付けます。</p><p>エディタ上のファイルは <code>FolderPicker.html</code> になります。ファイル名の大文字・小文字も合わせてください。</p></li>
+<li><h3>Google Drive API v3を有効にする</h3><p>初回導入時は、左側の<strong>「サービス」の「＋」</strong>からGoogle Drive APIを追加します。バージョンは <strong>v3</strong>、識別子は <strong>Drive</strong> です。旧版で既に追加済みなら、その設定を継続します。</p><p class="caption">通常のApps Scriptプロジェクトでは追加時にAPIも有効になります。標準Google Cloudプロジェクトへ自分で関連付けた場合は、Cloud側でも有効化します。<a href="https://developers.google.com/apps-script/guides/services/advanced">公式手順</a></p></li>
+<li><h3>初回設定を1回実行する</h3><p>保存後、上部の関数選択で <code>setupDriveSearch</code> を選んで実行します。権限の確認が出たら、共有ドライブへアクセスするGoogleアカウントで許可してください。<strong>旧版から更新する場合も、レイアウトを設定するため一度実行</strong>します。</p><p>検索用シートは初期設定では「検索」です。新しいレイアウトはB1が検索語、B2がフォルダ指定、3行目が見出し、4行目以降が結果になります。</p><p>旧版の見出しを検出した場合は、前回の検索結果を消して配置を移行します。B1の検索語は保持し、B2は共有ドライブ全体を表す <code>/</code> に設定します。</p></li>
+<li><h3>シートを再読み込みし、フォルダ選択ボタンを追加する</h3><p>スプレッドシートを再読み込みします。「共有ドライブ検索」メニューからフォルダ選択を開けるようになります。</p><p>B2の近くにボタンを置く場合は、<strong>「挿入 → 図形描画」</strong>で「フォルダを選択」などの図形を作成します。図形のメニューから<strong>「スクリプトを割り当て」</strong>を開き、<code>showFolderPicker</code> と入力してください。<strong>末尾の <code>()</code> は付けません。</strong></p><p>既存の検索ボタンに割り当てた <code>startDriveSearch</code>、再開ボタンの <code>continueDriveSearch</code> は、そのまま使えます。</p></li></ol>
+<aside class="note"><strong>B2を選択するだけではダイアログを開きません</strong>セル選択のイベントは選択位置が変わったときに動くため、既に選択中のB2を再クリックしても起動できず、短時間の選択移動はイベントが省略される場合があります。この版は、ボタンまたはメニューで選択画面を開きます。<a href="https://developers.google.com/apps-script/guides/triggers">セル選択イベントの仕様</a></aside>
+</section>
 
-  <section id="usage" class="card" aria-labelledby="usage-title">
-    <div class="section-head"><span class="section-no">03</span><h2 id="usage-title">普段の使い方</h2></div>
-    <div class="flow" aria-label="検索の操作手順"><div><small>STEP 1</small><strong>B1に検索語を入力</strong></div><div><small>STEP 2</small><strong>メニューで「新しく検索」</strong></div><div><small>STEP 3</small><strong>D1の状態と結果を確認</strong></div></div>
-    <p><strong>B1への入力だけでは自動実行しません。</strong>入力後に「共有ドライブ検索 → 新しく検索」を選択してください。</p>
-    <div class="table-wrap"><table class="sheet-example" aria-label="検索シートの表示例"><thead><tr><th class="corner"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody>
-      <tr><th class="rownum" scope="row">1</th><td>検索語</td><td class="input">見積</td><td>状態</td><td colspan="3">完了 ｜ 確認 12,000件 ／ 該当 2件 ｜ 検索語：見積</td></tr>
-      <tr class="head"><th class="rownum" scope="row">2</th><td>No.</td><td>種類</td><td>名前</td><td>更新日時</td><td>開くURL</td><td>親フォルダURL</td></tr>
-      <tr><th class="rownum" scope="row">3</th><td>1</td><td>ファイル</td><td>2026年度_見積一覧.xlsx</td><td>2026/11/10 09:00:00</td><td class="url">ファイルのURL</td><td class="url">フォルダのURL</td></tr>
-      <tr><th class="rownum" scope="row">4</th><td>2</td><td>フォルダ</td><td>株式会社〇〇_見積資料</td><td>2026/11/09 15:30:00</td><td class="url">フォルダのURL</td><td class="url">フォルダのURL</td></tr>
-    </tbody></table></div>
-    <p class="caption">表示イメージです。実際の出力ではE列とF列にURLを書き出します。更新日時はスプレッドシートのタイムゾーンに従います。</p>
-    <h3>D1の表示と次の操作</h3>
-    <div class="table-wrap"><table><thead><tr><th scope="col">D1の状態</th><th scope="col">次の操作</th></tr></thead><tbody>
-      <tr><th scope="row">検索中</th><td>処理が終わるまで待ちます。途中の結果も順に表示されます。</td></tr>
-      <tr><th scope="row">一時停止</th><td>「共有ドライブ検索 → <strong>続きから検索</strong>」を選択します。完了するまで必要な回数だけ繰り返します。</td></tr>
-      <tr><th scope="row">完了</th><td>検索終了です。「該当0件」で完了する場合もあります。</td></tr>
-      <tr><th scope="row">中断（未完了）</th><td>表示されたエラーを確認します。下の「困ったとき」を参照してください。</td></tr>
-    </tbody></table></div>
-    <aside class="note"><strong>再開する間は、検索条件と結果の行をそのままに</strong>検索中・再開待ちの間は、B1や結果の行を編集・並べ替えないでください。再開は検索を開始したGoogleアカウントで行います。別の文字を探す場合はB1を書き換え、「新しく検索」を選びます。このときA3:Fの前回結果は置き換わります。</aside>
-  </section>
+<section id="usage" class="card"><div class="section-head"><span class="section-no">03</span><h2>普段の使い方</h2></div><div class="flow"><div><small>STEP 1</small><strong>B1に検索語を入力</strong></div><div><small>STEP 2</small><strong>フォルダを選んでB2へ</strong></div><div><small>STEP 3</small><strong>「新しく検索」を実行</strong></div></div>
+<h3>画面からフォルダを選ぶ</h3><ol><li>「フォルダを選択」ボタン、または「共有ドライブ検索」メニューのフォルダ選択項目を実行します。</li><li>フォルダ名を1回クリックすると、そのフォルダを開きます。上部の階層表示、「上へ」「先頭へ」で移動できます。</li><li>目的の場所を開いたら、<strong>「このフォルダを選択」</strong>を押します。B2に選択した場所が入り、画面が閉じます。</li><li>共有ドライブの先頭では、<strong>「共有ドライブ全体を選択」</strong>を使えます。</li></ol><p class="caption">選択画面にはフォルダだけを表示します。1ページ最大100件で、続きがあれば「次のページ」が有効になります。</p>
+<h3>B2を直接入力する場合</h3><div class="table-wrap"><table><thead><tr><th scope="col">B2の入力</th><th scope="col">指定する場所</th></tr></thead><tbody><tr><th scope="row"><code>/</code></th><td>共有ドライブ全体。</td></tr><tr><th scope="row"><code>/営業/見積</code></th><td>共有ドライブの先頭から「営業」→「見積」とたどったフォルダ。</td></tr><tr><th scope="row">フォルダURL</th><td>Googleドライブでそのフォルダを開いたときのURL。指定共有ドライブ内のものを使います。</td></tr><tr><th scope="row"><code>id:フォルダID</code></th><td><code>id:</code> の後ろに対象フォルダのIDを指定します。共有ドライブ外のIDは指定できません。</td></tr></tbody></table></div><p>英数字などで10文字以上のフォルダ名（例：<code>Documents2026</code>）は、IDとの区別のため <code>/Documents2026</code> のように先頭へ <code>/</code> を付けます。</p><p>同じ階層に同じ名前のフォルダがある場合は、パスだけでは区別できません。<strong>フォルダ選択画面、またはフォルダURL・IDで指定</strong>してください。</p>
+<h3>検索結果と実行状況</h3><p>B1とB2を設定したら、<strong>「共有ドライブ検索 → 新しく検索」</strong>を実行します。入力だけでは自動検索しません。</p><div class="table-wrap"><table class="sheet-example" aria-label="新しい検索シートの静的表示例"><thead><tr><th class="rownum"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody><tr><th class="rownum" scope="row">1</th><td>検索語</td><td class="input">見積</td><td>状態</td><td colspan="3">完了 ｜ 確認・該当件数など</td></tr><tr><th class="rownum" scope="row">2</th><td>検索場所</td><td class="input" colspan="5">/営業/見積</td></tr><tr class="head"><th class="rownum" scope="row">3</th><td>No.</td><td>種類</td><td>名前</td><td>更新日時</td><td>開くURL</td><td>親フォルダURL</td></tr><tr><th class="rownum" scope="row">4</th><td>1</td><td>ファイル</td><td>2026年度_見積一覧.xlsx</td><td>2026/11/10 09:00:00</td><td class="url">ファイルのURL</td><td class="url">フォルダのURL</td></tr></tbody></table></div><p class="caption">表示イメージです。実際の結果は4行目以降に出力します。更新日時はスプレッドシートのタイムゾーンに従います。</p><div class="table-wrap"><table><thead><tr><th scope="col">状態</th><th scope="col">次の操作</th></tr></thead><tbody><tr><th scope="row">検索中</th><td>処理の終了を待ちます。</td></tr><tr><th scope="row">一時停止</th><td>「続きから検索」を実行します。完了まで必要な回数だけ繰り返します。</td></tr><tr><th scope="row">完了</th><td>検索終了です。0件の場合もあります。</td></tr><tr><th scope="row">中断・エラー</th><td>表示された内容を確認し、下の「困ったとき」を参照してください。</td></tr></tbody></table></div>
+<aside class="note"><strong>検索中・再開待ちの間は、条件と結果の行を保持してください</strong>B1・B2や結果の行を編集・並べ替えず、検索を開始したGoogleアカウントで再開します。条件を変える場合は「新しく検索」を実行します。処理用の管理シートは自動作成・非表示になります。その内容は手動で編集しないでください。</aside>
+<h3>大量のデータを扱うとき</h3><p>名前の途中まで一致を判定するため、GAS側で取得した名前を比較します。Drive APIの <code>name contains</code> は公式仕様上、任意位置の部分一致ではありません。</p><p>フォルダを指定した場合は下位フォルダをたどります。共有ドライブ全体を指定した場合は、ドライブ全体の一覧をまとめて取得する方式を使います。<strong>対象が多いほど時間がかかり、約4分を目安に中断・手動再開します。</strong></p><p class="caption">GASの通常の実行上限は1回6分です。ページ取得中に共有ドライブの内容が変更されると、結果に影響することがあります。再開用のページトークンは通常数時間有効です。<a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">files.listの仕様</a> ／ <a href="https://developers.google.com/apps-script/guides/services/quotas">実行時間制限</a></p>
+</section>
 
-  <section id="code" class="card code-card" aria-labelledby="code-title">
-    <div class="code-intro"><div class="section-head"><span class="section-no">04</span><h2 id="code-title">GASコード全文</h2></div><p>「コードをコピー」で全文をコピーし、Apps Scriptへ貼り付けます。<strong>変更が必須なのは <code>DRIVE_ID</code> の1か所</strong>です。</p></div>
-    <div class="code-toolbar"><span class="filename">shared_drive_search.gs</span><div class="tools"><button class="button primary small" type="button" id="copy-code">コードをコピー</button><button class="button secondary small" type="button" id="download-code">.gsを保存</button></div></div>
-    <pre class="code-view" tabindex="0" aria-label="Google Apps Scriptコード全文"><code id="gas-code">/**
- * 共有ドライブ内の名前を部分一致検索するGAS（2026-11-10）
+<section id="code-gs-section" class="card code-card"><div class="code-intro"><div class="section-head"><span class="section-no">04</span><h2>検索処理：Code.gs</h2></div><p>旧版の検索用GASをこの全文へ置き換え、<strong>DRIVE_IDを設定・引き継ぎ</strong>ます。</p></div><div class="code-toolbar"><span class="filename">Code.gs</span><div class="tools"><button type="button" class="button primary small copy-button" data-code="code-gs" data-file="Code.gs" data-status="status-gs">全文をコピー</button><button type="button" class="button secondary small download-button" data-code="code-gs" data-file="Code.gs" data-status="status-gs">Code.gsを保存</button></div></div><pre class="code-view" tabindex="0" aria-label="GASコード全文"><code id="code-gs">/**
+ * 共有ドライブ検索 v2（2026-11-10）
+ * B1: 名前の部分一致検索 / B2: 検索フォルダ / 3行目: 見出し / 4行目以降: 結果
  *
- * 初回設定:
- * 1. 検索に使うスプレッドシートの「拡張機能 → Apps Script」に貼り付ける。
- * 2. 下の DRIVE_ID を、共有ドライブ自体のIDに変更する。
- * 3. 左側の「サービス +」で Google Drive API（v3 / 識別子 Drive）を追加する。
- * 4. setupDriveSearch を一度実行し、アクセスを許可する。
+ * 設定: DRIVE_IDを変更し、「サービス +」でGoogle Drive API v3を追加。
+ * setupDriveSearchを一度実行後、シートを再読み込みする。
+ * 「共有ドライブ検索」メニューの「フォルダを選択」「新しく検索」を使用。
+ * 約4分で区切り、「続きから検索」で再開する。自動トリガーは使用しない。
+ * 検索・再開待ちの間はB1/B2、結果行、作業シートを編集・並べ替えない。
  *
- * 通常操作:
- * 「検索」シートのB1に文字を入力 → メニュー「共有ドライブ検索 → 新しく検索」。
- * D1が「一時停止」なら、同じメニューの「続きから検索」を実行する。
- * B1入力だけでは自動実行しない。約4分ごとに区切り、必要な回数だけ再開する。
- * 検索中・再開待ちの間は、検索語や結果の行を編集・並べ替えない。
- *
- * 対象: このアカウントから閲覧できる、指定共有ドライブ内の全階層の名前。
- * ゴミ箱は除外。本文検索・誤字補正・別ドライブへのショートカット追跡は行わない。
- * 全角半角と英字大小を正規化した部分一致。空白区切りはAND検索にせず文字として扱う。
- * 毎回、全件の名前などの情報を読み取るため、件数に比例して時間がかかる。
- * ページトークンが失効した場合は「新しく検索」でやり直す。
- *
- * 結果はA3:F以降を使用。新規検索ではこの範囲の前回結果を消去する。
- * Drive上のファイル操作は読み取りのみ。
- * 更新日時の表示はスプレッドシートのタイムゾーンに従う。
- *
- * 仕様確認:
- * https://developers.google.com/workspace/drive/api/guides/ref-search-terms
- * https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list
- * https://developers.google.com/apps-script/guides/services/quotas
+ * B2は /（共有ドライブ全体）、/営業/見積、フォルダURL、id:フォルダID。
+ * バックスラッシュ区切りも可。G:\\のようなPCのドライブパスは使用しない。
+ * 全階層のファイル名・フォルダ名が対象。本文検索・誤字補正は行わない。
+ * 全角半角と英字大小を正規化。空白区切りはAND検索にせず、そのまま検索。
+ * ゴミ箱を除外し、フォルダへのショートカットは検索先として辿らない。
+ * Drive上は読み取りのみ。シートの結果・入力表示・非表示作業表は更新する。
+ * APIの一覧は時点固定のスナップショットではない。トークン失効時は新規検索。
  */
 
 const DRIVE_SEARCH = {
@@ -124,226 +70,857 @@ const DRIVE_SEARCH = {
   SHEET_NAME: '検索',
   PAGE_SIZE: 1000,
   RUN_LIMIT_MS: 4 * 60 * 1000,
-  STATE_KEY: 'SHARED_DRIVE_NAME_SEARCH_V1'
+  RESULT_FIRST_ROW: 4,
+  STATE_KEY: 'SHARED_DRIVE_NAME_SEARCH_V2',
+  SELECTION_KEY: 'SHARED_DRIVE_FOLDER_SELECTION_V2',
+  QUEUE_SHEET_NAME: '_DriveSearchQueueV2',
+  QUEUE_SIGNATURE: 'SHARED_DRIVE_SEARCH_V2_QUEUE',
+  PARENT_BATCH_SIZE: 20
 };
 
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('共有ドライブ検索')
+    .addItem('フォルダを選択', 'showFolderPicker')
+    .addSeparator()
     .addItem('新しく検索', 'startDriveSearch')
     .addItem('続きから検索', 'continueDriveSearch')
     .addToUi();
 }
 
-// 初回だけ実行。B1の既存入力は保持する。
+// 既存B1とv2のB2・結果は保持。旧版の見出しが完全一致した場合だけ移行する。
 function setupDriveSearch() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
-  if (!sheet) {
-    sheet = ss.insertSheet(DRIVE_SEARCH.SHEET_NAME);
-    // 新規作成した検索専用シートは6列にして、セル数の増加を抑える。
-    if (sheet.getMaxColumns() &gt; 6) {
-      sheet.deleteColumns(7, sheet.getMaxColumns() - 6);
+  const lock = acquireDriveSearchLock_();
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
+    const created = !sheet;
+    if (!sheet) {
+      sheet = ss.insertSheet(DRIVE_SEARCH.SHEET_NAME);
+      if (sheet.getMaxColumns() &gt; 8) sheet.deleteColumns(9, sheet.getMaxColumns() - 8);
     }
+    ensureDriveSearchSize_(sheet, 4, 8);
+    const headers = driveSearchHeaders_();
+    const oldHeaders = sheet.getRange(2, 1, 1, 6).getDisplayValues()[0];
+    const legacy = oldHeaders.every((value, i) =&gt; value === headers[i]);
+    const currentHeaders = sheet.getRange(3, 1, 1, 6).getDisplayValues()[0];
+    if (!created &amp;&amp; !legacy &amp;&amp; currentHeaders.some(String) &amp;&amp;
+        !currentHeaders.every((value, i) =&gt; value === headers[i])) {
+      throw new Error('「検索」シートの3行目に別のデータがあります。移動してから初期設定してください。');
+    }
+    if (legacy) {
+      sheet.getRange(2, 1, Math.max(sheet.getLastRow(), 3) - 1, 6).clearContent();
+      const props = PropertiesService.getDocumentProperties();
+      props.deleteProperty(DRIVE_SEARCH.STATE_KEY);
+      props.deleteProperty(DRIVE_SEARCH.SELECTION_KEY);
+    }
+    sheet.getRange('A1').setValue('検索語');
+    sheet.getRange('B1').setBackground('#fff2cc');
+    sheet.getRange('C1').setValue('状態');
+    sheet.getRange('A2').setValue('検索場所');
+    const pathRange = sheet.getRange('B2:F2');
+    if (!pathRange.isPartOfMerge() &amp;&amp;
+        sheet.getRange('C2:F2').getDisplayValues()[0].every(value =&gt; value === '')) {
+      pathRange.merge();
+    }
+    sheet.getRange('B2').setNumberFormat('@').setBackground('#e8f0fe');
+    if (created || legacy) {
+      sheet.getRange('B2').setValue('/');
+      sheet.getRange('D1').setValue('未検索');
+    }
+    sheet.getRange(3, 1, 1, 6).setValues([headers])
+      .setFontWeight('bold').setBackground('#d9eaf7');
+    sheet.setFrozenRows(3);
+    sheet.setColumnWidth(1, 70);
+    sheet.setColumnWidth(2, 150);
+    sheet.setColumnWidth(3, 350);
+    sheet.setColumnWidth(4, 180);
+    sheet.setColumnWidths(5, 2, 300);
+    sheet.setColumnWidths(7, 2, 140);
+    ss.setActiveSheet(sheet);
+    SpreadsheetApp.flush();
+    onOpen();
+    ss.toast(legacy ? '旧版を移行しました。B2が検索場所、結果は4行目からです。'
+      : 'B1に検索語、B2に検索場所を指定してください。', '共有ドライブ検索', 8);
+  } finally {
+    lock.releaseLock();
   }
-  if (sheet.getMaxColumns() &lt; 6) {
-    sheet.insertColumnsAfter(sheet.getMaxColumns(), 6 - sheet.getMaxColumns());
-  }
-  if (sheet.getMaxRows() &lt; 3) {
-    sheet.insertRowsAfter(sheet.getMaxRows(), 3 - sheet.getMaxRows());
-  }
-  sheet.getRange('A1').setValue('検索語');
-  sheet.getRange('B1').setBackground('#fff2cc');
-  sheet.getRange('C1').setValue('状態');
-  sheet.getRange(2, 1, 1, 6)
-    .setValues([['No.', '種類', '名前', '更新日時', '開くURL', '親フォルダURL']])
-    .setFontWeight('bold').setBackground('#d9eaf7');
-  sheet.setFrozenRows(2);
-  sheet.setColumnWidth(1, 60);
-  sheet.setColumnWidth(2, 180);
-  sheet.setColumnWidth(3, 350);
-  sheet.setColumnWidth(4, 180);
-  sheet.setColumnWidths(5, 2, 300);
-  ss.setActiveSheet(sheet);
-  onOpen();
 }
 
-function startDriveSearch() {
-  runDriveSearch_(true);
-}
-
-function continueDriveSearch() {
-  runDriveSearch_(false);
-}
+function startDriveSearch() { runDriveSearch_(true); }
+function continueDriveSearch() { runDriveSearch_(false); }
 
 function runDriveSearch_(restart) {
   const started = Date.now();
-  const lock = LockService.getDocumentLock();
-  if (!lock || !lock.tryLock(1000)) {
-    throw new Error('別の検索が実行中です。終了後に実行してください。');
-  }
+  const lock = acquireDriveSearchLock_();
   let sheet;
   let processing = false;
   try {
-    if (typeof Drive === 'undefined') {
-      throw new Error('Apps Scriptの「サービス +」でGoogle Drive API（v3）を追加してください。');
-    }
-    const driveId = DRIVE_SEARCH.DRIVE_ID.trim();
-    if (!/^[A-Za-z0-9_-]+$/.test(driveId)) {
-      throw new Error('DRIVE_IDに共有ドライブ自体のIDを設定してください。');
-    }
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
-    if (!sheet) throw new Error('先にsetupDriveSearchを実行してください。');
-
+    sheet = getDriveSearchSheet_(ss);
+    const props = PropertiesService.getDocumentProperties();
     const keyword = sheet.getRange('B1').getDisplayValue().trim();
     if (!keyword) throw new Error('B1に検索する文字を入力してください。');
     const key = normalizeDriveName_(keyword);
     const owner = Session.getTemporaryActiveUserKey();
-    const props = PropertiesService.getDocumentProperties();
+    const root = getDriveSearchRoot_();
     let state;
+    let queue;
 
     if (restart) {
+      const scope = resolveDriveSearchScope_(sheet, root);
+      if (scope.id !== root.id) queue = getDriveSearchQueue_(ss, true);
+      // URLや手入力パスを、検証済みの現在のパスへそろえる。
+      writeDriveSearchSelection_(sheet, scope);
       state = {
-        driveId: driveId, sheetId: sheet.getSheetId(), owner: owner,
-        keyword: keyword, key: key, token: '',
-        nextRow: 3, checked: 0, hits: 0, done: false
+        version: 2, driveId: root.id, sheetId: sheet.getSheetId(), owner: owner,
+        keywordHash: driveSearchHash_(keyword), scopeInputHash: driveSearchHash_(scope.path),
+        scopeId: scope.id, mode: scope.id === root.id ? 'drive' : 'subtree',
+        token: '', nextRow: DRIVE_SEARCH.RESULT_FIRST_ROW, checked: 0, hits: 0, done: false,
+        queueSheetId: queue ? queue.getSheetId() : null,
+        queueReadIndex: 0, queueLength: 0, activeBatch: []
       };
-      props.setProperty(DRIVE_SEARCH.STATE_KEY, JSON.stringify(state));
+      // 新規検索を先に記録。初期化途中で止まっても前回のキューを再利用しない。
+      saveDriveSearchState_(props, state);
     } else {
       const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
       if (!saved) throw new Error('再開する検索がありません。「新しく検索」を実行してください。');
       state = JSON.parse(saved);
-      if (state.owner !== owner) {
-        throw new Error('検索を開始したGoogleアカウントで再開してください。');
+      if (state.owner !== owner) throw new Error('検索を開始したGoogleアカウントで再開してください。');
+      const input = sheet.getRange('B2').getDisplayValue();
+      if (state.version !== 2 || state.driveId !== root.id || state.sheetId !== sheet.getSheetId() ||
+          state.keywordHash !== driveSearchHash_(keyword) || state.scopeInputHash !== driveSearchHash_(input)) {
+        throw new Error('B1・B2または設定が変わっています。「新しく検索」を実行してください。');
       }
-      if (state.driveId !== driveId || state.sheetId !== sheet.getSheetId() || state.key !== key) {
-        throw new Error('検索条件が変わっています。「新しく検索」を実行してください。');
+      const scope = resolveDriveSearchScope_(sheet, root);
+      if (state.scopeId !== scope.id) {
+        throw new Error('検索フォルダが変わっています。「新しく検索」を実行してください。');
       }
-      if (state.done) {
-        showDriveStatus_(sheet, state, '完了');
-        return;
-      }
+      if (state.done) { showDriveSearchStatus_(sheet, state, '完了'); return; }
+      if (state.mode === 'subtree') queue = getDriveSearchQueue_(ss, false, state.queueSheetId);
     }
 
     processing = true;
-    // 前回、書き込み後・進捗保存前に止まった場合も二重追記を防ぐ。
-    clearDriveResultsFrom_(sheet, state.nextRow);
-    showDriveStatus_(sheet, state, '検索中');
+    clearDriveSearchTail_(sheet, state.nextRow, 6);
+    if (queue) {
+      clearDriveSearchTail_(queue, state.queueLength + 2, 1);
+      if (!state.queueLength) {
+        ensureDriveSearchSize_(queue, 2, 1);
+        queue.getRange(2, 1).setValue(state.scopeId);
+        SpreadsheetApp.flush();
+        state.queueLength = 1;
+        saveDriveSearchState_(props, state);
+      }
+    }
+    showDriveSearchStatus_(sheet, state, '検索中');
     SpreadsheetApp.flush();
 
     while (Date.now() - started &lt; DRIVE_SEARCH.RUN_LIMIT_MS) {
-      const options = {
-        corpora: 'drive', driveId: state.driveId,
-        includeItemsFromAllDrives: true, supportsAllDrives: true,
-        spaces: 'drive', q: 'trashed = false', pageSize: DRIVE_SEARCH.PAGE_SIZE,
-        fields: 'nextPageToken,incompleteSearch,files(id,name,mimeType,modifiedTime,webViewLink,parents)'
-      };
+      if (queue &amp;&amp; !state.activeBatch.length) {
+        const length = Math.min(DRIVE_SEARCH.PARENT_BATCH_SIZE, state.queueLength - state.queueReadIndex);
+        if (length &lt;= 0) { state.done = true; saveDriveSearchState_(props, state); break; }
+        state.activeBatch = queue.getRange(state.queueReadIndex + 2, 1, length, 1)
+          .getDisplayValues().map(row =&gt; row[0]);
+        if (state.activeBatch.some(id =&gt; !isDriveSearchId_(id))) {
+          throw new Error('検索用作業シートが変更されています。「新しく検索」でやり直してください。');
+        }
+        state.queueReadIndex += length;
+        state.token = '';
+      }
+      const options = driveSearchListOptions_(root.id);
+      options.fields = 'nextPageToken,incompleteSearch,files(id,name,mimeType,modifiedTime,webViewLink,parents)';
+      if (queue) {
+        options.q += ' and (' + state.activeBatch
+          .map(id =&gt; "'" + escapeDriveQuery_(id) + "' in parents").join(' or ') + ')';
+      }
       if (state.token) options.pageToken = state.token;
       const page = Drive.Files.list(options);
-      if (page.incompleteSearch) {
-        throw new Error('Drive APIが検索未完了を返しました。「新しく検索」でやり直してください。');
-      }
-
+      if (page.incompleteSearch) throw new Error('Drive APIが検索未完了を返しました。「新しく検索」でやり直してください。');
       const files = page.files || [];
-      const rows = files
-        .filter(file =&gt; normalizeDriveName_(file.name).includes(state.key))
-        .map((file, i) =&gt; {
-          const folder = file.mimeType === 'application/vnd.google-apps.folder';
-          const shortcut = file.mimeType === 'application/vnd.google-apps.shortcut';
-          const name = String(file.name || '');
-          return [
-            state.hits + i + 1,
-            folder ? 'フォルダ' : (shortcut ? 'ショートカット' : 'ファイル'),
-            /^[=']/.test(name) ? "'" + name : name,
-            file.modifiedTime ? new Date(file.modifiedTime) : '',
-            file.webViewLink || (folder
-              ? 'https://drive.google.com/drive/folders/' + file.id
-              : 'https://drive.google.com/file/d/' + file.id + '/view'),
-            file.parents &amp;&amp; file.parents.length
-              ? 'https://drive.google.com/drive/folders/' + file.parents[0] : ''
-          ];
-        });
-
+      const rows = files.filter(file =&gt; normalizeDriveName_(file.name).includes(key))
+        .map((file, i) =&gt; driveSearchResultRow_(file, state.hits + i + 1));
       if (rows.length) {
-        const endRow = state.nextRow + rows.length - 1;
-        if (endRow &gt; sheet.getMaxRows()) {
-          sheet.insertRowsAfter(sheet.getMaxRows(), endRow - sheet.getMaxRows());
-        }
+        ensureDriveSearchSize_(sheet, state.nextRow + rows.length - 1, 6);
         sheet.getRange(state.nextRow, 3, rows.length, 1).setNumberFormat('@');
         sheet.getRange(state.nextRow, 1, rows.length, 6).setValues(rows);
-        sheet.getRange(state.nextRow, 4, rows.length, 1)
-          .setNumberFormat('yyyy/mm/dd hh:mm:ss');
+        sheet.getRange(state.nextRow, 4, rows.length, 1).setNumberFormat('yyyy/mm/dd hh:mm:ss');
       }
-
+      const children = queue ? files.filter(file =&gt; file.mimeType === 'application/vnd.google-apps.folder')
+        .map(file =&gt; [file.id]) : [];
+      if (children.length) {
+        ensureDriveSearchSize_(queue, state.queueLength + children.length + 1, 1);
+        queue.getRange(state.queueLength + 2, 1, children.length, 1).setValues(children);
+      }
       state.checked += files.length;
       state.hits += rows.length;
       state.nextRow += rows.length;
+      state.queueLength += children.length;
       state.token = page.nextPageToken || '';
-      state.done = !state.token;
-      showDriveStatus_(sheet, state, '検索中');
-      // シートへの書き込みを確定してから、次のページ位置を保存する。
+      if (queue &amp;&amp; !state.token) state.activeBatch = [];
+      state.done = queue ? !state.token &amp;&amp; state.queueReadIndex &gt;= state.queueLength : !state.token;
+      showDriveSearchStatus_(sheet, state, '検索中');
+      // 結果と作業キューの両方を確定後にcheckpoint。保存失敗時は再開時に末尾を戻す。
       SpreadsheetApp.flush();
-      props.setProperty(DRIVE_SEARCH.STATE_KEY, JSON.stringify(state));
+      saveDriveSearchState_(props, state);
       if (state.done) break;
     }
-
-    showDriveStatus_(sheet, state, state.done
-      ? '完了' : '一時停止：「続きから検索」を実行');
+    showDriveSearchStatus_(sheet, state, state.done ? '完了' : '一時停止：「続きから検索」を実行');
     SpreadsheetApp.flush();
     ss.toast(state.done ? '検索が完了しました。' : '続きから検索できます。', '共有ドライブ検索', 8);
   } catch (error) {
-    if (sheet &amp;&amp; processing) {
-      sheet.getRange('D1').setValue('中断（未完了）：' + error.message);
-    }
+    if (sheet &amp;&amp; processing) sheet.getRange('D1').setValue('中断（未完了）：' + error.message);
     throw error;
   } finally {
     lock.releaseLock();
   }
 }
 
-function normalizeDriveName_(value) {
-  return String(value || '').normalize('NFKC').toLowerCase();
+function showFolderPicker() {
+  getDriveSearchSheet_(SpreadsheetApp.getActiveSpreadsheet());
+  const html = HtmlService.createHtmlOutputFromFile('FolderPicker').setWidth(760).setHeight(620);
+  SpreadsheetApp.getUi().showModalDialog(html, '検索するフォルダを選択');
 }
 
-function clearDriveResultsFrom_(sheet, row) {
-  const lastRow = sheet.getLastRow();
-  if (lastRow &gt;= row) {
-    sheet.getRange(row, 1, lastRow - row + 1, 6).clearContent();
+// HTMLから呼ぶ公開関数。Dateを返さず、現在フォルダの直下だけ取得する。
+function getFolderPickerPage(folderId, pageToken) {
+  const sheet = getDriveSearchSheet_(SpreadsheetApp.getActiveSpreadsheet());
+  const root = getDriveSearchRoot_();
+  let info;
+  let warning = '';
+  if (!folderId) {
+    try { info = resolveDriveSearchScope_(sheet, root); }
+    catch (error) { info = root; warning = 'B2の場所を開けないためルートを表示します。' + error.message; }
+  } else {
+    info = getDriveSearchFolderInfo_(String(folderId), root);
+  }
+  const options = driveSearchListOptions_(root.id);
+  options.q += " and '" + escapeDriveQuery_(info.id) + "' in parents"
+    + " and mimeType = 'application/vnd.google-apps.folder'";
+  options.pageSize = 100;
+  options.orderBy = 'name_natural';
+  options.fields = 'nextPageToken,incompleteSearch,files(id,name)';
+  if (pageToken) options.pageToken = String(pageToken);
+  const page = Drive.Files.list(options);
+  if (page.incompleteSearch) throw new Error('フォルダ一覧を取得しきれませんでした。もう一度開いてください。');
+  return {
+    rootId: root.id, rootName: root.name, folderId: info.id, folderName: info.name,
+    path: info.path, breadcrumbs: info.breadcrumbs,
+    folders: (page.files || []).map(file =&gt; ({ id: file.id, name: file.name })),
+    nextPageToken: page.nextPageToken || '', warning: warning
+  };
+}
+
+function selectSearchFolder(folderId) {
+  const lock = acquireDriveSearchLock_();
+  try {
+    const sheet = getDriveSearchSheet_(SpreadsheetApp.getActiveSpreadsheet());
+    const root = getDriveSearchRoot_();
+    const info = getDriveSearchFolderInfo_(String(folderId || ''), root);
+    writeDriveSearchSelection_(sheet, info);
+    return { id: info.id, path: info.path };
+  } finally {
+    lock.releaseLock();
   }
 }
 
-function showDriveStatus_(sheet, state, label) {
-  sheet.getRange('D1').setValue(
-    label + ' ｜ 確認 ' + state.checked.toLocaleString('ja-JP') + '件' +
-    ' ／ 該当 ' + state.hits.toLocaleString('ja-JP') + '件' +
-    ' ｜ 検索語：' + state.keyword
-  );
+function getDriveSearchRoot_() {
+  if (typeof Drive === 'undefined') throw new Error('「サービス +」でGoogle Drive API（v3）を追加してください。');
+  const id = String(DRIVE_SEARCH.DRIVE_ID).trim();
+  if (!isDriveSearchId_(id)) throw new Error('DRIVE_IDに共有ドライブ自体のIDを設定してください。');
+  const drive = Drive.Drives.get(id, { fields: 'id,name' });
+  return { id: id, name: drive.name, driveId: id, path: '/', breadcrumbs: [{ id: id, name: drive.name }] };
 }
-</code></pre>
-    <div class="copy-status" id="copy-status" role="status" aria-live="polite">コード全体をコピーできます。</div>
-    <div class="code-footer">Drive上のファイル操作は読み取りのみです。書き込み先は検索用スプレッドシートと、この検索の進捗情報です。</div>
-  </section>
 
-  <section id="help" class="card" aria-labelledby="help-title">
-    <div class="section-head"><span class="section-no">05</span><h2 id="help-title">困ったとき</h2></div>
-    <details><summary>「Drive is not defined」など、Driveのエラーが出る</summary><p>「サービス ＋」からGoogle Drive APIを追加し、v3・識別子Driveになっているか確認してください。共有ドライブIDを設定していることと、実行アカウントに対象ドライブの閲覧権限があることも確認します。</p></details>
-    <details><summary>「共有ドライブ検索」メニューが出ない</summary><p>setupDriveSearchを一度実行し、スプレッドシートを再読み込みしてください。既存プロジェクトに追加した場合は、onOpen()が重複していないか確認します。</p></details>
-    <details><summary>一時停止した後、再開するとエラーになる</summary><p>B1、共有ドライブID、シート、Googleアカウントが検索開始時と同じか確認してください。ページトークンは公式仕様で通常数時間有効です。長時間置いた後にpageToken関連のエラーが出た場合は、「新しく検索」で最初から実行してください。APIの一時的なエラーなら、同じ条件のまま「続きから検索」で再試行できます。</p></details>
-    <details><summary>ファイルが見つからない・0件になる</summary><p>検索対象は名前です。本文中だけに含まれる文字はヒットしません。複数語を空白で区切ると、その空白を含めた文字列で検索します。また、Googleアカウントから閲覧できない項目、ゴミ箱内、別ドライブへのショートカットの先は対象外です。</p></details>
-    <details><summary>大量のファイルを毎回もっと速く検索したい</summary><p>このコードは毎回すべての名前を確認する方式です。件数が多く、繰り返しすばやく検索する必要がある場合は、ファイル名の一覧を事前に作成し、その一覧を検索・更新する索引方式が適しています。このコードには索引作成機能は含めていません。</p></details>
-    <details><summary>検索時の結果は、完全な同一時点の一覧か</summary><p>検索中にファイルの追加・削除・名前変更があると、結果に影響することがあります。Drive APIのページ取得は、共有ドライブ全体を固定した同一時点のスナップショットではありません。</p></details>
-  </section>
+// 選択済みの表示文字列に対応するIDを優先。同名フォルダもIDで区別する。
+function resolveDriveSearchScope_(sheet, root) {
+  const rawInput = sheet.getRange('B2').getDisplayValue();
+  const saved = PropertiesService.getDocumentProperties().getProperty(DRIVE_SEARCH.SELECTION_KEY);
+  if (saved) {
+    const selection = JSON.parse(saved);
+    if (selection.driveId === root.id &amp;&amp; selection.sheetId === sheet.getSheetId() &amp;&amp;
+        (selection.pathHash ? selection.pathHash === driveSearchHash_(rawInput) : selection.path === rawInput)) {
+      return getDriveSearchFolderInfo_(selection.id, root);
+    }
+  }
+  // 選択画面で選んだ名前の末尾空白は保持。手入力を解決するときだけ外側の空白を除く。
+  const input = rawInput.trim();
+  if (!input || /^[\\/]+$/.test(input)) return root;
+  if (/^[A-Za-z]:[\\/]/.test(input)) {
+    throw new Error('G:\\などPCのパスは使えません。共有ドライブを起点に「/営業/見積」と入力するか、フォルダを選択してください。');
+  }
+  let id = '';
+  if (/^id:/i.test(input)) {
+    id = input.slice(3).trim();
+    if (!isDriveSearchId_(id)) throw new Error('id:の後ろにフォルダIDを入力してください。');
+  } else if (/^https?:\/\//i.test(input)) {
+    const host = input.match(/^https?:\/\/([^/]+)/i);
+    if (!host || host[1].toLowerCase() !== 'drive.google.com') throw new Error('Google DriveのフォルダURLを入力してください。');
+    const match = input.match(/\/folders\/([A-Za-z0-9_-]+)/) || input.match(/[?&amp;]id=([A-Za-z0-9_-]+)/);
+    if (!match) throw new Error('Google DriveのフォルダURLを入力してください。');
+    id = match[1];
+  } else if (isDriveSearchId_(input) &amp;&amp; input.length &gt;= 10) {
+    // 裸の長い英数字はIDとして扱う。同じ形のフォルダ名は / を先頭に付ける。
+    id = input;
+  }
+  if (id) return getDriveSearchFolderInfo_(id, root);
 
-  <section class="card" aria-labelledby="sources-title"><div class="section-head"><span class="section-no">参考</span><h2 id="sources-title">公式仕様と確認範囲</h2></div><ul class="refs"><li><a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">Google Drive API：検索クエリの用語と演算子</a></li><li><a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">Google Drive API：files.list・ページ取得・ページトークン</a></li><li><a href="https://developers.google.com/apps-script/guides/services/quotas">Google Apps Script：割り当てと実行時間制限</a></li><li><a href="https://developers.google.com/apps-script/guides/services/advanced">Google Apps Script：高度なサービスの有効化</a></li></ul><p class="caption">コードは構文チェックと疑似データによる部分一致・途中再開・重複防止などの確認を実施済みです。実際の共有ドライブへの接続確認は、IDを設定して実行した時点になります。</p></section>
-</main>
-<footer class="footer"><div class="wrap footer-inner"><span>共有ドライブの部分一致検索 / Google Apps Script</span><span>2026年11月10日版 · <a href="#main">ページ上部へ</a></span></div></footer>
+  const segments = input.replace(/\\/g, '/').split('/').filter(part =&gt; part !== '');
+  let currentId = root.id;
+  for (const segment of segments) {
+    const options = driveSearchListOptions_(root.id);
+    options.q += " and '" + escapeDriveQuery_(currentId) + "' in parents"
+      + " and mimeType = 'application/vnd.google-apps.folder' and name = '" + escapeDriveQuery_(segment) + "'";
+    options.fields = 'nextPageToken,incompleteSearch,files(id,name)';
+    options.pageSize = 100;
+    const matches = new Map();
+    do {
+      const page = Drive.Files.list(options);
+      if (page.incompleteSearch) throw new Error('検索場所を確認しきれませんでした。もう一度実行してください。');
+      (page.files || []).forEach(file =&gt; matches.set(file.id, file));
+      if (matches.size &gt; 1) throw new Error('「' + segment + '」という同名フォルダが複数あります。選択画面またはフォルダURLで指定してください。');
+      options.pageToken = page.nextPageToken || '';
+    } while (options.pageToken);
+    if (!matches.size) throw new Error('検索場所に「' + segment + '」が見つかりません。');
+    currentId = matches.values().next().value.id;
+  }
+  return getDriveSearchFolderInfo_(currentId, root);
+}
+
+// IDの実体と所属共有ドライブを確認し、親を辿ってルートまでの経路を作る。
+function getDriveSearchFolderInfo_(folderId, root) {
+  if (!isDriveSearchId_(folderId)) throw new Error('フォルダIDが正しくありません。');
+  if (folderId === root.id) return root;
+  const chain = [];
+  const seen = new Set();
+  let id = folderId;
+  while (id !== root.id) {
+    if (seen.has(id) || chain.length &gt;= 500) throw new Error('フォルダ階層を確認できません。フォルダURLを確認してください。');
+    seen.add(id);
+    const file = Drive.Files.get(id, {
+      supportsAllDrives: true, fields: 'id,name,mimeType,trashed,parents,driveId'
+    });
+    if (file.mimeType !== 'application/vnd.google-apps.folder' || file.trashed) {
+      throw new Error('ゴミ箱以外の通常のフォルダを指定してください。');
+    }
+    if (file.driveId !== root.id) throw new Error('設定した共有ドライブの外のフォルダは指定できません。');
+    chain.push({ id: file.id, name: file.name });
+    if (!file.parents || !file.parents.length) throw new Error('共有ドライブまでの親フォルダを確認できません。');
+    id = file.parents[0];
+  }
+  chain.reverse();
+  return {
+    id: folderId, name: chain[chain.length - 1].name, driveId: root.id,
+    path: '/' + chain.map(folder =&gt; folder.name).join('/'),
+    breadcrumbs: [{ id: root.id, name: root.name }].concat(chain)
+  };
+}
+
+function writeDriveSearchSelection_(sheet, info) {
+  const selection = {
+    id: info.id, driveId: info.driveId, sheetId: sheet.getSheetId(), pathHash: driveSearchHash_(info.path)
+  };
+  if (info.path.length &lt;= 1500) selection.path = info.path;
+  sheet.getRange('B2').setNumberFormat('@').setValue(safeDriveSearchText_(info.path));
+  SpreadsheetApp.flush();
+  setDriveSearchProperty_(PropertiesService.getDocumentProperties(), DRIVE_SEARCH.SELECTION_KEY, selection);
+}
+
+function driveSearchListOptions_(driveId) {
+  return {
+    corpora: 'drive', driveId: driveId, includeItemsFromAllDrives: true,
+    supportsAllDrives: true, spaces: 'drive', q: 'trashed = false', pageSize: DRIVE_SEARCH.PAGE_SIZE
+  };
+}
+
+function getDriveSearchQueue_(ss, create, sheetId) {
+  let sheet = sheetId != null ? ss.getSheets().find(item =&gt; item.getSheetId() === sheetId)
+    : ss.getSheetByName(DRIVE_SEARCH.QUEUE_SHEET_NAME);
+  if (!sheet) {
+    if (!create) throw new Error('検索用作業シートがありません。「新しく検索」でやり直してください。');
+    sheet = ss.insertSheet(DRIVE_SEARCH.QUEUE_SHEET_NAME);
+    if (sheet.getMaxColumns() &gt; 1) sheet.deleteColumns(2, sheet.getMaxColumns() - 1);
+    sheet.getRange('A1').setValue(DRIVE_SEARCH.QUEUE_SIGNATURE);
+  } else if (sheet.getRange('A1').getDisplayValue() !== DRIVE_SEARCH.QUEUE_SIGNATURE) {
+    throw new Error('「' + DRIVE_SEARCH.QUEUE_SHEET_NAME + '」は検索用の作業シートではありません。既存データは変更しません。別の名前へ変更してください。');
+  }
+  if (!sheet.isSheetHidden()) sheet.hideSheet();
+  return sheet;
+}
+
+function getDriveSearchSheet_(ss) {
+  const sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
+  if (!sheet) throw new Error('先にsetupDriveSearchを実行してください。');
+  const headers = driveSearchHeaders_();
+  if (sheet.getMaxRows() &lt; 4 || sheet.getMaxColumns() &lt; 6 ||
+      !sheet.getRange(3, 1, 1, 6).getDisplayValues()[0].every((value, i) =&gt; value === headers[i])) {
+    throw new Error('先にsetupDriveSearchを実行し、v2のシート配置へ更新してください。');
+  }
+  return sheet;
+}
+
+function acquireDriveSearchLock_() {
+  const lock = LockService.getDocumentLock();
+  if (!lock || !lock.tryLock(1000)) throw new Error('別の処理が実行中です。終了後に実行してください。');
+  return lock;
+}
+
+function saveDriveSearchState_(props, state) {
+  setDriveSearchProperty_(props, DRIVE_SEARCH.STATE_KEY, state);
+}
+
+function setDriveSearchProperty_(props, name, value) {
+  const json = JSON.stringify(value);
+  if (Utilities.newBlob(json).getBytes().length &gt; 8500) {
+    throw new Error('検索の進捗情報が保存上限に近づきました。対象フォルダを狭めて新しく検索してください。');
+  }
+  props.setProperty(name, json);
+}
+
+function driveSearchHash_(value) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(value), Utilities.Charset.UTF_8)
+    .map(byte =&gt; ('0' + (byte &amp; 255).toString(16)).slice(-2)).join('');
+}
+
+function driveSearchResultRow_(file, number) {
+  const folder = file.mimeType === 'application/vnd.google-apps.folder';
+  const shortcut = file.mimeType === 'application/vnd.google-apps.shortcut';
+  return [
+    number, folder ? 'フォルダ' : (shortcut ? 'ショートカット' : 'ファイル'),
+    safeDriveSearchText_(file.name || ''), file.modifiedTime ? new Date(file.modifiedTime) : '',
+    file.webViewLink || (folder ? 'https://drive.google.com/drive/folders/' + file.id
+      : 'https://drive.google.com/file/d/' + file.id + '/view'),
+    file.parents &amp;&amp; file.parents.length ? 'https://drive.google.com/drive/folders/' + file.parents[0] : ''
+  ];
+}
+
+function driveSearchHeaders_() { return ['No.', '種類', '名前', '更新日時', '開くURL', '親フォルダURL']; }
+function normalizeDriveName_(value) { return String(value || '').normalize('NFKC').toLowerCase(); }
+function isDriveSearchId_(value) { return /^[A-Za-z0-9_-]+$/.test(String(value || '')); }
+function escapeDriveQuery_(value) { return String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'"); }
+function safeDriveSearchText_(value) { const text = String(value); return /^[=']/.test(text) ? "'" + text : text; }
+
+function ensureDriveSearchSize_(sheet, rows, columns) {
+  if (sheet.getMaxColumns() &lt; columns) sheet.insertColumnsAfter(sheet.getMaxColumns(), columns - sheet.getMaxColumns());
+  if (sheet.getMaxRows() &lt; rows) sheet.insertRowsAfter(sheet.getMaxRows(), rows - sheet.getMaxRows());
+}
+
+function clearDriveSearchTail_(sheet, row, columns) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow &gt;= row) sheet.getRange(row, 1, lastRow - row + 1, columns).clearContent();
+}
+
+function showDriveSearchStatus_(sheet, state, label) {
+  sheet.getRange('D1').setValue(label + ' ｜ 確認 ' + state.checked.toLocaleString('ja-JP')
+    + '件 ／ 該当 ' + state.hits.toLocaleString('ja-JP') + '件');
+}
+</code></pre><div class="copy-status" id="status-gs" role="status" aria-live="polite">Code.gsの全文をコピーできます。</div><div class="code-footer">Drive上のファイルは読み取り対象です。検索結果・設定・進捗はスプレッドシートやスクリプトの管理情報へ保存します。</div></section>
+
+<section id="code-picker-section" class="card code-card"><div class="code-intro"><div class="section-head"><span class="section-no">05</span><h2>選択画面：FolderPicker.html</h2></div><p>Apps ScriptでHTMLファイルを作成し、名前を <strong>FolderPicker</strong> にして、下の全文を貼り付けます。</p></div><div class="code-toolbar"><span class="filename">FolderPicker.html</span><div class="tools"><button type="button" class="button primary small copy-button" data-code="code-picker" data-file="FolderPicker.html" data-status="status-picker">全文をコピー</button><button type="button" class="button secondary small download-button" data-code="code-picker" data-file="FolderPicker.html" data-status="status-picker">HTMLを保存</button></div></div><pre class="code-view" tabindex="0" aria-label="フォルダ選択画面HTML全文"><code id="code-picker">&lt;!doctype html&gt;
+&lt;html lang="ja"&gt;
+&lt;head&gt;
+  &lt;base target="_top"&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+  &lt;title&gt;検索するフォルダを選択&lt;/title&gt;
+  &lt;style&gt;
+    :root{--ink:#173349;--muted:#607585;--border:#dbe5ec;--accent:#087f76;--soft:#edf7f5;--bg:#f5f8fa}
+    *{box-sizing:border-box}html,body{height:100%;margin:0}body{color:var(--ink);background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",Meiryo,sans-serif;font-size:14px;line-height:1.55;overflow:hidden}button{font:inherit;cursor:pointer}button:disabled{cursor:default;opacity:.48}button:focus-visible{outline:3px solid #d8a12c;outline-offset:2px}.app{display:flex;flex-direction:column;height:100%;min-height:360px}.header{padding:18px 22px 12px;border-bottom:1px solid var(--border);flex-shrink:0}.eyebrow{font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.07em;margin-bottom:4px}.heading-row{display:flex;align-items:center;justify-content:space-between;gap:12px}h1{font-size:20px;line-height:1.5;margin:0;font-weight:750}.drive-badge{font-size:12px;color:#476677;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;max-width:46%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.intro{color:var(--muted);font-size:12px;margin:7px 0 0}.navigation{padding:12px 22px 10px;flex-shrink:0;background:#fbfcfd}.nav-row{display:flex;gap:8px;align-items:center}.nav-button{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:34px;padding:6px 11px;background:#fff;border:1px solid #cfdde5;border-radius:7px;color:#35576c;font-size:12px;white-space:nowrap}.nav-button:not(:disabled):hover{background:#eef5f8}.nav-button svg{width:15px;height:15px;flex-shrink:0}.breadcrumbs{display:flex;align-items:center;gap:3px;overflow-x:auto;white-space:nowrap;min-width:0;flex:1;padding:3px 2px;scrollbar-width:thin}.crumb{padding:5px 7px;border:0;border-radius:5px;background:transparent;color:#356b83;font-size:12px;max-width:180px;overflow:hidden;text-overflow:ellipsis;flex-shrink:0}.crumb:not(:disabled):hover{background:#eaf2f6}.crumb.current{color:var(--ink);font-weight:700;opacity:1}.crumb-separator{font-size:14px;color:#8a9daa;flex-shrink:0}.path-row{display:flex;align-items:baseline;gap:10px;margin-top:10px}.path-label{color:var(--muted);font-size:11px;white-space:nowrap}.path{font-size:12px;font-weight:600;overflow-wrap:anywhere;max-height:3.2em;overflow:auto;min-width:0;line-height:1.6;margin:0}.notices{flex-shrink:0;padding:0 22px}.notice{font-size:12px;line-height:1.6;margin-top:10px;padding:9px 11px;border-radius:7px;max-height:90px;overflow:auto}.notice[hidden]{display:none}.warning{background:#fff8e6;color:#745924;border:1px solid #f0dfad}.error{background:#fff2f1;color:#8e3e3a;border:1px solid #ebcfcc;display:flex;gap:12px;align-items:flex-start}.error-message{min-width:0;flex:1;overflow-wrap:anywhere}.retry{padding:4px 9px;background:#fff;border:1px solid #d9aaa6;border-radius:5px;color:#873b36;font-size:12px;white-space:nowrap;flex-shrink:0}.content{display:flex;flex-direction:column;flex:1;min-height:0;padding:12px 22px 0}.list-caption{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-shrink:0;color:var(--muted);font-size:11px;margin-bottom:7px}.list-caption h2{font-size:12px;margin:0;font-weight:600;color:#526d7f}.folder-area{flex:1;min-height:60px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;background:#fff}.folder-list{list-style:none;margin:0;padding:4px}.folder-item{margin:0}.folder-button{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;padding:9px 11px;border:0;border-radius:6px;text-align:left;color:var(--ink);background:#fff}.folder-button:not(:disabled):hover{background:#eef6f7}.folder-icon{width:22px;height:20px;flex-shrink:0;color:#c49425}.folder-name{flex:1;min-width:0;overflow-wrap:anywhere;font-size:13px}.folder-chevron{color:#7f98a8;font-size:20px;line-height:1;flex-shrink:0}.empty{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:9px;min-height:150px;height:100%;padding:20px;text-align:center;color:var(--muted);font-size:13px}.empty p{margin:0;max-width:410px}.empty .small{font-size:12px;color:#7a8d99}.spinner{width:24px;height:24px;border:3px solid #e1edee;border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}.pagination{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 0 11px;flex-shrink:0;min-height:52px}.page-info{font-size:12px;color:var(--muted)}.page-buttons{display:flex;gap:7px}.footer{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 22px 16px;border-top:1px solid var(--border);background:#fff;flex-shrink:0}.selection-note{font-size:11px;line-height:1.6;color:var(--muted);max-width:185px}.actions{display:flex;gap:9px;align-items:center}.button{display:inline-flex;align-items:center;justify-content:center;min-height:40px;padding:9px 16px;border:1px solid transparent;border-radius:8px;font-size:13px;font-weight:650;line-height:1.5}.button.secondary{background:#fff;border-color:#ccdbe4;color:#486477}.button.secondary:not(:disabled):hover{background:#f3f7f9}.button.primary{background:var(--accent);color:#fff}.button.primary:not(:disabled):hover{background:#066a62}.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;clip-path:inset(50%)}@keyframes spin{to{transform:rotate(360deg)}}
+    @media(max-width:570px){.header{padding:14px 15px 11px}.heading-row{align-items:flex-start;flex-direction:column;gap:6px}h1{font-size:18px}.drive-badge{max-width:100%;padding:3px 8px}.intro{font-size:11px}.navigation{padding:10px 15px}.nav-row{flex-wrap:wrap}.breadcrumbs{flex-basis:100%;order:3;padding-top:5px}.nav-button{font-size:11px;min-height:31px}.notices{padding:0 15px}.content{padding:10px 15px 0}.footer{padding:11px 15px 13px;gap:9px}.selection-note{display:none}.actions{width:100%;justify-content:flex-end}.button{font-size:12px;padding:9px 12px}.button.primary{flex:1;max-width:310px}.crumb{max-width:150px}.empty{min-height:100px}}
+    @media(prefers-reduced-motion:reduce){.spinner{animation:none}}
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;main class="app" aria-labelledby="title"&gt;
+  &lt;header class="header"&gt;
+    &lt;div class="eyebrow"&gt;検索範囲&lt;/div&gt;
+    &lt;div class="heading-row"&gt;&lt;h1 id="title"&gt;検索するフォルダを選択&lt;/h1&gt;&lt;div class="drive-badge" id="drive-name"&gt;共有ドライブ&lt;/div&gt;&lt;/div&gt;
+    &lt;p class="intro"&gt;フォルダ名をクリックして開き、目的の場所で下の選択ボタンを押してください。&lt;/p&gt;
+  &lt;/header&gt;
+  &lt;section class="navigation" aria-label="フォルダの移動"&gt;
+    &lt;div class="nav-row"&gt;
+      &lt;button type="button" class="nav-button" id="root-button" disabled&gt;&lt;svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"&gt;&lt;path d="M3 10.5 12 3l9 7.5M5.5 9.5V21h13V9.5M9 21v-7h6v7"/&gt;&lt;/svg&gt;先頭へ&lt;/button&gt;
+      &lt;button type="button" class="nav-button" id="up-button" disabled&gt;&lt;svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"&gt;&lt;path d="m5 10 7-7 7 7M12 3v18"/&gt;&lt;/svg&gt;上へ&lt;/button&gt;
+      &lt;nav class="breadcrumbs" id="breadcrumbs" aria-label="現在の階層"&gt;&lt;/nav&gt;
+    &lt;/div&gt;
+    &lt;div class="path-row"&gt;&lt;span class="path-label"&gt;現在の場所&lt;/span&gt;&lt;p class="path" id="current-path"&gt;読み込み中…&lt;/p&gt;&lt;/div&gt;
+  &lt;/section&gt;
+  &lt;div class="notices"&gt;
+    &lt;div class="notice warning" id="warning" role="status" hidden&gt;&lt;/div&gt;
+    &lt;div class="notice error" id="error" role="alert" hidden&gt;&lt;span class="error-message" id="error-message"&gt;&lt;/span&gt;&lt;button class="retry" type="button" id="retry-button"&gt;再試行&lt;/button&gt;&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;section class="content" aria-labelledby="list-title"&gt;
+    &lt;div class="list-caption"&gt;&lt;h2 id="list-title"&gt;この場所にあるフォルダ&lt;/h2&gt;&lt;span id="folder-count"&gt;&lt;/span&gt;&lt;/div&gt;
+    &lt;div class="folder-area" id="folder-area" aria-busy="true"&gt;&lt;div class="empty"&gt;&lt;span class="spinner" aria-hidden="true"&gt;&lt;/span&gt;&lt;p&gt;フォルダを読み込んでいます…&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+    &lt;div class="pagination"&gt;&lt;span class="page-info" id="page-info"&gt;&lt;/span&gt;&lt;div class="page-buttons"&gt;&lt;button class="nav-button" type="button" id="previous-button" disabled&gt;前のページ&lt;/button&gt;&lt;button class="nav-button" type="button" id="next-button" disabled&gt;次のページ&lt;/button&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;/section&gt;
+  &lt;footer class="footer"&gt;&lt;span class="selection-note"&gt;選んだ場所と、その下の階層を&lt;br&gt;検索範囲に設定します。&lt;/span&gt;&lt;div class="actions"&gt;&lt;button class="button secondary" type="button" id="close-button"&gt;閉じる&lt;/button&gt;&lt;button class="button primary" type="button" id="select-button" disabled&gt;このフォルダを選択&lt;/button&gt;&lt;/div&gt;&lt;/footer&gt;
+  &lt;div class="visually-hidden" id="live-status" role="status" aria-live="polite"&gt;&lt;/div&gt;
+&lt;/main&gt;
+&lt;script&gt;
+(function () {
+  'use strict';
+
+  var elements = {};
+  [
+    'drive-name', 'root-button', 'up-button', 'breadcrumbs', 'current-path',
+    'warning', 'error', 'error-message', 'retry-button', 'folder-count',
+    'folder-area', 'page-info', 'previous-button', 'next-button',
+    'close-button', 'select-button', 'live-status'
+  ].forEach(function (id) { elements[id] = document.getElementById(id); });
+
+  var state = {
+    requestSeq: 0,
+    closed: false,
+    loading: false,
+    saving: false,
+    validView: false,
+    page: null,
+    pageIndex: 0,
+    pageTokens: [null],
+    lastRequest: null,
+    retryAction: null
+  };
+
+  function isBusy() {
+    return state.loading || state.saving;
+  }
+
+  function getParentId() {
+    if (!state.page || state.page.folderId === state.page.rootId) return null;
+    var crumbs = state.page.breadcrumbs;
+    return crumbs.length &gt; 1 ? crumbs[crumbs.length - 2].id : null;
+  }
+
+  function syncControls() {
+    var busy = isBusy();
+    var page = state.page;
+    elements['root-button'].disabled = busy || !page;
+    elements['up-button'].disabled = busy || !getParentId();
+    elements['previous-button'].disabled = busy || !state.validView || state.pageIndex === 0;
+    elements['next-button'].disabled = busy || !state.validView || !page || !page.nextPageToken;
+    elements['select-button'].disabled = busy || !state.validView || !page;
+    elements['close-button'].disabled = state.saving;
+    elements['retry-button'].disabled = busy;
+    elements['select-button'].textContent = state.saving
+      ? '設定しています…'
+      : (page &amp;&amp; page.folderId === page.rootId ? '共有ドライブ全体を選択' : 'このフォルダを選択');
+    elements['folder-area'].setAttribute('aria-busy', String(busy));
+    elements['breadcrumbs'].querySelectorAll('button').forEach(function (button) {
+      button.disabled = busy || button.getAttribute('aria-current') === 'page';
+    });
+    elements['folder-area'].querySelectorAll('button').forEach(function (button) {
+      button.disabled = busy || !state.validView;
+    });
+  }
+
+  function errorText(error) {
+    if (error &amp;&amp; typeof error.message === 'string') return error.message;
+    if (typeof error === 'string') return error;
+    return '処理を完了できませんでした。もう一度お試しください。';
+  }
+
+  function clearError() {
+    elements['error'].hidden = true;
+    elements['error-message'].textContent = '';
+    state.retryAction = null;
+  }
+
+  function showError(error, retryAction) {
+    elements['error-message'].textContent = errorText(error);
+    elements['error'].hidden = false;
+    state.retryAction = retryAction;
+  }
+
+  function showEmpty(message, detail, loading) {
+    var empty = document.createElement('div');
+    empty.className = 'empty';
+    if (loading) {
+      var spinner = document.createElement('span');
+      spinner.className = 'spinner';
+      spinner.setAttribute('aria-hidden', 'true');
+      empty.appendChild(spinner);
+    }
+    var paragraph = document.createElement('p');
+    paragraph.textContent = message;
+    empty.appendChild(paragraph);
+    if (detail) {
+      var hint = document.createElement('p');
+      hint.className = 'small';
+      hint.textContent = detail;
+      empty.appendChild(hint);
+    }
+    elements['folder-area'].replaceChildren(empty);
+  }
+
+  function normalizePage(data) {
+    if (!data || typeof data !== 'object' || !data.rootId || !data.folderId ||
+        !Array.isArray(data.breadcrumbs) || !Array.isArray(data.folders)) {
+      throw new Error('フォルダの情報を取得できませんでした。再試行してください。');
+    }
+    var validItem = function (item) {
+      return item &amp;&amp; typeof item.id === 'string' &amp;&amp; item.id.length &gt; 0 &amp;&amp; typeof item.name === 'string';
+    };
+    if (!data.breadcrumbs.every(validItem) || !data.folders.every(validItem) ||
+        typeof data.rootId !== 'string' || typeof data.folderId !== 'string' ||
+        typeof data.path !== 'string') {
+      throw new Error('フォルダの情報を正しく読み取れませんでした。再試行してください。');
+    }
+    return {
+      rootId: data.rootId,
+      rootName: String(data.rootName || '共有ドライブ'),
+      folderId: data.folderId,
+      folderName: String(data.folderName || 'フォルダ'),
+      path: data.path,
+      breadcrumbs: data.breadcrumbs,
+      folders: data.folders,
+      nextPageToken: typeof data.nextPageToken === 'string' ? data.nextPageToken : '',
+      warning: typeof data.warning === 'string' ? data.warning : ''
+    };
+  }
+
+  function folderIcon() {
+    var ns = 'http://www.w3.org/2000/svg';
+    var svg = document.createElementNS(ns, 'svg');
+    svg.setAttribute('viewBox', '0 0 24 22');
+    svg.setAttribute('class', 'folder-icon');
+    svg.setAttribute('aria-hidden', 'true');
+    var path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', 'M2 5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2Z');
+    path.setAttribute('fill', '#fff0b8');
+    path.setAttribute('stroke', 'currentColor');
+    path.setAttribute('stroke-width', '1.4');
+    svg.appendChild(path);
+    return svg;
+  }
+
+  function renderPage() {
+    var page = state.page;
+    elements['drive-name'].textContent = page.rootName;
+    elements['drive-name'].title = page.rootName;
+    elements['current-path'].textContent = page.path;
+    elements['current-path'].title = page.path;
+    elements['warning'].textContent = page.warning;
+    elements['warning'].hidden = !page.warning;
+    elements['breadcrumbs'].replaceChildren();
+    page.breadcrumbs.forEach(function (crumb, index) {
+      if (index) {
+        var separator = document.createElement('span');
+        separator.className = 'crumb-separator';
+        separator.textContent = '›';
+        separator.setAttribute('aria-hidden', 'true');
+        elements['breadcrumbs'].appendChild(separator);
+      }
+      var button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'crumb';
+      button.textContent = crumb.name || '（名前なし）';
+      button.title = crumb.name;
+      if (crumb.id === page.folderId) {
+        button.classList.add('current');
+        button.setAttribute('aria-current', 'page');
+        button.disabled = true;
+      } else {
+        button.addEventListener('click', function () { openFolder(crumb.id); });
+      }
+      elements['breadcrumbs'].appendChild(button);
+    });
+
+    elements['folder-count'].textContent = page.folders.length.toLocaleString('ja-JP') + 'フォルダ';
+    elements['page-info'].textContent = (state.pageIndex + 1).toLocaleString('ja-JP') + 'ページ目';
+    if (!page.folders.length) {
+      var message = 'このページにフォルダはありません。';
+      var detail = page.nextPageToken
+        ? '「次のページ」で続きを確認できます。'
+        : '現在の場所を選択することはできます。';
+      if (state.pageIndex === 0 &amp;&amp; !page.nextPageToken) {
+        message = 'この場所の直下にフォルダはありません。';
+      }
+      showEmpty(message, detail, false);
+    } else {
+      var list = document.createElement('ul');
+      list.className = 'folder-list';
+      page.folders.forEach(function (folder) {
+        var item = document.createElement('li');
+        item.className = 'folder-item';
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'folder-button';
+        button.setAttribute('aria-label', (folder.name || '名前なしのフォルダ') + ' を開く');
+        button.appendChild(folderIcon());
+        var name = document.createElement('span');
+        name.className = 'folder-name';
+        name.textContent = folder.name || '（名前なし）';
+        button.appendChild(name);
+        var chevron = document.createElement('span');
+        chevron.className = 'folder-chevron';
+        chevron.textContent = '›';
+        chevron.setAttribute('aria-hidden', 'true');
+        button.appendChild(chevron);
+        button.addEventListener('click', function () { openFolder(folder.id); });
+        item.appendChild(button);
+        list.appendChild(item);
+      });
+      elements['folder-area'].replaceChildren(list);
+    }
+    elements['folder-area'].scrollTop = 0;
+    elements['breadcrumbs'].scrollLeft = elements['breadcrumbs'].scrollWidth;
+    elements['live-status'].textContent = page.path + '、' + page.folders.length + 'フォルダを表示しました。';
+    syncControls();
+  }
+
+  function requestPage(request) {
+    if (state.closed || state.saving) return;
+    var requestSeq = ++state.requestSeq;
+    state.lastRequest = {
+      folderId: request.folderId,
+      pageToken: request.pageToken,
+      pageIndex: request.pageIndex,
+      pageTokens: request.pageTokens.slice()
+    };
+    state.loading = true;
+    state.validView = false;
+    clearError();
+    elements['warning'].hidden = true;
+    elements['folder-count'].textContent = '';
+    elements['live-status'].textContent = 'フォルダを読み込んでいます。';
+    showEmpty('フォルダを読み込んでいます…', '', true);
+    syncControls();
+
+    function fail(error) {
+      if (state.closed || requestSeq !== state.requestSeq) return;
+      state.loading = false;
+      state.validView = false;
+      showEmpty('フォルダを読み込めませんでした。', '再試行するか、先頭・上の階層へ移動してください。', false);
+      showError(error, function () { requestPage(state.lastRequest); });
+      elements['live-status'].textContent = 'フォルダの読み込みに失敗しました。';
+      syncControls();
+    }
+
+    try {
+      google.script.run
+        .withSuccessHandler(function (data) {
+          if (state.closed || requestSeq !== state.requestSeq) return;
+          var page;
+          try { page = normalizePage(data); } catch (error) { fail(error); return; }
+          state.page = page;
+          state.pageIndex = request.pageIndex;
+          state.pageTokens = request.pageTokens.slice();
+          state.loading = false;
+          state.validView = true;
+          clearError();
+          renderPage();
+        })
+        .withFailureHandler(fail)
+        .getFolderPickerPage(request.folderId, request.pageToken);
+    } catch (error) {
+      fail(error);
+    }
+  }
+
+  function openFolder(folderId) {
+    if (isBusy() || state.closed) return;
+    requestPage({folderId: folderId, pageToken: null, pageIndex: 0, pageTokens: [null]});
+  }
+
+  function selectCurrentFolder() {
+    if (isBusy() || state.closed || !state.validView || !state.page) return;
+    var folderId = state.page.folderId;
+    var requestSeq = ++state.requestSeq;
+    state.saving = true;
+    clearError();
+    elements['live-status'].textContent = '検索範囲を設定しています。';
+    syncControls();
+
+    function fail(error) {
+      if (state.closed || requestSeq !== state.requestSeq) return;
+      state.saving = false;
+      showError(error, selectCurrentFolder);
+      elements['live-status'].textContent = '検索範囲を設定できませんでした。';
+      syncControls();
+    }
+
+    try {
+      google.script.run
+        .withSuccessHandler(function (result) {
+          if (state.closed || requestSeq !== state.requestSeq) return;
+          if (!result || result.id !== folderId || typeof result.path !== 'string') {
+            fail(new Error('検索範囲の設定結果を確認できませんでした。再試行してください。'));
+            return;
+          }
+          state.closed = true;
+          state.requestSeq++;
+          google.script.host.close();
+        })
+        .withFailureHandler(fail)
+        .selectSearchFolder(folderId);
+    } catch (error) {
+      fail(error);
+    }
+  }
+
+  elements['root-button'].addEventListener('click', function () {
+    if (state.page) openFolder(state.page.rootId);
+  });
+  elements['up-button'].addEventListener('click', function () {
+    var parentId = getParentId();
+    if (parentId) openFolder(parentId);
+  });
+  elements['previous-button'].addEventListener('click', function () {
+    if (isBusy() || !state.validView || state.pageIndex === 0) return;
+    var index = state.pageIndex - 1;
+    requestPage({
+      folderId: state.page.folderId,
+      pageToken: state.pageTokens[index],
+      pageIndex: index,
+      pageTokens: state.pageTokens.slice(0, index + 1)
+    });
+  });
+  elements['next-button'].addEventListener('click', function () {
+    if (isBusy() || !state.validView || !state.page || !state.page.nextPageToken) return;
+    var index = state.pageIndex + 1;
+    var tokens = state.pageTokens.slice(0, index);
+    tokens.push(state.page.nextPageToken);
+    requestPage({
+      folderId: state.page.folderId,
+      pageToken: state.page.nextPageToken,
+      pageIndex: index,
+      pageTokens: tokens
+    });
+  });
+  elements['retry-button'].addEventListener('click', function () {
+    if (!isBusy() &amp;&amp; state.retryAction) state.retryAction();
+  });
+  elements['select-button'].addEventListener('click', selectCurrentFolder);
+  elements['close-button'].addEventListener('click', function () {
+    if (state.saving || state.closed) return;
+    state.closed = true;
+    state.requestSeq++;
+    google.script.host.close();
+  });
+
+  requestPage({folderId: null, pageToken: null, pageIndex: 0, pageTokens: [null]});
+})();
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre><div class="copy-status" id="status-picker" role="status" aria-live="polite">FolderPicker.htmlの全文をコピーできます。</div><div class="code-footer">選択画面のHTMLです。単独でPCのブラウザから開くのではなく、Apps ScriptのshowFolderPickerから表示します。</div></section>
+
+<section id="help" class="card"><div class="section-head"><span class="section-no">06</span><h2>困ったとき</h2></div>
+<details><summary>「FolderPickerが見つからない」などのエラーが出る</summary><p>Apps ScriptのHTMLファイル名がFolderPickerになっているか確認してください。コード全文をHTMLファイルへ貼り付け、保存後にもう一度ボタンから開きます。</p></details>
+<details><summary>ボタンを押しても選択画面が開かない</summary><p>図形へ割り当てる関数名はshowFolderPickerです。かっこは付けません。スプレッドシートを再読み込みし、上部の「共有ドライブ検索」メニューから開けるかも確認してください。</p></details>
+<details><summary>B2のフォルダを開けない・同名フォルダがある</summary><p>B2のパスは共有ドライブの先頭から指定します。G:\から始まるPC上のパスは使えません。同じ階層に同名のフォルダがある場合は、選択画面、フォルダURL、またはフォルダIDで指定します。別ドライブ内や閲覧権限のないフォルダは検索対象にできません。</p></details>
+<details><summary>選択画面で「読み込めませんでした」と表示される</summary><p>「再試行」を押してください。既に開いていた場所がある場合は、先頭・上の階層へ戻ることもできます。読み込みに失敗した場所は、選択できない状態になります。</p></details>
+<details><summary>「Drive is not defined」などのエラーが出る</summary><p>Google Drive APIがサービスへ追加され、バージョンv3、識別子Driveになっているか確認します。DRIVE_IDには共有ドライブ自体のIDを指定してください。</p></details>
+<details><summary>途中から再開すると検索条件のエラーになる</summary><p>B1・B2、共有ドライブID、検索シート、Googleアカウントが開始時と同じか確認します。条件を変えたい場合は「新しく検索」を選びます。長時間置いた後にページトークンが失効した場合も、新しく検索し直してください。</p></details>
+<details><summary>検索結果が0件になる</summary><p>このコードはファイル名・フォルダ名を検索します。本文だけにある文字はヒットしません。B2の指定範囲も確認してください。複数語を空白で区切った場合、その空白を含む文字列で検索します。</p></details>
+<details><summary>検索を繰り返すので、さらに速くしたい</summary><p>このコードは検索ごとに対象の名前を取得します。非常に多い件数を繰り返しすばやく検索したい場合は、事前にファイル名の一覧を作成・更新する索引方式が適しています。この版には索引作成機能は含めていません。</p></details>
+</section>
+
+<section class="card"><div class="section-head"><span class="section-no">参考</span><h2>Google公式仕様</h2></div><ul class="refs"><li><a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">Drive API：検索クエリの用語と演算子</a></li><li><a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">Drive API：files.list・ページ取得・ページトークン</a></li><li><a href="https://developers.google.com/workspace/drive/api/guides/search-files">Drive API：ファイルとフォルダの検索</a></li><li><a href="https://developers.google.com/apps-script/guides/services/quotas">Apps Script：割り当てと実行時間制限</a></li><li><a href="https://developers.google.com/apps-script/guides/services/advanced">Apps Script：高度なサービスの有効化</a></li><li><a href="https://developers.google.com/apps-script/guides/triggers">Apps Script：簡易トリガーの制約</a></li><li><a href="https://developers.google.com/apps-script/reference/base/ui">Apps Script：ダイアログなどのUI</a></li></ul><p class="caption">実際の共有ドライブへの接続確認は、ドライブIDを設定して実行した時点になります。</p></section>
+</main><footer class="footer"><div class="wrap footer-inner"><span>共有ドライブのフォルダ指定・部分一致検索 / Google Apps Script</span><span>2026年11月10日版 · <a href="#main">ページ上部へ</a></span></div></footer>
 <script>
 (function () {
   'use strict';
-  var code = document.getElementById('gas-code');
-  var status = document.getElementById('copy-status');
-  var copyButton = document.getElementById('copy-code');
-  function fallbackCopy(text) {
+  function fallbackCopy(text, button) {
     var input = document.createElement('textarea');
     input.value = text;
     input.setAttribute('readonly', '');
@@ -352,46 +929,43 @@ function showDriveStatus_(sheet, state, label) {
     input.style.left = '-9999px';
     input.style.fontSize = '16px';
     document.body.appendChild(input);
-    input.focus();
-    input.select();
-    input.setSelectionRange(0, text.length);
+    input.focus(); input.select(); input.setSelectionRange(0, text.length);
     var copied = false;
     try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
-    input.remove();
-    copyButton.focus();
+    input.remove(); button.focus();
     return copied;
   }
-  copyButton.addEventListener('click', async function () {
-    var text = code.textContent;
-    var copied = false;
-    if (navigator.clipboard && window.isSecureContext) {
-      try { await navigator.clipboard.writeText(text); copied = true; } catch (error) { copied = false; }
-    }
-    if (!copied) copied = fallbackCopy(text);
-    if (copied) {
-      status.textContent = 'コード全文をコピーしました。Apps Scriptへ貼り付け、DRIVE_IDを設定してください。';
-      copyButton.textContent = 'コピーしました';
-      window.setTimeout(function () { copyButton.textContent = 'コードをコピー'; }, 2200);
-    } else {
-      var selection = window.getSelection();
-      var range = document.createRange();
-      range.selectNodeContents(code);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      status.textContent = '自動コピーができませんでした。コードを選択しましたので、コピー操作を行うか「.gsを保存」を使ってください。';
-    }
+  document.querySelectorAll('.copy-button').forEach(function (button) {
+    button.addEventListener('click', async function () {
+      var code = document.getElementById(button.dataset.code);
+      var status = document.getElementById(button.dataset.status);
+      var text = code.textContent;
+      var copied = false;
+      if (navigator.clipboard && window.isSecureContext) {
+        try { await navigator.clipboard.writeText(text); copied = true; } catch (error) { copied = false; }
+      }
+      if (!copied) copied = fallbackCopy(text, button);
+      if (copied) {
+        status.textContent = button.dataset.file + 'の全文をコピーしました。Apps Scriptの対応するファイルへ貼り付けてください。';
+        button.textContent = 'コピーしました';
+        window.setTimeout(function () { button.textContent = '全文をコピー'; }, 2200);
+      } else {
+        var range = document.createRange(); range.selectNodeContents(code);
+        var selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range);
+        status.textContent = '自動コピーができませんでした。選択されたコードをコピーするか、保存ボタンを使ってください。';
+      }
+    });
   });
-  document.getElementById('download-code').addEventListener('click', function () {
-    var blob = new Blob([code.textContent], {type: 'text/plain;charset=utf-8'});
-    var url = URL.createObjectURL(blob);
-    var link = document.createElement('a');
-    link.href = url;
-    link.download = 'shared_drive_search.gs';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
-    status.textContent = 'shared_drive_search.gsの保存を開始しました。';
+  document.querySelectorAll('.download-button').forEach(function (button) {
+    button.addEventListener('click', function () {
+      var code = document.getElementById(button.dataset.code);
+      var blob = new Blob([code.textContent], {type: 'text/plain;charset=utf-8'});
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement('a'); link.href = url; link.download = button.dataset.file;
+      document.body.appendChild(link); link.click(); link.remove();
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+      document.getElementById(button.dataset.status).textContent = button.dataset.file + 'の保存を開始しました。';
+    });
   });
 })();
 </script>
