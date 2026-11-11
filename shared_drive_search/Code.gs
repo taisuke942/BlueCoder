@@ -1,5 +1,5 @@
 /**
- * 共有ドライブ検索 v3（2026-11-10）
+ * 共有ドライブ検索 v3.1（2026-11-12）
  * B1: 名前の部分一致検索 / B2: 検索フォルダ / 3行目: 見出し / 4行目以降: 結果
  *
  * 設定: DRIVE_IDを変更し、「サービス +」でGoogle Drive API v3を追加。
@@ -7,6 +7,8 @@
  * 「共有ドライブ検索」メニューの「フォルダを選択」「新しく検索」を使用。
  * 約4分で区切り、「続きから検索」で再開する。自動トリガーは使用しない。
  * 一時停止・終了はページ処理の区切りで反映。実行中のDrive APIは即時中断できない。
+ * D1:F1に状態を常設表示。緑の「検索完了」になるまでは途中結果。
+ * v3の保存形式を維持。「状態を更新」で中断・条件変更も確認できる。
  * 検索・再開待ちの間はB1/B2、結果行、作業シートを編集・並べ替えない。
  *
  * B2は //（共有ドライブ一覧全体）、//ドライブ名/営業/見積、URL、id:フォルダID。
@@ -43,7 +45,22 @@ function onOpen() {
     .addItem('続きから検索', 'continueDriveSearch')
     .addItem('一時停止', 'pauseDriveSearch')
     .addItem('終了（再開しない）', 'stopDriveSearch')
+    .addSeparator()
+    .addItem('状態を更新', 'refreshDriveSearchStatus')
     .addToUi();
+  refreshDriveSearchStatus_(true);
+}
+
+// セル編集だけでは検索しない。前回の完了表示を現在の条件と区別する。
+function onEdit(e) {
+  if (!e || !e.range) return;
+  const range = e.range;
+  if (range.getSheet().getName() !== DRIVE_SEARCH.SHEET_NAME) return;
+  const lastRow = range.getRow() + range.getNumRows() - 1;
+  const lastColumn = range.getColumn() + range.getNumColumns() - 1;
+  const touchesB1 = range.getRow() <= 1 && lastRow >= 1 && range.getColumn() <= 2 && lastColumn >= 2;
+  const touchesB2 = range.getRow() <= 2 && lastRow >= 2 && range.getColumn() <= 6 && lastColumn >= 2;
+  if (touchesB1 || touchesB2) refreshDriveSearchStatus_(true);
 }
 
 // 既存B1/B2とv2・v3の結果は保持。旧版の2行目見出しが完全一致した場合だけ移行する。
@@ -66,6 +83,7 @@ function setupDriveSearch() {
         !currentHeaders.every((value, i) => value === headers[i])) {
       throw new Error('「検索」シートの3行目に別のデータがあります。移動してから初期設定してください。');
     }
+    setupDriveSearchStatusArea_(sheet);
     if (legacy) {
       sheet.getRange(2, 1, Math.max(sheet.getLastRow(), 3) - 1, 6).clearContent();
       const props = PropertiesService.getDocumentProperties();
@@ -85,7 +103,6 @@ function setupDriveSearch() {
     sheet.getRange('B2').setNumberFormat('@').setBackground('#e8f0fe');
     if (created || legacy) {
       sheet.getRange('B2').setValue('/');
-      sheet.getRange('D1').setValue('未検索');
     }
     sheet.getRange(3, 1, 1, 6).setValues([headers])
       .setFontWeight('bold').setBackground('#d9eaf7');
@@ -97,6 +114,7 @@ function setupDriveSearch() {
     sheet.setColumnWidths(5, 2, 300);
     sheet.setColumnWidths(7, 2, 140);
     ss.setActiveSheet(sheet);
+    refreshDriveSearchStatusLocked_(sheet, PropertiesService.getDocumentProperties());
     SpreadsheetApp.flush();
     onOpen();
     ss.toast(legacy ? '旧版を移行しました。B2が検索場所、結果は4行目からです。'
@@ -113,18 +131,25 @@ function runDriveSearch_(restart) {
   const started = Date.now();
   const lock = acquireDriveSearchLock_();
   let sheet;
+  let props;
+  let state;
   let processing = false;
   try {
-    requireDriveSearchApi_();
     const ss = SpreadsheetApp.getActiveSpreadsheet();
     sheet = getDriveSearchSheet_(ss);
-    const props = PropertiesService.getDocumentProperties();
+    props = PropertiesService.getDocumentProperties();
+    if (restart) {
+      markDriveSearchPreparing_(sheet, props);
+      showDriveSearchStatus_(sheet, { status: 'preparing', checked: 0, hits: 0 },
+        '新しい検索を準備中です。表示中の行は前回の結果です。');
+      SpreadsheetApp.flush();
+    }
+    requireDriveSearchApi_();
     const keyword = sheet.getRange('B1').getDisplayValue().trim();
     if (!keyword) throw new Error('B1に検索する文字を入力してください。');
     const key = normalizeDriveName_(keyword);
     const owner = Session.getTemporaryActiveUserKey();
     const defaultDriveId = String(DRIVE_SEARCH.DRIVE_ID).trim();
-    let state;
     let queue;
 
     if (restart) {
@@ -134,6 +159,7 @@ function runDriveSearch_(restart) {
       writeDriveSearchSelection_(sheet, scope);
       state = {
         version: 3, jobId: Utilities.getUuid(), owner: owner, status: 'running', stopped: false,
+        startedAt: Date.now(), finishedAt: null,
         defaultDriveId: defaultDriveId, driveId: scope.driveId, sheetId: sheet.getSheetId(),
         keywordHash: driveSearchHash_(keyword), scopeInputHash: driveSearchHash_(scope.path),
         scopeId: scope.id, mode: mode, token: '', nextRow: DRIVE_SEARCH.RESULT_FIRST_ROW,
@@ -165,9 +191,11 @@ function runDriveSearch_(restart) {
           throw new Error('この検索は終了しています。続ける場合は「新しく検索」を実行してください。');
         }
         if (request && request.action === 'pause') props.deleteProperty(DRIVE_SEARCH.CONTROL_KEY);
+        delete state.lastAttempt;
+        delete state.lastError;
         if (!state.done) { state.status = 'running'; saveDriveSearchState_(props, state); }
       });
-      if (state.done) { showDriveSearchStatus_(sheet, state, '完了'); return; }
+      if (state.done) { finishDriveSearchRun_(ss, sheet, props, state); return; }
       if (state.mode !== 'drive') queue = getDriveSearchQueue_(ss, false, state.queueSheetId);
     }
 
@@ -182,7 +210,7 @@ function runDriveSearch_(restart) {
         saveDriveSearchState_(props, state);
       }
     }
-    showDriveSearchStatus_(sheet, state, '検索中');
+    showDriveSearchStatus_(sheet, state);
     SpreadsheetApp.flush();
 
     while (!state.done && Date.now() - started < DRIVE_SEARCH.RUN_LIMIT_MS) {
@@ -200,9 +228,10 @@ function runDriveSearch_(restart) {
         state.driveListToken = page.nextPageToken || '';
         state.driveListDone = !state.driveListToken;
         state.done = state.driveListDone && !state.queueLength;
-        showDriveSearchStatus_(sheet, state, '共有ドライブ一覧を取得中');
         SpreadsheetApp.flush();
         saveDriveSearchState_(props, state);
+        showDriveSearchStatus_(sheet, state, '共有ドライブ一覧を取得中です。まだ検索は完了していません。');
+        SpreadsheetApp.flush();
       } else if (prepareDriveSearchPage_(queue, state)) {
         processDriveSearchPage_(sheet, queue, props, state, key);
       } else {
@@ -216,8 +245,8 @@ function runDriveSearch_(restart) {
     }
     finishDriveSearchRun_(ss, sheet, props, state);
   } catch (error) {
-    // 未確定のローカルstateを保存しない。前回checkpointから再開できる。
-    if (sheet && processing) sheet.getRange('D1').setValue('中断（未完了）：' + error.message);
+    // 未確定のローカルstateは保存しない。確定済みcheckpointの状態表示だけ更新する。
+    if (sheet && props) reportDriveSearchError_(sheet, props, state, processing, error);
     throw error;
   } finally {
     lock.releaseLock();
@@ -279,9 +308,10 @@ function processDriveSearchPage_(sheet, queue, props, state, key) {
   if (state.mode === 'allDrives' && !state.token) state.activeDriveId = '';
   state.done = state.mode === 'drive' ? !state.token
     : !state.token && state.queueReadIndex >= state.queueLength;
-  showDriveSearchStatus_(sheet, state, '検索中');
   SpreadsheetApp.flush();
   saveDriveSearchState_(props, state);
+  showDriveSearchStatus_(sheet, state);
+  SpreadsheetApp.flush();
 }
 
 function appendDriveSearchQueue_(queue, length, ids) {
@@ -307,17 +337,36 @@ function requestDriveSearchControl_(action) {
     if (state.owner !== Session.getTemporaryActiveUserKey()) throw new Error('検索を開始したGoogleアカウントで操作してください。');
     const sheet = getDriveSearchSheet_(ss);
     if (state.sheetId !== sheet.getSheetId()) throw new Error('検索先のシートが変わっています。');
-    if (state.stopped) { message = 'この検索は終了しています。'; result = { action: 'stop', requested: false }; return; }
-    if (state.done) { message = '検索は完了しています。'; result = { action: action, requested: false }; return; }
+    if (state.lastAttempt && state.lastAttempt.kind === 'preparing') {
+      message = '検索の準備中です。「検索中」の表示になってから操作してください。';
+      showDriveSearchStatus_(sheet, { status: 'preparing', checked: 0, hits: 0 });
+      SpreadsheetApp.flush();
+      result = { action: action, requested: false };
+      return;
+    }
+    if (state.stopped || (state.done && state.status === 'done')) {
+      message = state.stopped ? 'この検索は終了しています。' : '検索は完了しています。';
+      showDriveSearchStatus_(sheet, state);
+      SpreadsheetApp.flush();
+      result = { action: state.stopped ? 'stop' : action, requested: false };
+      return;
+    }
     const previous = readDriveSearchControl_(props, state);
     const effective = previous && previous.action === 'stop' ? 'stop' : action;
     setDriveSearchProperty_(props, DRIVE_SEARCH.CONTROL_KEY,
       { jobId: state.jobId, owner: state.owner, action: effective });
-    const paused = state.status === 'paused';
+    const paused = ['paused', 'error', 'interrupted'].includes(state.status);
     message = effective === 'stop'
       ? (paused ? '終了しました。続きから検索はできません。' : '終了要求を受け付けました。現在のページ処理後に終了します。')
       : (paused ? '一時停止しています。続きから検索できます。' : '一時停止要求を受け付けました。現在のページ処理後に停止します。');
-    sheet.getRange('D1').setValue(message);
+    if (paused && effective === 'stop') {
+      state.stopped = true;
+      state.status = 'stopped';
+      saveDriveSearchState_(props, state);
+    }
+    const displayState = Object.assign({}, state);
+    if (!paused) displayState.status = effective === 'stop' ? 'stop_requested' : 'pause_requested';
+    showDriveSearchStatus_(sheet, displayState);
     SpreadsheetApp.flush();
     result = { action: effective, requested: true };
   });
@@ -341,19 +390,22 @@ function finishDriveSearchRun_(ss, sheet, props, state) {
     if (request && request.action === 'stop') {
       state.stopped = true;
       state.status = 'stopped';
-      label = '終了（続きから検索はできません）';
+      label = '未完了のまま終了しました。続きから検索はできません。';
     } else if (state.done) {
       state.status = 'done';
-      label = '完了';
+      if (typeof state.finishedAt !== 'number') state.finishedAt = Date.now();
+      label = '検索完了：指定した範囲の検索処理が最後まで終了しました。';
     } else if (request && request.action === 'pause') {
       state.status = 'paused';
-      label = '一時停止（要求により停止）';
+      state.pauseReason = 'manual';
+      label = '未完了：一時停止しました。「続きから検索」で再開してください。';
     } else {
       state.status = 'paused';
-      label = '一時停止：「続きから検索」を実行';
+      state.pauseReason = 'time';
+      label = '未完了：時間の区切りで一時停止しました。「続きから検索」で再開してください。';
     }
     saveDriveSearchState_(props, state);
-    showDriveSearchStatus_(sheet, state, label);
+    showDriveSearchStatus_(sheet, state);
     SpreadsheetApp.flush();
   });
   ss.toast(label, '共有ドライブ検索', 8);
@@ -420,6 +472,7 @@ function selectSearchFolder(folderId) {
     const sheet = getDriveSearchSheet_(SpreadsheetApp.getActiveSpreadsheet());
     const info = getDriveSearchFolderInfo_(String(folderId || ''));
     writeDriveSearchSelection_(sheet, info);
+    refreshDriveSearchStatusLocked_(sheet, PropertiesService.getDocumentProperties());
     return { id: info.id, path: info.path };
   } finally {
     lock.releaseLock();
@@ -625,7 +678,9 @@ function acquireDriveSearchLock_() {
 }
 
 function saveDriveSearchState_(props, state) {
-  setDriveSearchProperty_(props, DRIVE_SEARCH.STATE_KEY, state);
+  const updatedAt = Date.now();
+  setDriveSearchProperty_(props, DRIVE_SEARCH.STATE_KEY, Object.assign({}, state, { updatedAt: updatedAt }));
+  state.updatedAt = updatedAt;
 }
 
 function setDriveSearchProperty_(props, name, value) {
@@ -669,7 +724,211 @@ function clearDriveSearchTail_(sheet, row, columns) {
   if (lastRow >= row) sheet.getRange(row, 1, lastRow - row + 1, columns).clearContent();
 }
 
-function showDriveSearchStatus_(sheet, state, label) {
-  sheet.getRange('D1').setValue(label + ' ｜ 確認 ' + state.checked.toLocaleString('ja-JP')
-    + '件 ／ 該当 ' + state.hits.toLocaleString('ja-JP') + '件');
+// E1/F1に別のデータがある場合は、結合で消さず利用者に移動を案内する。
+function setupDriveSearchStatusArea_(sheet) {
+  const area = sheet.getRange('D1:F1');
+  if (area.isPartOfMerge()) {
+    const merges = area.getMergedRanges();
+    if (merges.length !== 1 || merges[0].getA1Notation() !== 'D1:F1') {
+      throw new Error('D1:F1に別のセル結合があります。結合を解除してから初期設定してください。');
+    }
+  } else {
+    if (!sheet.getRange('E1:F1').isBlank()) {
+      throw new Error('E1/F1にデータがあります。別のセルへ移動してからsetupDriveSearchを実行してください。');
+    }
+    area.merge();
+  }
+  area.setWrap(true).setFontWeight('bold').setFontSize(11)
+    .setVerticalAlignment('middle').setHorizontalAlignment('left');
+  sheet.setRowHeight(1, 112);
+  sheet.getRange('A1:C1').setVerticalAlignment('middle');
+}
+
+// この機能はDrive APIを呼ばず、保存済みの進捗と実行ロックだけを確認する。
+function refreshDriveSearchStatus() { return refreshDriveSearchStatus_(false); }
+
+function refreshDriveSearchStatus_(quiet) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getSheetByName(DRIVE_SEARCH.SHEET_NAME);
+  if (!sheet) {
+    if (!quiet) throw new Error('先にsetupDriveSearchを実行してください。');
+    return;
+  }
+  const lock = LockService.getDocumentLock();
+  if (!lock || !lock.tryLock(1000)) {
+    if (!quiet) ss.toast('検索または別の操作が実行中です。状態は処理の区切りで更新されます。', '共有ドライブ検索', 8);
+    return;
+  }
+  try {
+    // 旧版の別レイアウトへD1を書き込まない。
+    getDriveSearchSheet_(ss);
+    refreshDriveSearchStatusLocked_(sheet, PropertiesService.getDocumentProperties());
+  } catch (error) {
+    if (!quiet) throw error;
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+// 呼び出し元がDocumentLockを保持する。進捗のtoken/行番号/キュー位置は変更しない。
+function refreshDriveSearchStatusLocked_(sheet, props) {
+  withDriveSearchControlLock_(() => {
+    const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+    const state = saved ? JSON.parse(saved) : null;
+    if (!state || state.version !== 3 || state.sheetId !== sheet.getSheetId()) {
+      showDriveSearchStatus_(sheet, null);
+    } else {
+      const request = readDriveSearchControl_(props, state);
+      if (state.lastAttempt && state.lastAttempt.kind === 'preparing') {
+        state.lastAttempt.kind = 'interrupted';
+        state.lastAttempt.message = '新しい検索の準備中に実行が中断しました。「新しく検索」を実行してください。';
+        saveDriveSearchState_(props, state);
+      }
+      if (!state.stopped && request && request.action === 'stop') {
+        state.stopped = true;
+        state.status = 'stopped';
+        saveDriveSearchState_(props, state);
+      } else if (state.status === 'running') {
+        // 強制終了ではcatchが走らない。ロック取得成功により実行がないことを確認済み。
+        // 最終ページが保存済みでも、完了の確定前なら「続きから検索」で最終確認する。
+        state.status = request && request.action === 'pause' ? 'paused' : 'interrupted';
+        if (state.status === 'paused') state.pauseReason = 'manual';
+        saveDriveSearchState_(props, state);
+      }
+      showDriveSearchStatus_(sheet, state);
+    }
+    SpreadsheetApp.flush();
+  });
+}
+
+function driveSearchInputsMatch_(sheet, state) {
+  if (state.sheetId !== sheet.getSheetId() ||
+      state.defaultDriveId !== String(DRIVE_SEARCH.DRIVE_ID).trim() ||
+      state.keywordHash !== driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()) ||
+      state.scopeInputHash !== driveSearchHash_(sheet.getRange('B2').getDisplayValue())) return false;
+  const saved = PropertiesService.getDocumentProperties().getProperty(DRIVE_SEARCH.SELECTION_KEY);
+  if (saved) {
+    const selection = JSON.parse(saved);
+    // 同じパス名でも、選択画面から別IDの同名フォルダを選んだ場合を区別する。
+    if (selection.sheetId === state.sheetId && selection.pathHash === state.scopeInputHash &&
+        selection.id !== state.scopeId) return false;
+  }
+  return true;
+}
+
+function markDriveSearchPreparing_(sheet, props) {
+  withDriveSearchControlLock_(() => {
+    const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+    const previous = saved ? JSON.parse(saved) : null;
+    if (!previous || previous.version !== 3 || previous.sheetId !== sheet.getSheetId()) return;
+    // 準備中の強制終了後に、前回の緑の完了表示が戻ることを防ぐ。
+    previous.lastAttempt = {
+      kind: 'preparing', keywordHash: driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()),
+      scopeInputHash: driveSearchHash_(sheet.getRange('B2').getDisplayValue()),
+      message: '', at: Date.now()
+    };
+    saveDriveSearchState_(props, previous);
+  });
+}
+
+function reportDriveSearchError_(sheet, props, localState, processing, error) {
+  const message = String(error && error.message || error).slice(0, 500);
+  let display = { status: 'notStarted', checked: 0, hits: 0, lastError: message };
+  try {
+    withDriveSearchControlLock_(() => {
+      try {
+        const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+        const checkpoint = saved ? JSON.parse(saved) : null;
+        if (processing && checkpoint && localState && checkpoint.jobId === localState.jobId) {
+          const request = readDriveSearchControl_(props, checkpoint);
+          checkpoint.status = checkpoint.stopped || (request && request.action === 'stop') ? 'stopped' : 'error';
+          if (checkpoint.status === 'stopped') checkpoint.stopped = true;
+          checkpoint.lastError = message;
+          delete checkpoint.lastAttempt;
+          display = checkpoint;
+          saveDriveSearchState_(props, checkpoint);
+        } else if (checkpoint && checkpoint.sheetId === sheet.getSheetId()) {
+          // 開始前の失敗は前回の検索カーソル・完了フラグを壊さず、別の通知情報として保持。
+          display = Object.assign({}, checkpoint, { status: 'notStarted', lastError: message, lastAttempt: null });
+          if (checkpoint.owner === Session.getTemporaryActiveUserKey()) {
+            checkpoint.lastAttempt = {
+              keywordHash: driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()),
+              scopeInputHash: driveSearchHash_(sheet.getRange('B2').getDisplayValue()),
+              message: message, at: Date.now()
+            };
+            display.lastAttempt = checkpoint.lastAttempt;
+            saveDriveSearchState_(props, checkpoint);
+          }
+        }
+      } finally {
+        // 保存と表示を同じロック内で行い、後着の終了要求を古いエラー表示で上書きしない。
+        try {
+          showDriveSearchStatus_(sheet, display);
+          SpreadsheetApp.flush();
+        } catch (displayError) {
+          // Sheets自体が利用不可の場合は元の例外をApps Script側へ返す。
+        }
+      }
+    });
+  } catch (reportError) {
+    // 進捗保存自体の失敗でも、元のエラーを別の例外で隠さない。
+  }
+}
+
+function showDriveSearchStatus_(sheet, state, detail) {
+  state = state || { status: 'idle', checked: 0, hits: 0 };
+  let status = state.stopped ? 'stopped' : state.status;
+  let errorText = state.lastError || '';
+  const attempt = state.lastAttempt;
+  const controlStatus = ['stopped', 'stop_requested', 'pause_requested'].includes(status);
+  if (!controlStatus && attempt && attempt.keywordHash === driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()) &&
+      attempt.scopeInputHash === driveSearchHash_(sheet.getRange('B2').getDisplayValue())) {
+    status = attempt.kind === 'preparing' ? 'preparing' : 'notStarted';
+    errorText = attempt.message;
+  } else if (!controlStatus && state.jobId && !['preparing', 'notStarted'].includes(status) && !driveSearchInputsMatch_(sheet, state)) {
+    status = 'changed';
+  } else if (status === 'running') {
+    const request = readDriveSearchControl_(PropertiesService.getDocumentProperties(), state);
+    if (request) status = request.action === 'stop' ? 'stop_requested' : 'pause_requested';
+  }
+  const complete = status === 'done' && state.done === true && state.stopped !== true;
+  const views = {
+    idle: ['【未検索】検索を開始してください', '#eeeeee', 'B1に検索語、B2に場所を指定して「新しく検索」を実行してください。'],
+    preparing: ['【未完了】検索の準備中', '#d9eaf7', '表示中の行は前回の結果です。新しい検索はまだ完了していません。'],
+    running: ['【未完了】検索中 — 表示中の一覧は途中結果です', '#d9eaf7', '緑の「検索完了」が表示されるまで、検索は終わっていません。'],
+    paused: [state.pauseReason === 'time' ? '【未完了】自動一時停止（時間の区切り）' : '【未完了】一時停止中', '#fff2cc', 'まだ続きがあります。「続きから検索」を押してください。'],
+    pause_requested: ['【未完了】一時停止を要求中', '#fff2cc', '現在のページ処理後に停止します。「一時停止中」の表示を待ってください。'],
+    stop_requested: ['【未完了】終了を要求中', '#f4cccc', '現在のページ処理後に終了します。まだ停止は確定していません。'],
+    stopped: ['【未完了】検索を終了しました（再開不可）', '#f4cccc', '表示中は途中結果です。必要な場合は「新しく検索」でやり直してください。'],
+    error: ['【未完了】エラーで中断', '#f4cccc', '原因を確認して「続きから検索」。再開不可の案内がある場合は「新しく検索」。'],
+    interrupted: ['【未完了】前回の実行が中断しています', '#f4cccc', '完了を確認できていません。「続きから検索」で再開・最終確認してください。'],
+    changed: ['【条件変更・未検索】表示中は前回の条件での結果です', '#fff2cc', '現在の条件では検索していません。「新しく検索」を押してください。'],
+    notStarted: ['【未完了】今回の操作を実行できませんでした', '#f4cccc', '表示中の行は前回の結果です。原因を修正して、もう一度操作してください。']
+  };
+  const view = complete
+    ? ['【検索完了】選択した範囲の検索が最後まで終了しました', '#d9ead3', 'この検索の全ページ・全対象範囲を確認済みです。']
+    : (views[status] || views.interrupted);
+  const hits = Number(state.hits || 0).toLocaleString('ja-JP');
+  const checked = Number(state.checked || 0).toLocaleString('ja-JP');
+  let counts = (complete ? '検索結果 ' : '保存済みの途中結果 ') + hits + '件 ／ 確認済み ' + checked + '件';
+  if (['idle', 'preparing', 'changed', 'notStarted'].includes(status)) {
+    counts = status === 'idle' ? '保存された検索完了の記録はありません。' : '表示中の行を、今回の条件での検索完了結果として使わないでください。';
+  }
+  let guidance = detail && status === 'running' ? detail : view[2];
+  if (errorText && ['error', 'notStarted'].includes(status)) guidance += ' 原因：' + errorText.slice(0, 90);
+  const time = complete ? '完了日時：' + formatDriveSearchStatusTime_(state.finishedAt)
+    : '状態の保存日時：' + formatDriveSearchStatusTime_(attempt && status === 'notStarted' ? attempt.at : state.updatedAt);
+  sheet.getRange('D1:F1').setBackground(view[1]).setFontColor('#202124')
+    .setFontWeight('bold').setFontSize(11).setWrap(true).setVerticalAlignment('middle');
+  sheet.getRange('D1').setValue([view[0], counts, guidance, time].join('\n'))
+    .setNote('緑の「検索完了」の場合だけ、選択した範囲の検索処理が完了しています。\n'
+      + '件数はファイルとフォルダの合計です。総数が未確定のため進捗率は表示しません。\n'
+      + 'エラー直前の未保存行が残る場合は、再開時に最後の保存位置から整理されます。'
+      + (errorText ? '\nエラー詳細：' + errorText : ''));
+}
+
+function formatDriveSearchStatusTime_(value) {
+  if (typeof value !== 'number') return '記録なし（未検索または旧版の記録）';
+  const timezone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
+  return Utilities.formatDate(new Date(value), timezone, 'yyyy/MM/dd HH:mm:ss');
 }
