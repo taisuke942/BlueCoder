@@ -1,5 +1,5 @@
 /**
- * 共有ドライブ検索 v3.1（2026-11-12）
+ * 共有ドライブ検索 v3.1.1（2026-11-12）
  * B1: 名前の部分一致検索 / B2: 検索フォルダ / 3行目: 見出し / 4行目以降: 結果
  *
  * 設定: DRIVE_IDを変更し、「サービス +」でGoogle Drive API v3を追加。
@@ -8,6 +8,7 @@
  * 約4分で区切り、「続きから検索」で再開する。自動トリガーは使用しない。
  * 一時停止・終了はページ処理の区切りで反映。実行中のDrive APIは即時中断できない。
  * D1:F1に状態を常設表示。緑の「検索完了」になるまでは途中結果。
+ * 日時表示のタイムゾーン取得・書式変換が失敗しても検索は継続する。
  * v3の保存形式を維持。「状態を更新」で中断・条件変更も確認できる。
  * 検索・再開待ちの間はB1/B2、結果行、作業シートを編集・並べ替えない。
  *
@@ -928,7 +929,31 @@ function showDriveSearchStatus_(sheet, state, detail) {
 }
 
 function formatDriveSearchStatusTime_(value) {
-  if (typeof value !== 'number') return '記録なし（未検索または旧版の記録）';
-  const timezone = SpreadsheetApp.getActiveSpreadsheet().getSpreadsheetTimeZone();
-  return Utilities.formatDate(new Date(value), timezone, 'yyyy/MM/dd HH:mm:ss');
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return '記録なし（未検索または旧版の記録）';
+  }
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '記録なし（日時データが不正です）';
+
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const configuredTimezone = ss ? ss.getSpreadsheetTimeZone() : null;
+    // formatDateの第2引数には、空でない文字列だけを渡す。
+    if (typeof configuredTimezone === 'string' && configuredTimezone.trim() !== '') {
+      const formatted = Utilities.formatDate(date, configuredTimezone.trim(), 'yyyy/MM/dd HH:mm:ss');
+      if (typeof formatted === 'string' && formatted.trim() !== '') return formatted;
+    }
+  } catch (error) {
+    // 日時の表示エラーを、検索処理のエラーとして外へ伝えない。
+  }
+
+  // 設定の取得・書式変換ができない場合は、外部サービスを使わず日本時間を表示する。
+  // UTCの各要素を使うため、Apps Scriptプロジェクトのタイムゾーンには依存しない。
+  const japanTime = new Date(value + 9 * 60 * 60 * 1000);
+  if (!Number.isFinite(japanTime.getTime())) return '日時表示を取得できません';
+  const pad = number => String(number).padStart(2, '0');
+  return String(japanTime.getUTCFullYear()).padStart(4, '0') + '/'
+    + pad(japanTime.getUTCMonth() + 1) + '/' + pad(japanTime.getUTCDate()) + ' '
+    + pad(japanTime.getUTCHours()) + ':' + pad(japanTime.getUTCMinutes()) + ':'
+    + pad(japanTime.getUTCSeconds()) + '（日本時間）';
 }
