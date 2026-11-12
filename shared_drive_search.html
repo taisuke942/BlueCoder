@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light">
-<meta name="description" content="共有ドライブ検索GAS v3.1.1。D1:F1に検索完了・未完了を常時表示し、自動一時停止との違いを明示。検索件数・日時、状態更新、導入手順、コード全文を掲載。">
-<title>共有ドライブ検索 v3.1.1｜完了・未完了をシートに常時表示</title>
+<meta name="description" content="共有ドライブ検索GAS v3.2。約4分ごとに進捗を保存し、自動で続きを検索。完了・自動再開待ち・一時停止をシートに常時表示。導入手順とコード全文を掲載。">
+<title>共有ドライブ検索 v3.2｜約4分ごとに保存・自動で続きから検索</title>
 <style>
 :root{--ink:#183349;--muted:#546979;--paper:#f4f7fa;--line:#dbe5ec;--accent:#087f76;--pale:#e9f6f3;--navy:#102b40}*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;color:var(--ink);background:var(--paper);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Yu Gothic",Meiryo,sans-serif;font-size:16px;line-height:1.9}a{color:#086d8b;text-underline-offset:3px}a:hover{text-decoration-thickness:2px}a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #e3a323;outline-offset:4px}button{font:inherit;cursor:pointer}button,a{touch-action:manipulation}.wrap{width:min(1080px,calc(100% - 40px));margin:auto}.hero{background:var(--navy);color:#fff;padding:45px 0 40px}.eyebrow{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:16px;color:#a8d5d4;font-size:13px;font-weight:700;letter-spacing:.05em}.eyebrow time{color:#bbccd7;font-weight:400;letter-spacing:0}.tag{border:1px solid #487382;border-radius:6px;padding:2px 9px}h1{font-size:clamp(28px,4.5vw,43px);line-height:1.45;margin:0 0 16px;font-weight:750}.lead{max-width:790px;margin:0;color:#d7e5ec;font-size:17px}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:25px}.button{display:inline-flex;justify-content:center;align-items:center;min-height:44px;padding:9px 19px;border:1px solid transparent;border-radius:9px;text-decoration:none;font-size:15px;line-height:1.6;font-weight:700}.button.primary{color:#fff;background:var(--accent)}.button.primary:hover{background:#06665e}.button.secondary{color:var(--ink);background:#fff;border-color:#c8d7e1}.hero .button.secondary{background:transparent;color:#fff;border-color:#71899a}.button.small{min-height:39px;font-size:13px;padding:8px 13px}.menu{display:flex;gap:20px;flex-wrap:wrap;padding:17px 0;font-size:14px;border-bottom:1px solid var(--line)}.menu a{color:var(--muted);text-decoration:none;font-weight:600}.menu a:hover{color:var(--accent)}main{padding-bottom:50px}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:26px 0}.fact{background:#fff;border:1px solid var(--line);border-radius:12px;padding:17px 19px}.fact span{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}.fact strong{display:block;font-size:20px;line-height:1.6}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:29px;margin-top:24px;min-width:0}.section-head{display:flex;align-items:center;gap:12px;margin-bottom:18px}.section-no{display:inline-flex;align-items:center;justify-content:center;flex:0 0 34px;width:34px;height:34px;background:var(--pale);color:var(--accent);border-radius:10px;font-size:13px;font-weight:750}h2{font-size:23px;line-height:1.5;margin:0}h3{font-size:18px;line-height:1.7;margin:24px 0 8px}p{margin:0 0 14px}p:last-child{margin-bottom:0}ul,ol{padding-left:1.5em;margin:10px 0 18px}li+li{margin-top:8px}code{font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:.91em;overflow-wrap:anywhere}p code,li code,td code{color:#13596d;background:#eef4f7;border-radius:4px;padding:2px 5px}.note{background:#f0f7fb;border-left:4px solid #4c8eab;padding:15px 18px;border-radius:0 9px 9px 0;font-size:14px;margin:18px 0 0}.note.calm{background:#eef8f4;border-left-color:#3b9176}.note strong{display:block;margin-bottom:4px}.table-wrap{overflow:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:14px}th,td{padding:11px 14px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}tr:last-child td,tr:last-child th{border-bottom:0}thead th{background:#f1f6f9;font-weight:700;color:#446073}tbody th{width:155px;background:#fafcfd;font-weight:600}.caption{font-size:13px;color:var(--muted);margin:8px 0}.steps{counter-reset:step;list-style:none;padding:0;margin:20px 0 0}.steps>li{position:relative;padding:0 0 24px 43px;margin:0 0 0 15px;border-left:1px solid var(--line)}.steps>li:last-child{border:0;padding-bottom:0}.steps>li:before{counter-increment:step;content:counter(step);position:absolute;left:-16px;top:1px;background:var(--accent);color:#fff;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700}.steps h3{margin:0 0 8px}.config{margin:14px 0;padding:14px 18px;border:1px solid var(--line);border-radius:8px;background:#f7fafc;overflow:auto;line-height:1.8;font-size:13px}.config code{white-space:pre;overflow-wrap:normal}.flow{display:flex;gap:11px;margin:20px 0}.flow>div{flex:1;background:#f3f8f9;border:1px solid #dbe9eb;border-radius:11px;padding:14px 16px}.flow small{display:block;color:var(--accent);font-size:11px;font-weight:700;margin-bottom:4px}.flow strong{font-size:16px}.code-card{padding:0;overflow:hidden}.code-intro{padding:26px 29px 18px}.code-toolbar{padding:13px 21px;background:#eaf1f5;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}.filename{font-family:Consolas,"SFMono-Regular",Menlo,monospace;color:#4c6779;font-size:13px}.tools{display:flex;gap:9px;flex-wrap:wrap}.code-view{margin:0;background:#102435;color:#e0edf3;overflow:auto;max-height:670px;padding:23px;tab-size:2;font-size:12px;line-height:1.8}.code-view code{font-size:inherit;white-space:pre;overflow-wrap:normal}.copy-status{padding:9px 23px;background:#f4f8fa;color:#3c6475;min-height:43px;font-size:13px}.code-footer{padding:14px 23px;font-size:13px;color:var(--muted)}details{border-top:1px solid var(--line);padding:16px 0}details:first-of-type{border-top:0}details:last-child{padding-bottom:0}summary{font-size:16px;font-weight:650;cursor:pointer;padding:2px 0}details p{font-size:14px;padding:11px 0 0 20px}.refs{font-size:14px;margin-bottom:0}.refs li+li{margin-top:6px}.footer{padding:23px 0 30px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}.footer-inner{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap}.skip{position:absolute;left:10px;top:-70px;background:#fff;padding:10px;z-index:3}.skip:focus{top:10px}.sheet-example{min-width:780px}.sheet-example td{white-space:nowrap}.sheet-example .rownum{background:#f2f5f7;color:#7a8c97;text-align:center;width:38px;font-size:12px}.sheet-example .input{background:#fff0bb;font-weight:700}.sheet-example .head{background:#e4f0f9;font-weight:700}.sheet-example .url{color:#087c92}.picker-demo{border:1px solid #ccdce4;border-radius:12px;max-width:720px;margin:18px auto;background:#fff;overflow:hidden;box-shadow:0 8px 26px #1f435010}.demo-head{background:#f7fafb;padding:13px 18px;border-bottom:1px solid var(--line);font-size:15px;font-weight:700;display:flex;justify-content:space-between;gap:12px}.demo-head span{font-size:11px;color:var(--muted);font-weight:400}.demo-body{padding:15px 18px}.demo-crumb{font-size:12px;color:#437486;padding-bottom:12px;border-bottom:1px solid #e4edf1}.demo-row{padding:11px 10px;border-bottom:1px solid #edf2f5;font-size:13px;display:flex;align-items:center;gap:11px}.demo-row:before{content:"";width:21px;height:15px;border:1px solid #ccaa4c;background:#fff1bc;border-radius:2px;flex-shrink:0}.demo-row span{margin-left:auto;color:#6f8c9b}.demo-bottom{padding:13px 18px;background:#fafcfd;display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:12px;border-top:1px solid var(--line)}.demo-select{background:var(--accent);border-radius:7px;color:white;padding:8px 12px;font-weight:600}.demo-label{text-align:center;font-size:12px;color:var(--muted);margin-top:10px}.file-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}.file-tile{border:1px solid var(--line);border-radius:10px;padding:14px 17px;background:#f9fbfc}.file-tile strong{display:block;font-family:Consolas,"SFMono-Regular",Menlo,monospace;font-size:16px}.file-tile span{display:block;font-size:13px;color:var(--muted);margin-top:4px}
 @media(max-width:720px){.wrap{width:calc(100% - 28px)}.hero{padding:31px 0}.lead{font-size:15px}.facts{grid-template-columns:repeat(2,1fr);gap:10px;margin:20px 0}.fact{padding:13px}.fact strong{font-size:18px}.card{padding:21px 18px;margin-top:18px;border-radius:12px}.code-card{padding:0}.code-intro{padding:22px 18px 17px}.code-toolbar{padding:13px 16px}.code-view{padding:17px;font-size:11px;max-height:540px}.copy-status{padding:9px 16px}.code-footer{padding:14px 16px}.menu{gap:14px;font-size:13px;padding:14px 0}.flow{flex-direction:column;gap:8px}.flow>div{padding:11px 14px}.flow small{display:inline;margin-right:10px}h2{font-size:20px}.steps>li{padding-left:29px;margin-left:14px}tbody th{width:105px}th,td{padding:10px;font-size:13px}.hero-actions .button{flex:1;min-width:150px}.section-head{gap:10px}.section-no{width:30px;height:30px;flex-basis:30px}.file-pair{grid-template-columns:1fr}.demo-bottom{align-items:flex-start;flex-direction:column}.demo-select{align-self:flex-end}.demo-head{flex-direction:column;gap:1px}}
@@ -16,34 +16,35 @@
 </head>
 <body>
 <a class="skip" href="#main">本文へ移動</a>
-<header class="hero"><div class="wrap"><div class="eyebrow"><span class="tag">GOOGLE APPS SCRIPT · v3.1.1 状態の常時表示</span><time datetime="2026-11-12">更新日：2026年11月12日</time></div><h1>検索完了と一時停止を、<br>シート上で見分ける。</h1><p class="lead">共有ドライブ検索の状態を、シート上部に大きく表示。通知が消えた後も、すべて調べ終えたのか、途中で止まっているのかを確認できます。</p><div class="hero-actions"><a class="button primary" href="#status">完了・途中の見分け方</a><a class="button secondary" href="#setup">更新の手順</a><a class="button secondary" href="#code-gs-section">コード全文へ</a></div></div></header>
+<header class="hero"><div class="wrap"><div class="eyebrow"><span class="tag">GOOGLE APPS SCRIPT · v3.2 自動で続きから検索</span><time datetime="2026-11-12">更新日：2026年11月12日</time></div><h1>大量の検索を、<br>自動で続きから再開。</h1><p class="lead">約4分ごとに進捗を保存し、時間を空けて次の処理へ進みます。完了・自動再開待ち・一時停止はシート上部に常時表示。必要なときはボタンで止められます。</p><div class="hero-actions"><a class="button primary" href="#status">完了・途中の見分け方</a><a class="button secondary" href="#setup">更新の手順</a><a class="button secondary" href="#code-gs-section">コード全文へ</a></div></div></header>
 <main id="main" class="wrap">
 <nav class="menu" aria-label="ページ内メニュー"><a href="./index.html">GASコード一覧</a><a href="#status">完了の見分け方</a><a href="#overview">動作</a><a href="#setup">導入・更新</a><a href="#usage">使い方</a><a href="#control">一時停止・終了</a><a href="#code-gs-section">Code.gs</a><a href="#code-picker-section">FolderPicker.html</a><a href="#help">困ったとき</a></nav>
 <div class="facts"><div class="fact"><span>検索語</span><strong>B1セル</strong></div><div class="fact"><span>検索する範囲</span><strong>B2セル</strong></div><div class="fact"><span>検索結果</span><strong>4行目から</strong></div><div class="fact"><span>状態はシート上部に</span><strong>常時表示</strong></div></div>
 
-<aside class="note" id="release-note"><strong>v3.1.1：日時表示のtimeZone引数エラー対策</strong>日時表示の処理で問題が起きても、検索を止めないように修正しました。シートのタイムゾーンが利用できる場合は従来どおり使い、取得・日時整形に失敗した場合は日本時間（UTC+9）へ切り替え、「日本時間」と付けて表示します。v3.1ですでに状態欄を設定済みなら、Code.gsの更新だけで対応でき、初回設定のやり直しは不要です。<a href="#setup">更新方法</a></aside>
+<aside class="note" id="release-note"><strong>v3.2：「新しく検索」「続きから検索」で自動再開が有効になります</strong>約4分で区切って保存し、1分以上の待ち時間を置いて自動で続きへ進みます。実際の開始はGoogle側の実行タイミングにより遅れる場合があります。毎回「続きから検索」を押す必要はありません。v3.xの途中経過も同じ条件・同じアカウントなら引き継げます。Code.gsの全文を更新し、最初の手動実行時に追加の権限を許可してください。<a href="#setup">更新方法</a></aside>
 
-<section id="status" class="card"><div class="section-head"><span class="section-no">状態</span><h2>緑の「検索完了」で、検索全体の終了を確認</h2></div><p class="status-rule">緑の【検索完了】が表示されたときだけ、対象全体の検索が完了しています。</p><p>シートの<strong>D1:F1を結合した大きな表示欄</strong>に、状態・件数・次の操作・日時の4項目を残します。上の3行は固定するため、結果を下へスクロールしても確認できます。</p><div class="status-showcases"><div class="status-example-wrap"><h3>すべての対象を確認し終えた場合</h3><div class="status-example complete"><strong>【検索完了】選択した範囲の検索が最後まで終了しました</strong><span>検索結果 32件 ／ 確認済み 75,000件</span><span>この検索の全ページ・全対象範囲を確認済みです。</span><span>完了日時：2026/11/12 08:15:30</span></div></div><div class="status-example-wrap"><h3>約4分で自動的に区切った場合</h3><div class="status-example paused"><strong>【未完了】自動一時停止（時間の区切り）</strong><span>保存済みの途中結果 21件 ／ 確認済み 50,000件</span><span>まだ続きがあります。「続きから検索」を押してください。</span><span>状態の保存日時：2026/11/12 08:11:20</span></div></div></div><p class="caption">状態表示のイメージです。件数と日時は説明用の例です。</p><aside class="note"><strong>「1回の実行が終わった」と「検索がすべて終わった」は別です</strong>Apps Scriptの「実行が完了しました」は、その1回の実行が終了したことを表します。約4分で自動一時停止した場合も実行自体は終了します。検索全体の完了は、シート上の緑の【検索完了】で判断してください。</aside><div class="table-wrap"><table><thead><tr><th scope="col">表示</th><th scope="col">意味</th><th scope="col">次の操作</th></tr></thead><tbody><tr><th scope="row"><span class="state-badge green">緑：検索完了</span></th><td>すべてのページと下位階層の処理を終え、最後の結果・進捗を保存済み。</td><td>その検索は完了です。</td></tr><tr><th scope="row"><span class="state-badge blue">青：未完了・検索中</span></th><td>検索処理が進行中です。</td><td>状態が変わるまで待ちます。</td></tr><tr><th scope="row"><span class="state-badge yellow">黄：未完了・一時停止</span></th><td>自動または手動で区切った途中の状態です。「要求中」なら、まだ停止待ちです。</td><td>停止済みの表示になってから「続きから検索」を実行します。</td></tr><tr><th scope="row"><span class="state-badge yellow">黄：条件変更・未検索</span></th><td>B1・B2などが変更され、表示中の結果は前の条件のものです。</td><td>現在の条件で「新しく検索」を実行します。</td></tr><tr><th scope="row"><span class="state-badge red">赤：未完了・終了／中断</span></th><td>終了要求、エラー、予期しない中断などで検索全体の完了を確定していません。</td><td>表示された理由と案内を確認します。終了扱いの検索は再開できません。</td></tr></tbody></table></div><h3>件数・日時の見方</h3><p><strong>確認件数</strong>は名前を確認した項目の数、<strong>該当件数</strong>は検索語に一致した数です。完了前は「途中結果」として示し、後の処理で増える場合があります。未完了時は「状態の保存日時」、完了時は「完了日時」を表示します。旧版の保存記録に日時がない場合は「記録なし」と表示します。状態欄の日時は通常スプレッドシートのタイムゾーンに従います。利用できない場合は日本時間で表示し、日時自体が無効な場合は「記録なし」と表示します。</p><p class="caption">対象の総数が事前には分からないため、進捗率（％）は表示しません。</p><h3>表示が古いと感じたら「状態を更新」</h3><p>メニューの<strong>「状態を更新」</strong>、または <code>refreshDriveSearchStatus</code> を割り当てたボタンで、保存済みの状態を表示し直せます。<strong>新しいDrive検索は開始しません。</strong>シートを開き直したときも状態を確認します。</p><p>検索処理が動いていないのに「検索中」が残っていた場合は、保存状態を確認して中断として表示します。最後のページまで保存していても完了の確定前に中断した場合は、中断表示のまま「続きから検索」で最終確認します。B1・B2の編集や選択画面で範囲を変更した場合は、条件が変わったことを表示し、前の結果が現在の条件の結果ではないと分かるようにします。</p><aside class="note calm"><strong>表示欄を隠さない配置にしてください</strong>初回設定でD1:F1を結合し、1行目を112pxにします。長い文言は折り返して表示します。E1・F1に別の内容がある場合は、他のセルへ移してから設定してください。図形ボタンはG列以降などへ置き、この表示欄に重ねないでください。</aside></section>
+<section id="status" class="card"><div class="section-head"><span class="section-no">状態</span><h2>緑の「検索完了」で、検索全体の終了を確認</h2></div><p class="status-rule">緑の【検索完了】が表示されたときだけ、対象全体の検索が完了しています。</p><p>シートの<strong>D1:F1を結合した大きな表示欄</strong>に、状態・件数・次の操作・日時の4項目を残します。上の3行は固定するため、結果を下へスクロールしても確認できます。</p><div class="status-showcases"><div class="status-example-wrap"><h3>すべての対象を確認し終えた場合</h3><div class="status-example complete"><strong>【検索完了】選択した範囲の検索が最後まで終了しました</strong><span>検索結果 32件 ／ 確認済み 75,000件</span><span>この検索の全ページ・全対象範囲を確認済みです。</span><span>完了日時：2026/11/12 08:15:30</span></div></div><div class="status-example-wrap"><h3>約4分で自動的に区切った場合</h3><div class="status-example paused"><strong>【未完了】自動再開待ち</strong><span>保存済みの途中結果 21件 ／ 確認済み 50,000件</span><span>約1分以降に自動で続きを検索します。止める場合は「一時停止」を押してください。</span><span>次の開始目安：2026/11/12 08:12:20 以降</span></div></div></div><p class="caption">状態表示のイメージです。件数と日時は説明用の例です。</p><aside class="note"><strong>「1回の実行が終わった」と「検索がすべて終わった」は別です</strong>Apps Scriptの「実行が完了しました」は、その1回の実行が終了したことを表します。約4分で区切って自動再開を待つ場合も、その回の実行自体は終了します。検索全体の完了は、シート上の緑の【検索完了】で判断してください。</aside><div class="table-wrap"><table><thead><tr><th scope="col">表示</th><th scope="col">意味</th><th scope="col">次の操作</th></tr></thead><tbody><tr><th scope="row"><span class="state-badge green">緑：検索完了</span></th><td>すべてのページと下位階層の処理を終え、最後の結果・進捗を保存済み。</td><td>その検索は完了です。</td></tr><tr><th scope="row"><span class="state-badge blue">青：未完了・検索中</span></th><td>検索処理が進行中です。</td><td>状態が変わるまで待ちます。</td></tr><tr><th scope="row"><span class="state-badge yellow">黄：未完了・自動再開待ち</span></th><td>進捗を保存し、次回の自動実行を予約しています。</td><td>そのまま待ちます。表示時刻は最も早い開始目安で、実際には遅れる場合があります。</td></tr><tr><th scope="row"><span class="state-badge yellow">黄：未完了・一時停止</span></th><td>手動で停止、または1回分だけの再開を終えた状態です。自動では続きません。「要求中」なら停止待ちです。</td><td>停止済みになってから「続きから検索」で自動再開を有効にします。</td></tr><tr><th scope="row"><span class="state-badge yellow">黄：条件変更・未検索</span></th><td>B1・B2などが変更され、表示中の結果は前の条件のものです。</td><td>現在の条件で「新しく検索」を実行します。</td></tr><tr><th scope="row"><span class="state-badge red">赤：未完了・終了／中断</span></th><td>終了要求、エラー、予期しない中断などで検索全体の完了を確定していません。</td><td>表示された理由と案内を確認します。終了扱いの検索は再開できません。</td></tr></tbody></table></div><h3>件数・日時の見方</h3><p><strong>確認件数</strong>は名前を確認した項目の数、<strong>該当件数</strong>は検索語に一致した数です。完了前は「途中結果」として示し、後の処理で増える場合があります。自動再開待ちは「次の開始目安」、それ以外の未完了時は「状態の保存日時」、完了時は「完了日時」を表示します。次の開始目安は、次に開始できる最も早い時刻です。旧版の保存記録に日時がない場合は「記録なし」と表示します。状態欄の日時は通常スプレッドシートのタイムゾーンに従います。利用できない場合は日本時間で表示し、日時自体が無効な場合は「記録なし」と表示します。</p><p class="caption">対象の総数が事前には分からないため、進捗率（％）は表示しません。</p><h3>表示が古いと感じたら「状態を更新」</h3><p>メニューの<strong>「状態を更新」</strong>、または <code>refreshDriveSearchStatus</code> を割り当てたボタンで、保存済みの状態を表示し直せます。<strong>新しいDrive検索は開始しません。</strong>シートを開き直したときも状態を確認します。</p><p>検索処理が動いていないのに「検索中」が残っていた場合は、保存状態を確認して中断として表示します。最後のページまで保存していても完了の確定前に中断した場合は、中断表示のまま「続きから検索」で最終確認します。B1・B2の編集や選択画面で範囲を変更した場合は、自動再開を止めて条件変更を表示し、前の結果が現在の条件の結果ではないと分かるようにします。</p><aside class="note calm"><strong>表示欄を隠さない配置にしてください</strong>初回設定でD1:F1を結合し、1行目を112pxにします。長い文言は折り返して表示します。E1・F1に別の内容がある場合は、他のセルへ移してから設定してください。図形ボタンはG列以降などへ置き、この表示欄に重ねないでください。</aside></section>
 
 <section id="overview" class="card"><div class="section-head"><span class="section-no">01</span><h2>共有ドライブの一覧から、検索範囲を選ぶ</h2></div><p><strong>B1に検索語、B2に検索対象の場所を指定</strong>します。選択画面の「ドライブ一覧」から任意の共有ドライブへ移動し、その下のフォルダまでたどれます。</p><div class="table-wrap"><table><thead><tr><th scope="col">選ぶ場所</th><th scope="col">検索範囲</th></tr></thead><tbody><tr><th scope="row">共有ドライブ一覧</th><td>このアカウントで表示できるすべての共有ドライブ。</td></tr><tr><th scope="row">個別のドライブ</th><td>選んだ共有ドライブの全階層。</td></tr><tr><th scope="row">下位フォルダ</th><td>選んだフォルダの中と、その下の全階層にある名前（選択したフォルダ自体の名前は除く）。</td></tr></tbody></table></div><aside class="note calm"><strong>上の階層が「共有ドライブ一覧」を指す場合、新しいドライブIDは不要です</strong>この版では、共有ドライブを一覧表示する入口を追加しています。この一覧はアプリ内の仮想的な階層なので、実フォルダのIDを新しく設定する必要はありません。既存の <code>DRIVE_ID</code> は、初期位置と従来のパス指定の起点として引き継ぎます。</aside>
 <div class="picker-demo" role="img" aria-label="共有ドライブ一覧の静的な表示イメージ。営業共有、総務共有、開発共有という3つの例を表示し、すべての共有ドライブを選択できる画面。"><div class="demo-head">検索する場所を選択<span>共有ドライブ一覧</span></div><div class="demo-body"><div class="demo-crumb">共有ドライブ一覧</div><div class="demo-row">営業共有<span>›</span></div><div class="demo-row">総務共有<span>›</span></div><div class="demo-row">開発共有<span>›</span></div></div><div class="demo-bottom"><span>現在の場所：//</span><span class="demo-select">すべての共有ドライブを選択</span></div></div><p class="demo-label">画面イメージです。このページから実際の共有ドライブには接続しません。</p>
 <h3>検索するもの・指定できる場所</h3><p>実行したGoogleアカウントから閲覧できるファイル名・フォルダ名を対象にします。例えばB1が <code>見積</code> なら、<code>見積書.xlsx</code> や <code>2026年度_見積一覧.xlsx</code> などが一致します。名前の途中も検索し、英字の大小、全角・半角を正規化します。</p><p>設定済みの共有ドライブ以外も、選択画面・URL・IDから指定できます。<strong>対象は共有ドライブ内に限り、マイドライブは対象外</strong>です。ゴミ箱を除外し、ショートカットの先はたどりません。</p><p class="caption">本文検索、誤字の推測、ひらがな・カタカナの同一視は行いません。空白も文字として扱うため、空白区切りのAND検索ではありません。</p><aside class="note"><strong>PCの「G:」のパスは指定しません</strong>GASはGoogleドライブ上のデータを検索します。B2には <code>//営業共有/営業/見積</code> のように、共有ドライブ名を含むパスを表示します。Windows上の <code>G:\</code> から始まるパスは入力対象ではありません。</aside></section>
 
-<section id="setup" class="card"><div class="section-head"><span class="section-no">02</span><h2>導入・旧版からの更新</h2></div><p><strong>v3・v3.1からの更新はCode.gsの置き換えだけで対応できます。</strong>FolderPicker.htmlはv3と同一です。初回導入、またはv2以前からの更新用に、ZIPには両方のファイルを同梱しています。</p><p><a class="button primary" href="shared_drive_search_v3_1_1.zip" download>2ファイル＋導入手順をZIPでダウンロード</a></p><div class="file-pair"><div class="file-tile"><strong>Code.gs</strong><span>v3.1.1で更新：日時表示のtimeZone引数エラー対策</span></div><div class="file-tile"><strong>FolderPicker.html</strong><span>v3と同一：共有ドライブ一覧とフォルダ選択の画面</span></div></div><ol class="steps"><li><h3>検索を止め、現在の設定を控える</h3><p><strong>検索が停止した状態で更新してください。</strong>スプレッドシートの「拡張機能 → Apps Script」を開き、現在の <code>DRIVE_ID</code> と、変更している場合は <code>SHEET_NAME</code> を控えます。</p></li><li><h3>Code.gsを置き換える</h3><p><a href="#code-gs-section">Code.gsの全文</a>をコピーし、旧版の検索用コードを置き換えます。初回は最初の <code>myFunction</code> を消して貼り付けます。別用途のコードは保持してください。</p><p>v3.1のコードなら、末尾の <code>formatDriveSearchStatusTime_</code> 関数だけをこの版へ置き換える方法もあります。関数は追加ではなく置換し、同じ名前を2つ残さないでください。</p><p>全文を置き換える場合は、控えた設定を引き継ぎます。DRIVE_IDは初期位置と従来の <code>/営業/見積</code> 形式のパスの起点です。</p><pre class="config"><code>DRIVE_ID: 'ここに共有ドライブIDを入力',
-SHEET_NAME: '検索',</code></pre><p>同じ検索用関数や <code>DRIVE_SEARCH</code> を旧版と新版に重複して残さないでください。独自の <code>onOpen()</code> や <code>onEdit(e)</code> がある場合は、それぞれの関数内に既存処理と、この版のメニュー・状態更新処理をまとめます。</p></li><li><h3>HTMLファイルとAPI設定を確認する</h3><p><strong>v3のFolderPicker.htmlはそのまま使えます。</strong>初回・v2以前の場合は、<a href="#code-picker-section">FolderPicker.html全文</a>を設定します。初回は「ファイル」の「＋ → HTML」から、名前を <code>FolderPicker</code> として作成してください。</p><p>Google Drive API v3（識別子Drive）は既存設定を継続します。未追加の場合は「サービス」の「＋」から追加します。<a href="https://developers.google.com/apps-script/guides/services/advanced">公式手順</a></p></li><li><h3>状態欄が未設定の場合だけ初回設定する</h3><p><strong>v3.1ですでにD1:F1の状態欄を設定済みなら、setupDriveSearchの再実行は不要です。</strong>保存後にシートを再読み込みするか、「状態を更新」を実行してください。</p><p>初回導入などで状態欄が未設定の場合は、E1・F1の別データを他のセルへ移し、<code>setupDriveSearch</code> を1回実行します。D1:F1に常時表示欄を作り、1行目を高くします。</p><p>v2・v3の配置なら、B1・B2・既存結果を保持します。B1が検索語、B2が検索場所、3行目が見出し、4行目以降が結果という配置は変わりません。</p></li><li><h3>シートを再読み込みして状態を確認する</h3><p>シートを開き直すとメニューと常時表示欄が更新されます。<strong>v3で保存した再開位置は、同じ条件・同じアカウントであれば引き継いで再開できます。</strong>v1・v2以前の途中経過は引き継がないため、「新しく検索」から始めます。</p><p>図形ボタンを追加する場合は「挿入 → 図形描画」で作成し、「スクリプトを割り当て」へ下の関数名を入力します。<code>()</code> は付けません。既存ボタンの関数名はそのままです。</p></li></ol><div class="table-wrap"><table><thead><tr><th scope="col">ボタンの文字例</th><th scope="col">割り当てる関数名</th></tr></thead><tbody><tr><th scope="row">ドライブ・フォルダを選択</th><td><code>showFolderPicker</code></td></tr><tr><th scope="row">新しく検索</th><td><code>startDriveSearch</code></td></tr><tr><th scope="row">続きから検索</th><td><code>continueDriveSearch</code></td></tr><tr><th scope="row">一時停止</th><td><code>pauseDriveSearch</code></td></tr><tr><th scope="row">検索を終了</th><td><code>stopDriveSearch</code></td></tr><tr><th scope="row">状態を更新（任意）</th><td><code>refreshDriveSearchStatus</code></td></tr></tbody></table></div><aside class="note"><strong>B2のクリックだけでは選択画面を開きません</strong>セル選択のイベントは選択位置が変わったときに動き、短時間の選択移動では省略される場合もあります。選択画面はボタンまたはメニューで開きます。<a href="https://developers.google.com/apps-script/guides/triggers">セル選択イベントの仕様</a></aside></section>
+<section id="setup" class="card"><div class="section-head"><span class="section-no">02</span><h2>導入・旧版からの更新</h2></div><p><strong>v3.xからはCode.gsの全文を置き換え、最初の手動実行で追加の権限を許可します。</strong>FolderPicker.htmlはv3と同一です。初回導入、またはv2以前からの更新用に、ZIPには両方のファイルを同梱しています。</p><p><a class="button primary" href="shared_drive_search_v3_2.zip" download>2ファイル＋導入手順をZIPでダウンロード</a></p><div class="file-pair"><div class="file-tile"><strong>Code.gs</strong><span>v3.2で更新：約4分ごとの保存と自動再開</span></div><div class="file-tile"><strong>FolderPicker.html</strong><span>v3と同一：共有ドライブ一覧とフォルダ選択の画面</span></div></div><ol class="steps"><li><h3>検索を止め、現在の設定を控える</h3><p><strong>検索が停止した状態で更新してください。</strong>スプレッドシートの「拡張機能 → Apps Script」を開き、現在の <code>DRIVE_ID</code> と、変更している場合は <code>SHEET_NAME</code> を控えます。</p></li><li><h3>Code.gsを置き換える</h3><p><a href="#code-gs-section">Code.gsの全文</a>をコピーし、旧版の検索用コードを置き換えます。初回は最初の <code>myFunction</code> を消して貼り付けます。別用途のコードは保持してください。</p><p>控えた設定を引き継ぎます。DRIVE_IDは初期位置と従来の <code>/営業/見積</code> 形式のパスの起点です。</p><pre class="config"><code>DRIVE_ID: 'ここに共有ドライブIDを入力',
+SHEET_NAME: '検索',</code></pre><p>同じ検索用関数や <code>DRIVE_SEARCH</code> を旧版と新版に重複して残さないでください。独自の <code>onOpen()</code> や <code>onEdit(e)</code> がある場合は、それぞれの関数内に既存処理と、この版のメニュー・状態更新処理をまとめます。</p></li><li><h3>HTMLファイルとAPI設定を確認する</h3><p><strong>v3のFolderPicker.htmlはそのまま使えます。</strong>初回・v2以前の場合は、<a href="#code-picker-section">FolderPicker.html全文</a>を設定します。初回は「ファイル」の「＋ → HTML」から、名前を <code>FolderPicker</code> として作成してください。</p><p>Google Drive API v3（識別子Drive）は既存設定を継続します。未追加の場合は「サービス」の「＋」から追加します。<a href="https://developers.google.com/apps-script/guides/services/advanced">公式手順</a></p></li><li><h3>状態欄が未設定の場合だけ初回設定する</h3><p><strong>v3.1以降ですでにD1:F1の状態欄を設定済みなら、setupDriveSearchの再実行は不要です。</strong>保存後にシートを再読み込みするか、「状態を更新」を実行してください。</p><p>初回導入などで状態欄が未設定の場合は、E1・F1の別データを他のセルへ移し、<code>setupDriveSearch</code> を1回実行します。D1:F1に常時表示欄を作り、1行目を高くします。</p><p>v2・v3の配置なら、B1・B2・既存結果を保持します。B1が検索語、B2が検索場所、3行目が見出し、4行目以降が結果という配置は変わりません。</p></li><li><h3>シートを再読み込みして状態を確認する</h3><p>シートを開き直すとメニューと常時表示欄が更新されます。<strong>v3.xで保存した再開位置は、同じ条件・同じアカウントであれば引き継いで再開できます。</strong>v1・v2以前の途中経過は引き継がないため、「新しく検索」から始めます。</p></li><li><h3>最初の手動実行で追加の権限を許可する</h3><p>途中の検索を続ける場合は <code>continueDriveSearch</code>、新しく始める場合は <code>startDriveSearch</code> を、Apps Scriptのエディタまたはシートのボタン・メニューから1回実行します。Googleの認可画面が出たら、自動実行の予約に必要な追加の権限を許可してください。途中経過があり条件が同じなら、最初から検索し直す必要はありません。</p><p>トリガーの手動設定、メールアドレスの転記、追加のドライブID設定は不要です。開始したGoogleアカウントで続けて操作してください。</p><p>図形ボタンを追加する場合は「挿入 → 図形描画」で作成し、「スクリプトを割り当て」へ下の関数名を入力します。<code>()</code> は付けません。既存ボタンの関数名はそのままです。</p></li></ol><div class="table-wrap"><table><thead><tr><th scope="col">ボタンの文字例</th><th scope="col">割り当てる関数名</th></tr></thead><tbody><tr><th scope="row">ドライブ・フォルダを選択</th><td><code>showFolderPicker</code></td></tr><tr><th scope="row">新しく検索</th><td><code>startDriveSearch</code></td></tr><tr><th scope="row">続きから検索</th><td><code>continueDriveSearch</code></td></tr><tr><th scope="row">一時停止</th><td><code>pauseDriveSearch</code></td></tr><tr><th scope="row">検索を終了</th><td><code>stopDriveSearch</code></td></tr><tr><th scope="row">状態を更新（任意）</th><td><code>refreshDriveSearchStatus</code></td></tr><tr><th scope="row">手動で1回分だけ再開（任意）</th><td><code>continueDriveSearchOnce</code></td></tr></tbody></table></div><p class="caption"><code>autoContinueDriveSearch</code> はコードが自動で予約・管理する内部処理です。ボタンへの割り当てや手動のトリガー登録はしないでください。</p><aside class="note"><strong>B2のクリックだけでは選択画面を開きません</strong>セル選択のイベントは選択位置が変わったときに動き、短時間の選択移動では省略される場合もあります。選択画面はボタンまたはメニューで開きます。<a href="https://developers.google.com/apps-script/guides/triggers">セル選択イベントの仕様</a></aside></section>
 
-<section id="usage" class="card"><div class="section-head"><span class="section-no">03</span><h2>検索範囲の選び方と検索の実行</h2></div><div class="flow"><div><small>STEP 1</small><strong>B1に検索語を入力</strong></div><div><small>STEP 2</small><strong>検索する場所を選択</strong></div><div><small>STEP 3</small><strong>「新しく検索」を実行</strong></div></div><h3>選択画面の上の階層へ移動する</h3><ol><li>フォルダ選択ボタン、または「共有ドライブ検索」メニューの選択項目を実行します。初めはB2で指定した場所を開きます。</li><li><strong>「ドライブ一覧」</strong>で共有ドライブの一覧を表示します。個別ドライブの先頭から「上へ」を押しても一覧へ戻れます。</li><li>ドライブ名・フォルダ名を1回クリックすると開きます。上部の階層表示からも移動できます。</li><li>検索したい場所で、下の選択ボタンを押します。B2にその範囲が入り、画面が閉じます。</li></ol><div class="table-wrap"><table><thead><tr><th scope="col">表示中の場所</th><th scope="col">選択ボタン</th></tr></thead><tbody><tr><th scope="row">共有ドライブ一覧</th><td>すべての共有ドライブを選択</td></tr><tr><th scope="row">個別ドライブの先頭</th><td>このドライブを選択</td></tr><tr><th scope="row">下位フォルダ</th><td>このフォルダを選択</td></tr></tbody></table></div><p class="caption">一覧はページ単位で表示します。「次のページ」が有効なら続きがあります。ファイルは選択画面に表示しません。</p><h3>B2の入力形式</h3><div class="table-wrap"><table><thead><tr><th scope="col">B2の入力例</th><th scope="col">検索範囲</th></tr></thead><tbody><tr><th scope="row"><code>//</code></th><td>このアカウントで一覧取得できるすべての共有ドライブ。</td></tr><tr><th scope="row"><code>//営業共有</code></th><td>「営業共有」ドライブの全体。</td></tr><tr><th scope="row"><code>//営業共有/営業/見積</code></th><td>そのドライブの「営業」→「見積」フォルダ以下。</td></tr><tr><th scope="row"><code>/</code></th><td>コードのDRIVE_IDで設定したドライブ全体。従来形式との互換です。</td></tr><tr><th scope="row"><code>/営業/見積</code></th><td>設定DRIVE_IDのドライブを起点にしたフォルダ指定。</td></tr><tr><th scope="row">フォルダURL・<code>id:フォルダID</code></th><td>共有ドライブ内の対象フォルダ。設定DRIVE_ID以外の共有ドライブも指定可能です。</td></tr></tbody></table></div><p><strong><code>//</code> と <code>/</code> は範囲が異なります。</strong>選択画面を使うと、B2にはドライブ名を含む <code>//ドライブ名/フォルダ</code> 形式で反映します。</p><p>同名の共有ドライブや、同じ階層の同名フォルダは、パスだけでは区別できません。選択画面、フォルダURL、IDで指定してください。英数字などで10文字以上のフォルダ名は、IDとの区別のため <code>/Documents2026</code> のように先頭へ <code>/</code> を付けます。</p><h3>検索結果</h3><p>B1・B2を設定したら、<strong>「新しく検索」</strong>を実行します。入力だけでは自動検索しません。前回の結果は、新しい検索結果へ置き換わります。</p><div class="table-wrap"><table class="sheet-example" aria-label="検索シートの静的表示例"><thead><tr><th class="rownum"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody><tr><th class="rownum" scope="row">1</th><td>検索語</td><td class="input">見積</td><td>状態</td><td colspan="3" class="sheet-banner"><strong>【検索完了】選択した範囲の検索が最後まで終了しました</strong><span>検索結果 32件 ／ 確認済み 75,000件</span><span>この検索の全ページ・全対象範囲を確認済みです。</span><span>完了日時：2026/11/12 08:15:30</span></td></tr><tr><th class="rownum" scope="row">2</th><td>検索場所</td><td class="input" colspan="5">//営業共有/営業/見積</td></tr><tr class="head"><th class="rownum" scope="row">3</th><td>No.</td><td>種類</td><td>名前</td><td>更新日時</td><td>開くURL</td><td>親フォルダURL</td></tr><tr><th class="rownum" scope="row">4</th><td>1</td><td>ファイル</td><td>2026年度_見積一覧.xlsx</td><td>2026/11/11 17:00:00</td><td class="url">ファイルのURL</td><td class="url">フォルダのURL</td></tr></tbody></table></div><p class="caption">表示イメージです。更新日時はスプレッドシートのタイムゾーンに従います。</p><aside class="note"><strong>検索中・再開待ちは条件と結果行を保持してください</strong>B1・B2や結果の行を編集・並べ替えず、開始したGoogleアカウントで操作します。処理用の管理シートは自動作成・非表示になります。その内容は手動で編集しないでください。</aside><h3>大量データの処理</h3><p>フォルダ指定時は下の階層をたどり、ドライブ全体の指定時はドライブ単位で一覧を取得します。すべての共有ドライブを選ぶと、各ドライブを順番に処理します。対象が多いほど時間がかかります。</p><p><strong>約4分を目安に区切り、「続きから検索」で再開</strong>します。名前の途中を判定するためGAS側で名前を比較しており、索引を事前作成する方式ではありません。検索中にファイルが追加・変更されると結果に影響する場合があります。</p><p class="caption">GASの通常の実行上限は1回6分です。Drive APIのページトークンは通常数時間有効です。<a href="https://developers.google.com/apps-script/guides/services/quotas">実行時間制限</a> ／ <a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">ページ取得の仕様</a></p></section>
+<section id="usage" class="card"><div class="section-head"><span class="section-no">03</span><h2>検索範囲の選び方と検索の実行</h2></div><div class="flow"><div><small>STEP 1</small><strong>B1に検索語を入力</strong></div><div><small>STEP 2</small><strong>検索する場所を選択</strong></div><div><small>STEP 3</small><strong>「新しく検索」を実行</strong></div></div><h3>選択画面の上の階層へ移動する</h3><ol><li>フォルダ選択ボタン、または「共有ドライブ検索」メニューの選択項目を実行します。初めはB2で指定した場所を開きます。</li><li><strong>「ドライブ一覧」</strong>で共有ドライブの一覧を表示します。個別ドライブの先頭から「上へ」を押しても一覧へ戻れます。</li><li>ドライブ名・フォルダ名を1回クリックすると開きます。上部の階層表示からも移動できます。</li><li>検索したい場所で、下の選択ボタンを押します。B2にその範囲が入り、画面が閉じます。</li></ol><div class="table-wrap"><table><thead><tr><th scope="col">表示中の場所</th><th scope="col">選択ボタン</th></tr></thead><tbody><tr><th scope="row">共有ドライブ一覧</th><td>すべての共有ドライブを選択</td></tr><tr><th scope="row">個別ドライブの先頭</th><td>このドライブを選択</td></tr><tr><th scope="row">下位フォルダ</th><td>このフォルダを選択</td></tr></tbody></table></div><p class="caption">一覧はページ単位で表示します。「次のページ」が有効なら続きがあります。ファイルは選択画面に表示しません。</p><h3>B2の入力形式</h3><div class="table-wrap"><table><thead><tr><th scope="col">B2の入力例</th><th scope="col">検索範囲</th></tr></thead><tbody><tr><th scope="row"><code>//</code></th><td>このアカウントで一覧取得できるすべての共有ドライブ。</td></tr><tr><th scope="row"><code>//営業共有</code></th><td>「営業共有」ドライブの全体。</td></tr><tr><th scope="row"><code>//営業共有/営業/見積</code></th><td>そのドライブの「営業」→「見積」フォルダ以下。</td></tr><tr><th scope="row"><code>/</code></th><td>コードのDRIVE_IDで設定したドライブ全体。従来形式との互換です。</td></tr><tr><th scope="row"><code>/営業/見積</code></th><td>設定DRIVE_IDのドライブを起点にしたフォルダ指定。</td></tr><tr><th scope="row">フォルダURL・<code>id:フォルダID</code></th><td>共有ドライブ内の対象フォルダ。設定DRIVE_ID以外の共有ドライブも指定可能です。</td></tr></tbody></table></div><p><strong><code>//</code> と <code>/</code> は範囲が異なります。</strong>選択画面を使うと、B2にはドライブ名を含む <code>//ドライブ名/フォルダ</code> 形式で反映します。</p><p>同名の共有ドライブや、同じ階層の同名フォルダは、パスだけでは区別できません。選択画面、フォルダURL、IDで指定してください。英数字などで10文字以上のフォルダ名は、IDとの区別のため <code>/Documents2026</code> のように先頭へ <code>/</code> を付けます。</p><h3>検索結果</h3><p>B1・B2を設定したら、<strong>「新しく検索」</strong>を実行します。入力だけでは自動検索しません。前回の結果は、新しい検索結果へ置き換わります。</p><div class="table-wrap"><table class="sheet-example" aria-label="検索シートの静的表示例"><thead><tr><th class="rownum"></th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th>F</th></tr></thead><tbody><tr><th class="rownum" scope="row">1</th><td>検索語</td><td class="input">見積</td><td>状態</td><td colspan="3" class="sheet-banner"><strong>【検索完了】選択した範囲の検索が最後まで終了しました</strong><span>検索結果 32件 ／ 確認済み 75,000件</span><span>この検索の全ページ・全対象範囲を確認済みです。</span><span>完了日時：2026/11/12 08:15:30</span></td></tr><tr><th class="rownum" scope="row">2</th><td>検索場所</td><td class="input" colspan="5">//営業共有/営業/見積</td></tr><tr class="head"><th class="rownum" scope="row">3</th><td>No.</td><td>種類</td><td>名前</td><td>更新日時</td><td>開くURL</td><td>親フォルダURL</td></tr><tr><th class="rownum" scope="row">4</th><td>1</td><td>ファイル</td><td>2026年度_見積一覧.xlsx</td><td>2026/11/11 17:00:00</td><td class="url">ファイルのURL</td><td class="url">フォルダのURL</td></tr></tbody></table></div><p class="caption">表示イメージです。更新日時はスプレッドシートのタイムゾーンに従います。</p><aside class="note"><strong>検索中・再開待ちは条件と結果行を保持してください</strong>B1・B2や結果の行を編集・並べ替えず、開始したGoogleアカウントで操作します。処理用の管理シートは自動作成・非表示になります。その内容は手動で編集しないでください。</aside><h3>大量データの処理</h3><p>フォルダ指定時は下の階層をたどり、ドライブ全体の指定時はドライブ単位で一覧を取得します。すべての共有ドライブを選ぶと、各ドライブを順番に処理します。対象が多いほど時間がかかります。</p><p><strong>約4分を目安に区切って保存し、1分以上待ってから自動で再開</strong>します。再開の予約はコードが毎回1回分だけ作成します。正確に1分後の開始を保証するものではありません。<a href="https://developers.google.com/apps-script/reference/script/clock-trigger-builder#afterdurationmilliseconds">自動実行の待ち時間に関する公式仕様</a></p><p>名前の途中を判定するためGAS側で名前を比較しており、索引を事前作成する方式ではありません。検索中にファイルが追加・変更されると結果に影響する場合があります。</p><aside class="note"><strong>ブラウザやPCを閉じても、自動再開は続きます</strong>処理はGoogle側で実行されます。止めたいときは「一時停止」または「検索を終了」を実行してください。完了・エラー・条件変更でも自動再開を止め、エラーの無限再試行はしません。</aside><p class="caption">GASの通常の実行上限は1回6分です。トリガーによる合計実行時間は、一般アカウントで1日90分、Google Workspaceで1日6時間が上限です（Googleの割り当ては変更される場合があります）。自動再開でも無制限には実行できません。Drive APIのページトークンは通常数時間有効です。<a href="https://developers.google.com/apps-script/guides/services/quotas">実行時間制限</a> ／ <a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">ページ取得の仕様</a></p></section>
 
-<section id="control" class="card"><div class="section-head"><span class="section-no">04</span><h2>検索を一時停止・終了する</h2></div><p>シートのボタン、または「共有ドライブ検索」メニューから操作します。いずれも<strong>停止要求を出し、処理の区切りで反映</strong>する方式です。</p><div class="table-wrap"><table><thead><tr><th scope="col">操作</th><th scope="col">結果と再開</th><th scope="col">割り当てる関数</th></tr></thead><tbody><tr><th scope="row">一時停止</th><td>書き出した結果と進捗を保持。「続きから検索」で再開できます。</td><td><code>pauseDriveSearch</code></td></tr><tr><th scope="row">検索を終了</th><td>書き出した結果を残して検索を終了します。続きからは再開できません。</td><td><code>stopDriveSearch</code></td></tr><tr><th scope="row">続きから検索</th><td>一時停止した検索を、同じB1・B2で再開します。</td><td><code>continueDriveSearch</code></td></tr></tbody></table></div><aside class="note"><strong>ボタンを押した瞬間に処理を強制終了するものではありません</strong>Drive APIへの問い合わせや書き込みが進行中なら、その処理が戻ってページの区切りに達した後で停止します。黄色の一時停止、または赤色の終了になったことを確認してから次の操作を行ってください。停止したことは検索全体の完了を意味しません。</aside><h3>Google側の実行そのものを強制終了する場合</h3><ol><li>スプレッドシートの「拡張機能 → Apps Script」を開きます。</li><li>左側の<strong>「実行数」</strong>（Executions）を開きます。</li><li>実行中の <code>startDriveSearch</code> または <code>continueDriveSearch</code> の行を確認します。</li><li>行の<strong>「その他（︙）」→「終了」</strong>（Terminate）を選択します。</li></ol><p>これはシート上の一時停止・終了要求とは別の操作です。処理途中で打ち切られるため、終了時の状態表示などが更新されない場合があります。強制終了後は実行が止まったことを確認し、「状態を更新」またはシートの開き直しで保存済みの状態を表示し直してください。</p><p class="caption"><a href="https://developers.google.com/apps-script/guides/dashboard">Google公式：実行状況の管理とTerminate</a></p></section>
+<section id="control" class="card"><div class="section-head"><span class="section-no">04</span><h2>検索を一時停止・終了する</h2></div><p>シートのボタン、または「共有ドライブ検索」メニューから操作します。いずれも<strong>停止要求を出し、処理の区切りで反映</strong>する方式です。</p><div class="table-wrap"><table><thead><tr><th scope="col">操作</th><th scope="col">結果と再開</th><th scope="col">割り当てる関数</th></tr></thead><tbody><tr><th scope="row">一時停止</th><td>自動再開の予約を取り消し、書き出した結果と進捗を保持。「続きから検索」で自動再開を再び有効にできます。</td><td><code>pauseDriveSearch</code></td></tr><tr><th scope="row">検索を終了</th><td>自動再開の予約を取り消し、書き出した結果を残して検索を終了します。続きからは再開できません。</td><td><code>stopDriveSearch</code></td></tr><tr><th scope="row">続きから検索</th><td>同じB1・B2の保存済み位置から再開し、以後は約4分ごとに自動で続きを処理します。</td><td><code>continueDriveSearch</code></td></tr><tr><th scope="row">手動で1回分だけ再開</th><td>保存済み位置から約4分ぶんだけ実行します。続きが残っても次の自動実行を予約しません。</td><td><code>continueDriveSearchOnce</code></td></tr></tbody></table></div><aside class="note"><strong>ボタンを押した瞬間に処理を強制終了するものではありません</strong>Drive APIへの問い合わせや書き込みが進行中なら、その処理が戻ってページの区切りに達した後で停止します。黄色の一時停止、または赤色の終了になったことを確認してから次の操作を行ってください。停止したことは検索全体の完了を意味しません。</aside><h3>Google側の実行そのものを強制終了する場合</h3><ol><li>スプレッドシートの「拡張機能 → Apps Script」を開きます。</li><li>左側の<strong>「実行数」</strong>（Executions）を開きます。</li><li>実行中の検索関数の行を確認します。自動再開中は <code>autoContinueDriveSearch</code>、手動開始・再開時は <code>startDriveSearch</code>、<code>continueDriveSearch</code>、<code>continueDriveSearchOnce</code> です。</li><li>行の<strong>「その他（︙）」→「終了」</strong>（Terminate）を選択します。</li></ol><p>これはシート上の一時停止・終了要求とは別の操作です。処理途中で打ち切られるため、終了時の状態表示などが更新されない場合があります。強制終了後は実行が止まったことを確認し、「状態を更新」またはシートの開き直しで保存済みの状態を表示し直してください。強制終了後に必ず自動復旧する仕組みはないため、再開する場合は「続きから検索」を使います。自動再開の予約も止める場合は、シートの「一時停止」または「検索を終了」を実行してください。</p><p class="caption"><a href="https://developers.google.com/apps-script/guides/dashboard">Google公式：実行状況の管理とTerminate</a></p></section>
 
 <section id="code-gs-section" class="card code-card"><div class="code-intro"><div class="section-head"><span class="section-no">05</span><h2>検索処理：Code.gs</h2></div><p>旧版の検索用GASをこの全文へ置き換え、<strong>DRIVE_IDを設定・引き継ぎ</strong>ます。</p></div><div class="code-toolbar"><span class="filename">Code.gs</span><div class="tools"><button type="button" class="button primary small copy-button" data-code="code-gs" data-file="Code.gs" data-status="status-gs">全文をコピー</button><button type="button" class="button secondary small download-button" data-code="code-gs" data-file="Code.gs" data-status="status-gs">Code.gsを保存</button></div></div><pre class="code-view" tabindex="0" aria-label="GASコード全文"><code id="code-gs">/**
- * 共有ドライブ検索 v3.1.1（2026-11-12）
+ * 共有ドライブ検索 v3.2（2026-11-12）
  * B1: 名前の部分一致検索 / B2: 検索フォルダ / 3行目: 見出し / 4行目以降: 結果
  *
  * 設定: DRIVE_IDを変更し、「サービス +」でGoogle Drive API v3を追加。
  * setupDriveSearchを一度実行後、シートを再読み込みする。
  * 「共有ドライブ検索」メニューの「フォルダを選択」「新しく検索」を使用。
- * 約4分で区切り、「続きから検索」で再開する。自動トリガーは使用しない。
+ * 約4分で確定保存し、約1分以降に時間トリガーで自動再開する。
+ * 一時停止・終了・完了・エラー・条件変更では自動再開を止める。
  * 一時停止・終了はページ処理の区切りで反映。実行中のDrive APIは即時中断できない。
  * D1:F1に状態を常設表示。緑の「検索完了」になるまでは途中結果。
  * 日時表示のタイムゾーン取得・書式変換が失敗しても検索は継続する。
@@ -65,6 +66,11 @@ const DRIVE_SEARCH = {
   SHEET_NAME: '検索',
   PAGE_SIZE: 1000,
   RUN_LIMIT_MS: 4 * 60 * 1000,
+  AUTO_CONTINUE: true,
+  AUTO_DELAY_MS: 60 * 1000,
+  AUTO_KEY: 'SHARED_DRIVE_SEARCH_AUTO_V32',
+  AUTO_OWNER_KEY: 'SHARED_DRIVE_SEARCH_USER_V32',
+  AUTO_HANDLER: 'autoContinueDriveSearch',
   RESULT_FIRST_ROW: 4,
   STATE_KEY: 'SHARED_DRIVE_NAME_SEARCH_V3',
   CONTROL_KEY: 'SHARED_DRIVE_SEARCH_CONTROL_V3',
@@ -80,12 +86,13 @@ function onOpen() {
   SpreadsheetApp.getUi().createMenu('共有ドライブ検索')
     .addItem('フォルダを選択', 'showFolderPicker')
     .addSeparator()
-    .addItem('新しく検索', 'startDriveSearch')
-    .addItem('続きから検索', 'continueDriveSearch')
+    .addItem('新しく検索（自動継続）', 'startDriveSearch')
+    .addItem('続きから検索（自動継続）', 'continueDriveSearch')
     .addItem('一時停止', 'pauseDriveSearch')
     .addItem('終了（再開しない）', 'stopDriveSearch')
     .addSeparator()
     .addItem('状態を更新', 'refreshDriveSearchStatus')
+    .addItem('手動で1回分だけ再開', 'continueDriveSearchOnce')
     .addToUi();
   refreshDriveSearchStatus_(true);
 }
@@ -99,7 +106,23 @@ function onEdit(e) {
   const lastColumn = range.getColumn() + range.getNumColumns() - 1;
   const touchesB1 = range.getRow() &lt;= 1 &amp;&amp; lastRow &gt;= 1 &amp;&amp; range.getColumn() &lt;= 2 &amp;&amp; lastColumn &gt;= 2;
   const touchesB2 = range.getRow() &lt;= 2 &amp;&amp; lastRow &gt;= 2 &amp;&amp; range.getColumn() &lt;= 6 &amp;&amp; lastColumn &gt;= 2;
-  if (touchesB1 || touchesB2) refreshDriveSearchStatus_(true);
+  if (touchesB1 || touchesB2) {
+    // 簡易トリガーでは予約削除APIを使わず、有効フラグだけを止める。
+    try {
+      withDriveSearchControlLock_(() =&gt; {
+        const props = PropertiesService.getDocumentProperties();
+        const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+        const state = saved ? JSON.parse(saved) : null;
+        if (state &amp;&amp; state.sheetId === range.getSheet().getSheetId() &amp;&amp;
+            !driveSearchInputsMatch_(range.getSheet(), state)) {
+          disableDriveSearchAutoLocked_(props, state.jobId, 'conditions', false);
+        }
+      });
+    } catch (error) {
+      // 実行中・終了時にも条件を再検査する。
+    }
+    refreshDriveSearchStatus_(true);
+  }
 }
 
 // 既存B1/B2とv2・v3の結果は保持。旧版の2行目見出しが完全一致した場合だけ移行する。
@@ -163,20 +186,91 @@ function setupDriveSearch() {
   }
 }
 
-function startDriveSearch() { runDriveSearch_(true); }
-function continueDriveSearch() { runDriveSearch_(false); }
+function startDriveSearch() { runDriveSearch_(true, { auto: DRIVE_SEARCH.AUTO_CONTINUE }); }
+function continueDriveSearch() { runDriveSearch_(false, { auto: DRIVE_SEARCH.AUTO_CONTINUE }); }
+function continueDriveSearchOnce() { runDriveSearch_(false, { auto: false }); }
 
-function runDriveSearch_(restart) {
+// 時間トリガー専用。ボタンにはcontinueDriveSearchを割り当てる。
+function autoContinueDriveSearch(e) {
+  const triggerId = e &amp;&amp; e.triggerUid != null ? String(e.triggerUid) : '';
+  if (!triggerId) return;
+  const props = PropertiesService.getDocumentProperties();
+  const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+  const state = saved ? JSON.parse(saved) : null;
+  const expected = readDriveSearchAuto_(props);
+  if (!isDriveSearchAutoEvent_(expected, state, triggerId)) {
+    deleteOwnDriveSearchAutoTriggers_(triggerId);
+    return;
+  }
+  try {
+    const ss = SpreadsheetApp.openById(expected.spreadsheetId);
+    const lock = LockService.getDocumentLock();
+    if (!lock) throw new Error('スプレッドシートに紐づくApps Scriptから実行してください。');
+    if (!lock.tryLock(1000)) {
+      // 別操作と重なっても1回限りの予約を失わず、同じジョブだけを再予約する。
+      withDriveSearchControlLock_(() =&gt; {
+        const latestSaved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+        const latest = latestSaved ? JSON.parse(latestSaved) : null;
+        const auto = readDriveSearchAuto_(props);
+        if (!isDriveSearchAutoEvent_(auto, latest, triggerId)) {
+          deleteOwnDriveSearchAutoTriggers_(triggerId);
+          return;
+        }
+        if (!DRIVE_SEARCH.AUTO_CONTINUE || readDriveSearchControl_(props, latest) ||
+            latest.done || latest.stopped) {
+          disableDriveSearchAutoLocked_(props, latest.jobId, 'cancelled', true);
+          return;
+        }
+        scheduleDriveSearchAutoLocked_(props, latest, ss);
+      });
+      return;
+    }
+    // runDriveSearch_がこのロックをfinallyで解放する。
+    runDriveSearch_(false, {
+      fromTrigger: true, triggerId: triggerId, jobId: expected.jobId,
+      spreadsheet: ss, lock: lock
+    });
+  } catch (error) {
+    // シートを開けないなど、本体に入る前の失敗も無限再試行しない。
+    try {
+      withDriveSearchControlLock_(() =&gt; {
+        const auto = readDriveSearchAuto_(props);
+        // 本体でUIDを消費した後のエラーは本体が記録済み。
+        // 同じjobを手動再開した新しい実行（UID未設定）を古いcatchで無効化しない。
+        if (auto &amp;&amp; auto.jobId === expected.jobId &amp;&amp; auto.ownerUserId === readDriveSearchUserId_() &amp;&amp;
+            auto.triggerId === triggerId) {
+          const disabled = disableDriveSearchAutoLocked_(props, expected.jobId, 'error', true);
+          disabled.error = String(error &amp;&amp; error.message || error).slice(0, 500);
+          setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, disabled);
+        }
+      });
+    } catch (saveError) {}
+    deleteOwnDriveSearchAutoTriggers_(triggerId);
+    throw error;
+  }
+}
+
+function runDriveSearch_(restart, options) {
+  options = options || { auto: DRIVE_SEARCH.AUTO_CONTINUE };
   const started = Date.now();
-  const lock = acquireDriveSearchLock_();
+  const lock = options.lock || acquireDriveSearchLock_();
   let sheet;
   let props;
   let state;
   let processing = false;
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = options.spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
     sheet = getDriveSearchSheet_(ss);
     props = PropertiesService.getDocumentProperties();
+    if (options.fromTrigger) {
+      const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
+      const previous = saved ? JSON.parse(saved) : null;
+      if (!isDriveSearchAutoEvent_(readDriveSearchAuto_(props), previous, options.triggerId) ||
+          previous.jobId !== options.jobId) {
+        deleteOwnDriveSearchAutoTriggers_(options.triggerId);
+        return;
+      }
+    }
     if (restart) {
       markDriveSearchPreparing_(sheet, props);
       showDriveSearchStatus_(sheet, { status: 'preparing', checked: 0, hits: 0 },
@@ -188,6 +282,7 @@ function runDriveSearch_(restart) {
     if (!keyword) throw new Error('B1に検索する文字を入力してください。');
     const key = normalizeDriveName_(keyword);
     const owner = Session.getTemporaryActiveUserKey();
+    const ownerUserId = options.fromTrigger ? readDriveSearchUserId_() : getDriveSearchUserId_();
     const defaultDriveId = String(DRIVE_SEARCH.DRIVE_ID).trim();
     let queue;
 
@@ -198,6 +293,7 @@ function runDriveSearch_(restart) {
       writeDriveSearchSelection_(sheet, scope);
       state = {
         version: 3, jobId: Utilities.getUuid(), owner: owner, status: 'running', stopped: false,
+        ownerUserId: ownerUserId, spreadsheetId: ss.getId(),
         startedAt: Date.now(), finishedAt: null,
         defaultDriveId: defaultDriveId, driveId: scope.driveId, sheetId: sheet.getSheetId(),
         keywordHash: driveSearchHash_(keyword), scopeInputHash: driveSearchHash_(scope.path),
@@ -209,13 +305,15 @@ function runDriveSearch_(restart) {
       withDriveSearchControlLock_(() =&gt; {
         saveDriveSearchState_(props, state);
         props.deleteProperty(DRIVE_SEARCH.CONTROL_KEY);
+        enableDriveSearchAutoLocked_(props, state, ss, options.auto === true);
       });
     } else {
       const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
       if (!saved) throw new Error('再開するv3の検索がありません。旧版の進捗は引き継げないため「新しく検索」を実行してください。');
       state = JSON.parse(saved);
-      if (state.owner !== owner) throw new Error('検索を開始したGoogleアカウントで再開してください。');
+      if (!isDriveSearchOwner_(state)) throw new Error('検索を開始したGoogleアカウントで再開してください。');
       if (state.version !== 3 || state.defaultDriveId !== defaultDriveId ||
+          (state.spreadsheetId &amp;&amp; state.spreadsheetId !== ss.getId()) ||
           state.sheetId !== sheet.getSheetId() || state.keywordHash !== driveSearchHash_(keyword) ||
           state.scopeInputHash !== driveSearchHash_(sheet.getRange('B2').getDisplayValue())) {
         throw new Error('B1・B2または設定が変わっています。「新しく検索」を実行してください。');
@@ -224,17 +322,43 @@ function runDriveSearch_(restart) {
       if (state.scopeId !== scope.id || state.driveId !== scope.driveId) {
         throw new Error('検索場所が変わっています。「新しく検索」を実行してください。');
       }
+      let canRun = true;
       withDriveSearchControlLock_(() =&gt; {
         const request = readDriveSearchControl_(props, state);
+        if (options.fromTrigger) {
+          const auto = readDriveSearchAuto_(props);
+          if (!isDriveSearchAutoEvent_(auto, state, options.triggerId) ||
+              auto.spreadsheetId !== ss.getId() || request || state.stopped || state.done ||
+              !DRIVE_SEARCH.AUTO_CONTINUE) {
+            canRun = false;
+            // 手動の一時停止要求は自動処理から解除しない。
+            if (auto &amp;&amp; auto.jobId === state.jobId &amp;&amp; auto.triggerId === options.triggerId) {
+              disableDriveSearchAutoLocked_(props, state.jobId, 'cancelled', true);
+            }
+            return;
+          }
+          auto.triggerId = '';
+          auto.nextRunAt = null;
+          setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, auto);
+          deleteOwnDriveSearchAutoTriggers_(options.triggerId);
+        }
         if (state.stopped || (request &amp;&amp; request.action === 'stop')) {
           throw new Error('この検索は終了しています。続ける場合は「新しく検索」を実行してください。');
         }
-        if (request &amp;&amp; request.action === 'pause') props.deleteProperty(DRIVE_SEARCH.CONTROL_KEY);
+        if (!options.fromTrigger) {
+          if (request &amp;&amp; request.action === 'pause') props.deleteProperty(DRIVE_SEARCH.CONTROL_KEY);
+          // 旧版の所有者確認を通過した手動操作だけ、安定した利用者IDへ移行する。
+          state.ownerUserId = ownerUserId;
+          state.spreadsheetId = ss.getId();
+          enableDriveSearchAutoLocked_(props, state, ss, options.auto === true);
+        }
         delete state.lastAttempt;
         delete state.lastError;
+        delete state.lastAutoError;
         if (!state.done) { state.status = 'running'; saveDriveSearchState_(props, state); }
       });
-      if (state.done) { finishDriveSearchRun_(ss, sheet, props, state); return; }
+      if (!canRun) { deleteOwnDriveSearchAutoTriggers_(options.triggerId); return; }
+      if (state.done) { finishDriveSearchRun_(ss, sheet, props, state, options); return; }
       if (state.mode !== 'drive') queue = getDriveSearchQueue_(ss, false, state.queueSheetId);
     }
 
@@ -254,7 +378,7 @@ function runDriveSearch_(restart) {
 
     while (!state.done &amp;&amp; Date.now() - started &lt; DRIVE_SEARCH.RUN_LIMIT_MS) {
       if (readDriveSearchControl_(props, state)) {
-        finishDriveSearchRun_(ss, sheet, props, state);
+        finishDriveSearchRun_(ss, sheet, props, state, options);
         return;
       }
       if (state.mode === 'allDrives' &amp;&amp; !state.driveListDone) {
@@ -278,11 +402,11 @@ function runDriveSearch_(restart) {
         saveDriveSearchState_(props, state);
       }
       if (readDriveSearchControl_(props, state)) {
-        finishDriveSearchRun_(ss, sheet, props, state);
+        finishDriveSearchRun_(ss, sheet, props, state, options);
         return;
       }
     }
-    finishDriveSearchRun_(ss, sheet, props, state);
+    finishDriveSearchRun_(ss, sheet, props, state, options);
   } catch (error) {
     // 未確定のローカルstateは保存しない。確定済みcheckpointの状態表示だけ更新する。
     if (sheet &amp;&amp; props) reportDriveSearchError_(sheet, props, state, processing, error);
@@ -373,7 +497,7 @@ function requestDriveSearchControl_(action) {
     const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
     if (!saved) throw new Error('操作する検索がありません。');
     const state = JSON.parse(saved);
-    if (state.owner !== Session.getTemporaryActiveUserKey()) throw new Error('検索を開始したGoogleアカウントで操作してください。');
+    if (!isDriveSearchOwner_(state)) throw new Error('検索を開始したGoogleアカウントで操作してください。');
     const sheet = getDriveSearchSheet_(ss);
     if (state.sheetId !== sheet.getSheetId()) throw new Error('検索先のシートが変わっています。');
     if (state.lastAttempt &amp;&amp; state.lastAttempt.kind === 'preparing') {
@@ -384,6 +508,7 @@ function requestDriveSearchControl_(action) {
       return;
     }
     if (state.stopped || (state.done &amp;&amp; state.status === 'done')) {
+      disableDriveSearchAutoLocked_(props, state.jobId, action, true);
       message = state.stopped ? 'この検索は終了しています。' : '検索は完了しています。';
       showDriveSearchStatus_(sheet, state);
       SpreadsheetApp.flush();
@@ -392,6 +517,8 @@ function requestDriveSearchControl_(action) {
     }
     const previous = readDriveSearchControl_(props, state);
     const effective = previous &amp;&amp; previous.action === 'stop' ? 'stop' : action;
+    // 予約の無効化はページ進捗とは別保存。実行中workerの保存で元に戻らない。
+    disableDriveSearchAutoLocked_(props, state.jobId, effective, true);
     setDriveSearchProperty_(props, DRIVE_SEARCH.CONTROL_KEY,
       { jobId: state.jobId, owner: state.owner, action: effective });
     const paused = ['paused', 'error', 'interrupted'].includes(state.status);
@@ -401,6 +528,10 @@ function requestDriveSearchControl_(action) {
     if (paused &amp;&amp; effective === 'stop') {
       state.stopped = true;
       state.status = 'stopped';
+      saveDriveSearchState_(props, state);
+    } else if (state.status === 'paused' &amp;&amp; effective === 'pause') {
+      state.pauseReason = 'manual';
+      delete state.lastAutoError;
       saveDriveSearchState_(props, state);
     }
     const displayState = Object.assign({}, state);
@@ -422,32 +553,52 @@ function readDriveSearchControl_(props, state) {
 }
 
 // 終了表示とcontrol更新の競合を短いScriptLockで防ぐ。Drive APIはこのlock内では呼ばない。
-function finishDriveSearchRun_(ss, sheet, props, state) {
+function finishDriveSearchRun_(ss, sheet, props, state, options) {
   let label;
   withDriveSearchControlLock_(() =&gt; {
     const request = readDriveSearchControl_(props, state);
     if (request &amp;&amp; request.action === 'stop') {
+      disableDriveSearchAutoLocked_(props, state.jobId, 'stop', true);
       state.stopped = true;
       state.status = 'stopped';
       label = '未完了のまま終了しました。続きから検索はできません。';
     } else if (state.done) {
+      disableDriveSearchAutoLocked_(props, state.jobId, 'done', true);
       state.status = 'done';
       if (typeof state.finishedAt !== 'number') state.finishedAt = Date.now();
       label = '検索完了：指定した範囲の検索処理が最後まで終了しました。';
     } else if (request &amp;&amp; request.action === 'pause') {
+      disableDriveSearchAutoLocked_(props, state.jobId, 'pause', true);
       state.status = 'paused';
       state.pauseReason = 'manual';
       label = '未完了：一時停止しました。「続きから検索」で再開してください。';
+    } else if (!driveSearchInputsMatch_(sheet, state)) {
+      disableDriveSearchAutoLocked_(props, state.jobId, 'conditions', true);
+      state.status = 'paused';
+      state.pauseReason = 'conditions';
+      label = '未完了：検索条件が変わったため、自動再開を停止しました。';
     } else {
       state.status = 'paused';
       state.pauseReason = 'time';
       label = '未完了：時間の区切りで一時停止しました。「続きから検索」で再開してください。';
+      try {
+        const scheduled = scheduleDriveSearchAutoLocked_(props, state, ss);
+        if (scheduled) {
+          state.pauseReason = 'auto';
+          delete state.lastAutoError;
+          label = '未完了：保存しました。約1分以降に自動で続きを検索します。';
+        }
+      } catch (error) {
+        state.pauseReason = 'auto_error';
+        state.lastAutoError = String(error &amp;&amp; error.message || error).slice(0, 500);
+        label = '未完了：自動再開を予約できませんでした。状態欄の案内を確認してください。';
+      }
     }
     saveDriveSearchState_(props, state);
     showDriveSearchStatus_(sheet, state);
     SpreadsheetApp.flush();
   });
-  ss.toast(label, '共有ドライブ検索', 8);
+  if (!options || !options.fromTrigger) ss.toast(label, '共有ドライブ検索', 8);
 }
 
 function withDriveSearchControlLock_(callback) {
@@ -818,6 +969,11 @@ function refreshDriveSearchStatusLocked_(sheet, props) {
       showDriveSearchStatus_(sheet, null);
     } else {
       const request = readDriveSearchControl_(props, state);
+      const auto = readDriveSearchAuto_(props);
+      if (auto &amp;&amp; auto.jobId === state.jobId &amp;&amp;
+          (!driveSearchInputsMatch_(sheet, state) || request || state.done || state.stopped)) {
+        disableDriveSearchAutoLocked_(props, state.jobId, request ? request.action : 'conditions', false);
+      }
       if (state.lastAttempt &amp;&amp; state.lastAttempt.kind === 'preparing') {
         state.lastAttempt.kind = 'interrupted';
         state.lastAttempt.message = '新しい検索の準備中に実行が中断しました。「新しく検索」を実行してください。';
@@ -831,7 +987,13 @@ function refreshDriveSearchStatusLocked_(sheet, props) {
         // 強制終了ではcatchが走らない。ロック取得成功により実行がないことを確認済み。
         // 最終ページが保存済みでも、完了の確定前なら「続きから検索」で最終確認する。
         state.status = request &amp;&amp; request.action === 'pause' ? 'paused' : 'interrupted';
+        disableDriveSearchAutoLocked_(props, state.jobId, 'interrupted', false);
         if (state.status === 'paused') state.pauseReason = 'manual';
+        saveDriveSearchState_(props, state);
+      } else if (state.status === 'paused' &amp;&amp; state.pauseReason === 'auto' &amp;&amp;
+          auto &amp;&amp; auto.enabled &amp;&amp; !auto.triggerId) {
+        state.status = 'interrupted';
+        disableDriveSearchAutoLocked_(props, state.jobId, 'interrupted', false);
         saveDriveSearchState_(props, state);
       }
       showDriveSearchStatus_(sheet, state);
@@ -857,6 +1019,7 @@ function driveSearchInputsMatch_(sheet, state) {
 
 function markDriveSearchPreparing_(sheet, props) {
   withDriveSearchControlLock_(() =&gt; {
+    disableDriveSearchAutoLocked_(props, '', 'new_search', true);
     const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
     const previous = saved ? JSON.parse(saved) : null;
     if (!previous || previous.version !== 3 || previous.sheetId !== sheet.getSheetId()) return;
@@ -878,6 +1041,9 @@ function reportDriveSearchError_(sheet, props, localState, processing, error) {
       try {
         const saved = props.getProperty(DRIVE_SEARCH.STATE_KEY);
         const checkpoint = saved ? JSON.parse(saved) : null;
+        if (checkpoint &amp;&amp; isDriveSearchOwner_(checkpoint)) {
+          disableDriveSearchAutoLocked_(props, checkpoint.jobId, 'error', true);
+        }
         if (processing &amp;&amp; checkpoint &amp;&amp; localState &amp;&amp; checkpoint.jobId === localState.jobId) {
           const request = readDriveSearchControl_(props, checkpoint);
           checkpoint.status = checkpoint.stopped || (request &amp;&amp; request.action === 'stop') ? 'stopped' : 'error';
@@ -889,7 +1055,7 @@ function reportDriveSearchError_(sheet, props, localState, processing, error) {
         } else if (checkpoint &amp;&amp; checkpoint.sheetId === sheet.getSheetId()) {
           // 開始前の失敗は前回の検索カーソル・完了フラグを壊さず、別の通知情報として保持。
           display = Object.assign({}, checkpoint, { status: 'notStarted', lastError: message, lastAttempt: null });
-          if (checkpoint.owner === Session.getTemporaryActiveUserKey()) {
+          if (isDriveSearchOwner_(checkpoint)) {
             checkpoint.lastAttempt = {
               keywordHash: driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()),
               scopeInputHash: driveSearchHash_(sheet.getRange('B2').getDisplayValue()),
@@ -918,6 +1084,8 @@ function showDriveSearchStatus_(sheet, state, detail) {
   state = state || { status: 'idle', checked: 0, hits: 0 };
   let status = state.stopped ? 'stopped' : state.status;
   let errorText = state.lastError || '';
+  const savedAuto = readDriveSearchAuto_(PropertiesService.getDocumentProperties());
+  const auto = savedAuto &amp;&amp; savedAuto.jobId === state.jobId ? savedAuto : null;
   const attempt = state.lastAttempt;
   const controlStatus = ['stopped', 'stop_requested', 'pause_requested'].includes(status);
   if (!controlStatus &amp;&amp; attempt &amp;&amp; attempt.keywordHash === driveSearchHash_(sheet.getRange('B1').getDisplayValue().trim()) &amp;&amp;
@@ -930,12 +1098,25 @@ function showDriveSearchStatus_(sheet, state, detail) {
     const request = readDriveSearchControl_(PropertiesService.getDocumentProperties(), state);
     if (request) status = request.action === 'stop' ? 'stop_requested' : 'pause_requested';
   }
+  if (status === 'paused' &amp;&amp; ['auto', 'auto_error'].includes(state.pauseReason)) {
+    if (state.lastAutoError || (auto &amp;&amp; auto.error)) {
+      status = 'auto_error';
+      errorText = state.lastAutoError || auto.error;
+    } else if (auto &amp;&amp; auto.enabled &amp;&amp; auto.triggerId) {
+      status = 'auto_wait';
+    } else {
+      status = 'auto_cancelled';
+    }
+  }
   const complete = status === 'done' &amp;&amp; state.done === true &amp;&amp; state.stopped !== true;
   const views = {
     idle: ['【未検索】検索を開始してください', '#eeeeee', 'B1に検索語、B2に場所を指定して「新しく検索」を実行してください。'],
     preparing: ['【未完了】検索の準備中', '#d9eaf7', '表示中の行は前回の結果です。新しい検索はまだ完了していません。'],
     running: ['【未完了】検索中 — 表示中の一覧は途中結果です', '#d9eaf7', '緑の「検索完了」が表示されるまで、検索は終わっていません。'],
     paused: [state.pauseReason === 'time' ? '【未完了】自動一時停止（時間の区切り）' : '【未完了】一時停止中', '#fff2cc', 'まだ続きがあります。「続きから検索」を押してください。'],
+    auto_wait: ['【未完了】自動再開待ち', '#fff2cc', '約1分以降に自動で続きを検索します。止める場合は「一時停止」を押してください。'],
+    auto_error: ['【未完了】自動再開を予約できませんでした', '#f4cccc', '「続きから検索」で再試行、またはメニューの「手動で1回分だけ再開」を実行してください。'],
+    auto_cancelled: ['【未完了】自動再開を停止しています', '#fff2cc', '続ける場合は「続きから検索」を押してください。条件を変えた場合は「新しく検索」。'],
     pause_requested: ['【未完了】一時停止を要求中', '#fff2cc', '現在のページ処理後に停止します。「一時停止中」の表示を待ってください。'],
     stop_requested: ['【未完了】終了を要求中', '#f4cccc', '現在のページ処理後に終了します。まだ停止は確定していません。'],
     stopped: ['【未完了】検索を終了しました（再開不可）', '#f4cccc', '表示中は途中結果です。必要な場合は「新しく検索」でやり直してください。'],
@@ -954,9 +1135,14 @@ function showDriveSearchStatus_(sheet, state, detail) {
     counts = status === 'idle' ? '保存された検索完了の記録はありません。' : '表示中の行を、今回の条件での検索完了結果として使わないでください。';
   }
   let guidance = detail &amp;&amp; status === 'running' ? detail : view[2];
-  if (errorText &amp;&amp; ['error', 'notStarted'].includes(status)) guidance += ' 原因：' + errorText.slice(0, 90);
-  const time = complete ? '完了日時：' + formatDriveSearchStatusTime_(state.finishedAt)
-    : '状態の保存日時：' + formatDriveSearchStatusTime_(attempt &amp;&amp; status === 'notStarted' ? attempt.at : state.updatedAt);
+  if (!detail &amp;&amp; status === 'running' &amp;&amp; auto &amp;&amp; auto.enabled) {
+    guidance = '約4分で保存し、続きは自動で検索します。緑の「検索完了」になるまで途中結果です。';
+  }
+  if (errorText &amp;&amp; ['error', 'notStarted', 'auto_error'].includes(status)) guidance += ' 原因：' + errorText.slice(0, 90);
+  const spreadsheet = sheet.getParent();
+  const time = complete ? '完了日時：' + formatDriveSearchStatusTime_(state.finishedAt, spreadsheet)
+    : status === 'auto_wait' ? '次の開始目安：' + formatDriveSearchStatusTime_(auto.nextRunAt, spreadsheet) + ' 以降'
+    : '状態の保存日時：' + formatDriveSearchStatusTime_(attempt &amp;&amp; status === 'notStarted' ? attempt.at : state.updatedAt, spreadsheet);
   sheet.getRange('D1:F1').setBackground(view[1]).setFontColor('#202124')
     .setFontWeight('bold').setFontSize(11).setWrap(true).setVerticalAlignment('middle');
   sheet.getRange('D1').setValue([view[0], counts, guidance, time].join('\n'))
@@ -966,7 +1152,7 @@ function showDriveSearchStatus_(sheet, state, detail) {
       + (errorText ? '\nエラー詳細：' + errorText : ''));
 }
 
-function formatDriveSearchStatusTime_(value) {
+function formatDriveSearchStatusTime_(value, spreadsheet) {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return '記録なし（未検索または旧版の記録）';
   }
@@ -974,7 +1160,7 @@ function formatDriveSearchStatusTime_(value) {
   if (!Number.isFinite(date.getTime())) return '記録なし（日時データが不正です）';
 
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
     const configuredTimezone = ss ? ss.getSpreadsheetTimeZone() : null;
     // formatDateの第2引数には、空でない文字列だけを渡す。
     if (typeof configuredTimezone === 'string' &amp;&amp; configuredTimezone.trim() !== '') {
@@ -994,6 +1180,154 @@ function formatDriveSearchStatusTime_(value) {
     + pad(japanTime.getUTCMonth() + 1) + '/' + pad(japanTime.getUTCDate()) + ' '
     + pad(japanTime.getUTCHours()) + ':' + pad(japanTime.getUTCMinutes()) + ':'
     + pad(japanTime.getUTCSeconds()) + '（日本時間）';
+}
+
+// 自動再開用の補助関数。Code.gsへ統合して使用する。
+// 進捗STATEとは別に予約を保存し、ページ保存が停止要求を上書きしないようにする。
+
+function readDriveSearchAuto_(props) {
+  const saved = props.getProperty(DRIVE_SEARCH.AUTO_KEY);
+  if (!saved) return null;
+  try {
+    const value = JSON.parse(saved);
+    return value &amp;&amp; typeof value === 'object' &amp;&amp; !Array.isArray(value) ? value : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readDriveSearchUserId_() {
+  const value = PropertiesService.getUserProperties().getProperty(DRIVE_SEARCH.AUTO_OWNER_KEY);
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+// この関数はScriptLockを保持していない場所から呼ぶ。
+function getDriveSearchUserId_() {
+  const existing = readDriveSearchUserId_();
+  if (existing) return existing;
+  return withDriveSearchControlLock_(() =&gt; {
+    const saved = readDriveSearchUserId_();
+    if (saved) return saved;
+    const id = Utilities.getUuid();
+    PropertiesService.getUserProperties().setProperty(DRIVE_SEARCH.AUTO_OWNER_KEY, id);
+    return id;
+  });
+}
+
+function isDriveSearchOwner_(state) {
+  if (!state) return false;
+  if (Object.prototype.hasOwnProperty.call(state, 'ownerUserId')) {
+    return typeof state.ownerUserId === 'string' &amp;&amp; state.ownerUserId !== '' &amp;&amp;
+      state.ownerUserId === readDriveSearchUserId_();
+  }
+  // 旧版の手動操作だけを移行できるよう、UUIDが未保存の場合に限り旧方式を使う。
+  return typeof state.owner === 'string' &amp;&amp; state.owner !== '' &amp;&amp;
+    state.owner === Session.getTemporaryActiveUserKey();
+}
+
+function isDriveSearchAutoEvent_(auto, state, triggerId) {
+  const uid = triggerId == null ? '' : String(triggerId);
+  return !!(auto &amp;&amp; state &amp;&amp; auto.enabled === true &amp;&amp; state.version === 3 &amp;&amp;
+    uid &amp;&amp; typeof auto.triggerId === 'string' &amp;&amp; auto.triggerId === uid &amp;&amp;
+    typeof state.jobId === 'string' &amp;&amp; state.jobId &amp;&amp; auto.jobId === state.jobId &amp;&amp;
+    typeof state.ownerUserId === 'string' &amp;&amp; state.ownerUserId &amp;&amp;
+    auto.ownerUserId === state.ownerUserId &amp;&amp; state.ownerUserId === readDriveSearchUserId_() &amp;&amp;
+    typeof auto.spreadsheetId === 'string' &amp;&amp; auto.spreadsheetId.trim() !== '');
+}
+
+// 以下のLocked関数は、呼び出し元が短いScriptLockを保持する。
+function enableDriveSearchAutoLocked_(props, state, ss, enabled) {
+  disableDriveSearchAutoLocked_(props, '', 'replaced', false);
+  deleteOwnDriveSearchAutoTriggers_();
+  if (enabled === true &amp;&amp; (typeof state.ownerUserId !== 'string' || !state.ownerUserId ||
+      state.ownerUserId !== readDriveSearchUserId_())) {
+    throw new Error('検索を開始したGoogleアカウントで自動再開を有効にしてください。');
+  }
+  const auto = {
+    enabled: enabled === true, jobId: state.jobId,
+    ownerUserId: state.ownerUserId || '', spreadsheetId: ss.getId(),
+    triggerId: '', nextRunAt: null, error: '', reason: enabled === true ? 'enabled' : 'disabled'
+  };
+  setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, auto);
+  return auto;
+}
+
+function disableDriveSearchAutoLocked_(props, jobId, reason, deleteTrigger) {
+  const previous = readDriveSearchAuto_(props);
+  if (!previous || (jobId &amp;&amp; previous.jobId !== jobId)) return null;
+  const uid = previous.triggerId;
+  // errorは保持する。新規有効化・正常な再予約で消すため、失敗の理由が残る。
+  const auto = Object.assign({}, previous, {
+    enabled: false, triggerId: '', nextRunAt: null, reason: String(reason || 'disabled')
+  });
+  // 削除の失敗や他アカウントの予約でも、保存した無効フラグで実行を防ぐ。
+  setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, auto);
+  if (deleteTrigger &amp;&amp; uid) deleteOwnDriveSearchAutoTriggers_(uid);
+  return auto;
+}
+
+function scheduleDriveSearchAutoLocked_(props, state, ss) {
+  const previous = readDriveSearchAuto_(props);
+  if (!previous || previous.enabled !== true || previous.jobId !== state.jobId ||
+      typeof state.ownerUserId !== 'string' || !state.ownerUserId ||
+      previous.ownerUserId !== state.ownerUserId || state.ownerUserId !== readDriveSearchUserId_() ||
+      previous.spreadsheetId !== ss.getId()) return null;
+  if (state.done || state.stopped || readDriveSearchControl_(props, state)) {
+    disableDriveSearchAutoLocked_(props, state.jobId, 'not_resumable', true);
+    return null;
+  }
+
+  const oldUid = previous.triggerId;
+  const pending = Object.assign({}, previous, {
+    triggerId: '', nextRunAt: null, error: '', reason: 'scheduling'
+  });
+  let created;
+  try {
+    // 古い登録を先に無効化。物理削除できない予約もUID照合で無害化する。
+    setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, pending);
+    if (oldUid) deleteOwnDriveSearchAutoTriggers_(oldUid);
+    const scheduledAt = Date.now();
+    created = ScriptApp.newTrigger(DRIVE_SEARCH.AUTO_HANDLER).timeBased()
+      .after(DRIVE_SEARCH.AUTO_DELAY_MS).create();
+    const uid = String(created.getUniqueId() || '');
+    if (!uid) throw new Error('自動再開トリガーのIDを取得できませんでした。');
+    const auto = Object.assign({}, pending, {
+      triggerId: uid, nextRunAt: scheduledAt + DRIVE_SEARCH.AUTO_DELAY_MS, reason: 'scheduled'
+    });
+    setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, auto);
+    return auto;
+  } catch (error) {
+    const failed = Object.assign({}, pending, {
+      enabled: false, error: String(error &amp;&amp; error.message || error).slice(0, 500),
+      reason: 'schedule_error'
+    });
+    // 予約の保存失敗でも進捗STATEには触れない。元の例外を呼び出し元へ返す。
+    try { setDriveSearchProperty_(props, DRIVE_SEARCH.AUTO_KEY, failed); } catch (saveError) {}
+    if (created) {
+      // この関数が作った予約だけを削除。getUniqueId自体が失敗した場合にも対応。
+      try { ScriptApp.deleteTrigger(created); } catch (deleteError) {}
+    }
+    if (oldUid) deleteOwnDriveSearchAutoTriggers_(oldUid);
+    throw error;
+  }
+}
+
+function deleteOwnDriveSearchAutoTriggers_(uid) {
+  const target = uid == null ? '' : String(uid);
+  try {
+    const triggers = ScriptApp.getProjectTriggers();
+    triggers.forEach(trigger =&gt; {
+      try {
+        if (trigger.getHandlerFunction() !== DRIVE_SEARCH.AUTO_HANDLER) return;
+        if (target &amp;&amp; String(trigger.getUniqueId()) !== target) return;
+        ScriptApp.deleteTrigger(trigger);
+      } catch (error) {
+        // 無効フラグ・UID照合が実行可否の基準。削除失敗を検索エラーにしない。
+      }
+    });
+  } catch (error) {
+    // simple triggerからは呼ばない。サービスが使えない場合も予約の無効化は有効。
+  }
 }
 </code></pre><div class="copy-status" id="status-gs" role="status" aria-live="polite">Code.gsの全文をコピーできます。</div><div class="code-footer">Drive上のファイルは読み取り対象です。検索結果・設定・進捗はスプレッドシートやスクリプトの管理情報へ保存します。</div></section>
 
@@ -1399,9 +1733,9 @@ function formatDriveSearchStatusTime_(value) {
 &lt;/html&gt;
 </code></pre><div class="copy-status" id="status-picker" role="status" aria-live="polite">FolderPicker.htmlの全文をコピーできます。</div><div class="code-footer">選択画面のHTMLです。単独でPCのブラウザから開くのではなく、Apps ScriptのshowFolderPickerから表示します。</div></section>
 
-<section id="help" class="card"><div class="section-head"><span class="section-no">07</span><h2>困ったとき</h2></div><details><summary>timeZone引数のエラーが出る・日時に「日本時間」と付く</summary><p>v3.1.1では、タイムゾーンの取得や日時整形のエラーを日時表示内で処理し、日本時間（UTC+9）の表示へ切り替えます。「日本時間」は代替表示を使った印です。Code.gs、またはv3.1末尾のformatDriveSearchStatusTime_を更新し、「状態を更新」で確認してください。状態欄が設定済みならsetupDriveSearchの再実行は不要です。</p></details><details><summary>通知が消えて、終わったのか分からない</summary><p>D1:F1の常時表示欄を確認してください。緑の【検索完了】だけが対象全体の完了です。黄色の【未完了】なら「続きから検索」を実行します。表示が古い場合は「状態を更新」で保存状態を表示し直せます。</p></details><details><summary>状態欄が大きくならない・ボタンで隠れる</summary><p>setupDriveSearchを1回実行してください。E1・F1に別の内容がある場合は移動してから実行します。図形ボタンはG列以降などへ移し、D1:F1に重ねないでください。</p></details><details><summary>前回は完了していたのに、新しい検索でエラーになった</summary><p>新しい検索を開始できなかった場合は、赤い「今回の操作を実行できませんでした」を表示します。残っている行は前回の結果です。現在の条件で完了した結果として扱わず、表示された原因を確認してください。</p></details><details><summary>B1やB2を変えたら「条件変更」と表示された</summary><p>表示中の結果が前の条件の結果であることを示しています。新しい条件で調べる場合は「新しく検索」を実行してください。条件の編集だけでは新たな検索は始まりません。</p></details><details><summary>上の階層へ行けない・共有ドライブ一覧が出ない</summary><p>v2以前から更新する場合はFolderPicker.htmlも同梱版へ置き換え、保存後に選択画面を開き直してください。v3のHTMLはそのまま使えます。上部の「ドライブ一覧」から一覧へ移動します。</p></details><details><summary>「FolderPickerが見つからない」と表示される</summary><p>Apps ScriptのHTMLファイル名をFolderPickerにしてください。ファイル名の大文字・小文字も合わせます。</p></details><details><summary>一時停止・終了ボタンを押しても、すぐには止まらない</summary><p>ページ処理の区切りで停止要求を確認するため、APIへの問い合わせや書き込み中は待つことがあります。実行そのものを打ち切る必要がある場合は、上の「Google側の実行そのものを強制終了する場合」を参照してください。</p></details><details><summary>終了した検索を再開したい</summary><p>「検索を終了」は再開不可です。「新しく検索」で開始し直します。後から再開したい場合は「一時停止」を使ってください。</p></details><details><summary>B2に指定したドライブ・フォルダが開けない</summary><p>閲覧権限とB2の入力を確認します。「//」はすべての共有ドライブ、「/」は設定済みDRIVE_IDのドライブです。同名のドライブやフォルダは、選択画面・URL・IDで指定してください。マイドライブやWindowsのG:\パスは指定できません。</p></details><details><summary>一覧の読み込みでエラーになる</summary><p>「再試行」を押してください。既に開いた場所がある場合は「ドライブ一覧」「上へ」へ戻ることもできます。読み込みに失敗した場所は選択できません。</p></details><details><summary>「Drive is not defined」などのエラーが出る</summary><p>Google Drive APIがサービスに追加され、バージョンv3、識別子Driveになっているか確認してください。</p></details><details><summary>更新前の検索を「続きから検索」で再開できない</summary><p>v3の保存済み進捗は、同じB1・B2・設定・アカウントで再開できます。v1・v2以前の途中状態は引き継がないため、「新しく検索」を使います。</p></details><details><summary>途中再開で検索条件・ページトークンのエラーになる</summary><p>B1・B2、設定、Googleアカウントが開始時と同じか確認します。条件を変えた場合やページトークンが失効した場合は「新しく検索」を実行してください。</p></details><details><summary>検索結果が0件になる</summary><p>検索対象は名前です。本文だけにある文字はヒットしません。B2の検索範囲や、空白も含めてB1の文字列が名前に含まれるか確認してください。</p></details></section>
+<section id="help" class="card"><div class="section-head"><span class="section-no">07</span><h2>困ったとき</h2></div><details><summary>自動再開を待っても動かない</summary><p>表示時刻は最も早い開始目安で、Google側の実行タイミングにより遅れる場合があります。「状態を更新」で表示と理由を確認してください。手動一時停止・エラー・条件変更では自動再開しません。追加の権限をまだ許可していない場合は、開始したアカウントで「続きから検索」を手動実行し、認可画面に従います。強制終了後や予約が失敗した場合も手動での再開が必要です。必要に応じて「手動で1回分だけ再開」も使えます。</p></details><details><summary>timeZone引数のエラーが出る・日時に「日本時間」と付く</summary><p>v3.1.1の日時表示修正を引き継いでいます。タイムゾーンの取得や日時整形に失敗した場合は日本時間（UTC+9）へ切り替えます。「日本時間」は代替表示を使った印です。Code.gsをこの版の全文へ更新し、「状態を更新」で確認してください。状態欄が設定済みならsetupDriveSearchの再実行は不要です。</p></details><details><summary>通知が消えて、終わったのか分からない</summary><p>D1:F1の常時表示欄を確認してください。緑の【検索完了】だけが対象全体の完了です。黄色でも「自動再開待ち」ならそのまま待ち、「一時停止中」なら「続きから検索」を実行します。表示が古い場合は「状態を更新」で保存状態を表示し直せます。</p></details><details><summary>状態欄が大きくならない・ボタンで隠れる</summary><p>setupDriveSearchを1回実行してください。E1・F1に別の内容がある場合は移動してから実行します。図形ボタンはG列以降などへ移し、D1:F1に重ねないでください。</p></details><details><summary>前回は完了していたのに、新しい検索でエラーになった</summary><p>新しい検索を開始できなかった場合は、赤い「今回の操作を実行できませんでした」を表示します。残っている行は前回の結果です。現在の条件で完了した結果として扱わず、表示された原因を確認してください。</p></details><details><summary>B1やB2を変えたら「条件変更」と表示された</summary><p>自動再開を止め、表示中の結果が前の条件の結果であることを示しています。新しい条件で調べる場合は「新しく検索」を実行してください。条件の編集だけでは新たな検索は始まりません。</p></details><details><summary>上の階層へ行けない・共有ドライブ一覧が出ない</summary><p>v2以前から更新する場合はFolderPicker.htmlも同梱版へ置き換え、保存後に選択画面を開き直してください。v3のHTMLはそのまま使えます。上部の「ドライブ一覧」から一覧へ移動します。</p></details><details><summary>「FolderPickerが見つからない」と表示される</summary><p>Apps ScriptのHTMLファイル名をFolderPickerにしてください。ファイル名の大文字・小文字も合わせます。</p></details><details><summary>一時停止・終了ボタンを押しても、すぐには止まらない</summary><p>ページ処理の区切りで停止要求を確認するため、APIへの問い合わせや書き込み中は待つことがあります。実行そのものを打ち切る必要がある場合は、上の「Google側の実行そのものを強制終了する場合」を参照してください。</p></details><details><summary>終了した検索を再開したい</summary><p>「検索を終了」は再開不可です。「新しく検索」で開始し直します。後から再開したい場合は「一時停止」を使ってください。</p></details><details><summary>B2に指定したドライブ・フォルダが開けない</summary><p>閲覧権限とB2の入力を確認します。「//」はすべての共有ドライブ、「/」は設定済みDRIVE_IDのドライブです。同名のドライブやフォルダは、選択画面・URL・IDで指定してください。マイドライブやWindowsのG:\パスは指定できません。</p></details><details><summary>一覧の読み込みでエラーになる</summary><p>「再試行」を押してください。既に開いた場所がある場合は「ドライブ一覧」「上へ」へ戻ることもできます。読み込みに失敗した場所は選択できません。</p></details><details><summary>「Drive is not defined」などのエラーが出る</summary><p>Google Drive APIがサービスに追加され、バージョンv3、識別子Driveになっているか確認してください。</p></details><details><summary>更新前の検索を「続きから検索」で再開できない</summary><p>v3.xの保存済み進捗は、同じB1・B2・設定・アカウントで引き継げます。「続きから検索」を押すと自動再開も有効になります。v1・v2以前の途中状態は引き継がないため、「新しく検索」を使います。</p></details><details><summary>途中再開で検索条件・ページトークンのエラーになる</summary><p>B1・B2、設定、Googleアカウントが開始時と同じか確認します。条件を変えた場合やページトークンが失効した場合は「新しく検索」を実行してください。</p></details><details><summary>検索結果が0件になる</summary><p>検索対象は名前です。本文だけにある文字はヒットしません。B2の検索範囲や、空白も含めてB1の文字列が名前に含まれるか確認してください。</p></details></section>
 
-<section class="card"><div class="section-head"><span class="section-no">参考</span><h2>Google公式仕様</h2></div><ul class="refs"><li><a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">Drive API：検索クエリの用語と演算子</a></li><li><a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">Drive API：files.list・ページ取得・ページトークン</a></li><li><a href="https://developers.google.com/workspace/drive/api/guides/search-files">Drive API：ファイルとフォルダの検索</a></li><li><a href="https://developers.google.com/apps-script/guides/services/quotas">Apps Script：割り当てと実行時間制限</a></li><li><a href="https://developers.google.com/apps-script/guides/services/advanced">Apps Script：高度なサービスの有効化</a></li><li><a href="https://developers.google.com/apps-script/guides/triggers">Apps Script：簡易トリガーの制約</a></li><li><a href="https://developers.google.com/apps-script/reference/base/ui">Apps Script：ダイアログなどのUI</a></li><li><a href="https://developers.google.com/apps-script/guides/dashboard">Apps Script：実行状況の管理と強制終了</a></li></ul><p class="caption">実際の共有ドライブへの接続確認は、ドライブIDを設定して実行した時点になります。</p></section>
+<section class="card"><div class="section-head"><span class="section-no">参考</span><h2>Google公式仕様</h2></div><ul class="refs"><li><a href="https://developers.google.com/workspace/drive/api/guides/ref-search-terms">Drive API：検索クエリの用語と演算子</a></li><li><a href="https://developers.google.com/workspace/drive/api/reference/rest/v3/files/list">Drive API：files.list・ページ取得・ページトークン</a></li><li><a href="https://developers.google.com/workspace/drive/api/guides/search-files">Drive API：ファイルとフォルダの検索</a></li><li><a href="https://developers.google.com/apps-script/guides/services/quotas">Apps Script：割り当てと実行時間制限</a></li><li><a href="https://developers.google.com/apps-script/reference/script/clock-trigger-builder#afterdurationmilliseconds">Apps Script：時間を空けて1回実行するトリガー</a></li><li><a href="https://developers.google.com/apps-script/guides/services/advanced">Apps Script：高度なサービスの有効化</a></li><li><a href="https://developers.google.com/apps-script/guides/triggers">Apps Script：簡易トリガーの制約</a></li><li><a href="https://developers.google.com/apps-script/reference/base/ui">Apps Script：ダイアログなどのUI</a></li><li><a href="https://developers.google.com/apps-script/guides/dashboard">Apps Script：実行状況の管理と強制終了</a></li></ul><p class="caption">実際の共有ドライブへの接続確認は、ドライブIDを設定して実行した時点になります。</p></section>
 </main><footer class="footer"><div class="wrap footer-inner"><span>共有ドライブの一覧選択・部分一致検索 / Google Apps Script</span><span>2026年11月12日版 · <a href="#main">ページ上部へ</a></span></div></footer>
 <script>
 (function () {
