@@ -10,12 +10,14 @@ set "UTLIUPDT=utliupdt"
 set "ROOT=%~dp0"
 set "LOG=%ROOT%hulft10_import_result.log"
 
-where utliupdt >nul 2>&1
-if errorlevel 1 (
-    echo ERROR: utliupdt not found in PATH.
-    echo Set the full HULFT10 executable path and edit this check if needed.
-    pause
-    exit /b 3
+if not exist "%UTLIUPDT%" (
+    where "%UTLIUPDT%" >nul 2>&1
+    if errorlevel 1 (
+        echo ERROR: HULFT10 utliupdt command not found.
+        echo Set UTLIUPDT to the full HULFT10 exe path.
+        pause
+        exit /b 3
+    )
 )
 if not exist "%ROOT%hulft10_snd.txt" (
     echo ERROR: hulft10_snd.txt not found beside this BAT.
@@ -36,11 +38,11 @@ if errorlevel 2 exit /b 0
 
 echo ==== HULFT10 management registration ==== > "%LOG%"
 echo ==== SEND ==== >> "%LOG%"
-%UTLIUPDT% -f "%ROOT%hulft10_snd.txt" >> "%LOG%" 2>&1
+"%UTLIUPDT%" -f "%ROOT%hulft10_snd.txt" >> "%LOG%" 2>&1
 set "RC_SND=%ERRORLEVEL%"
 
 echo ==== RECEIVE ==== >> "%LOG%"
-%UTLIUPDT% -f "%ROOT%hulft10_rcv.txt" >> "%LOG%" 2>&1
+"%UTLIUPDT%" -f "%ROOT%hulft10_rcv.txt" >> "%LOG%" 2>&1
 set "RC_RCV=%ERRORLEVEL%"
 
 echo SEND exit code: %RC_SND%
