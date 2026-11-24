@@ -16,10 +16,14 @@ if not exist "%OUT%" (
     exit /b 1
 )
 
-where utligen >nul 2>&1
-if errorlevel 1 goto MissingProgram
-where utllist >nul 2>&1
-if errorlevel 1 goto MissingProgram
+if not exist "%UTLIGEN%" (
+    where "%UTLIGEN%" >nul 2>&1
+    if errorlevel 1 goto MissingProgram
+)
+if not exist "%UTLLIST%" (
+    where "%UTLLIST%" >nul 2>&1
+    if errorlevel 1 goto MissingProgram
+)
 
 REM Never overwrite files in an existing export folder.
 if exist "%OUT%\hulft10_source_snd.txt" goto Exists
@@ -28,24 +32,23 @@ if exist "%OUT%\hulft10_snd_history.txt" goto Exists
 if exist "%OUT%\hulft10_rcv_history.txt" goto Exists
 
 echo ==== HULFT10 export ==== > "%LOG%"
-echo Source commands: >> "%LOG%"
-where utligen >> "%LOG%" 2>&1
-where utllist >> "%LOG%" 2>&1
+echo utligen path: %UTLIGEN% >> "%LOG%"
+echo utllist path: %UTLLIST% >> "%LOG%"
 
 echo [1/4] SEND management ...
-%UTLIGEN% -f "%OUT%\hulft10_source_snd.txt" -i snd -id "*" >> "%LOG%" 2>&1
+"%UTLIGEN%" -f "%OUT%\hulft10_source_snd.txt" -i snd -id "*" >> "%LOG%" 2>&1
 if errorlevel 1 goto Failure
 
 echo [2/4] RECEIVE management ...
-%UTLIGEN% -f "%OUT%\hulft10_source_rcv.txt" -i rcv -id "*" >> "%LOG%" 2>&1
+"%UTLIGEN%" -f "%OUT%\hulft10_source_rcv.txt" -i rcv -id "*" >> "%LOG%" 2>&1
 if errorlevel 1 goto Failure
 
 echo [3/4] SEND history (V84) ...
-%UTLLIST% -s -v84 > "%OUT%\hulft10_snd_history.txt" 2>> "%LOG%"
+"%UTLLIST%" -s -v84 > "%OUT%\hulft10_snd_history.txt" 2>> "%LOG%"
 if errorlevel 1 goto Failure
 
 echo [4/4] RECEIVE history (V84) ...
-%UTLLIST% -r -v84 > "%OUT%\hulft10_rcv_history.txt" 2>> "%LOG%"
+"%UTLLIST%" -r -v84 > "%OUT%\hulft10_rcv_history.txt" 2>> "%LOG%"
 if errorlevel 1 goto Failure
 
 echo SUCCESS. Exported files: >> "%LOG%"
