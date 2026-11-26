@@ -77,7 +77,7 @@ utllist -r -v84 &gt; "C:\temp\hulft10_rcv_history.txt"</code></div>
 <section>
 <h2>操作手順</h2>
 <ol>
-<li>HULFT10のWindowsサーバーで <code>hulft10_export_all.bat</code> を実行し、BATと同じ場所の <code>hulft10_export</code> フォルダ内へ4ファイルを保存します。すでに同名TXTが存在すると、誤上書き防止のため停止します。</li>
+<li>HULFT10のWindowsサーバーで <code>hulft10_export_all.bat</code> を実行します。毎回新しい <code>hulft10_export_runs\run_1</code>、<code>run_2</code> … へ4種類のTXTが保存されます。同名ファイルは上書きせず、実行結果を <code>export_result.log</code> と個別のエラーファイルへ記録します。</li>
 <li>Windows版Excelで <kbd>Alt + F11</kbd> →［挿入］→［標準モジュール］で②のVBAを貼り付けます。<kbd>Alt + F8</kbd> → <code>HULFT10_4Files_Import</code> を実行し、4ファイルを順に選択します。不要なものはファイル選択をキャンセルしてスキップできます。</li>
 <li>Excelブックを<strong>マクロ有効ブック（.xlsm）</strong>として保存。管理情報を編集する場合は、③のVBAを別の標準モジュールへ貼り付けます。</li>
 <li><kbd>Alt + F8</kbd> → <code>HULFT10_ExportCardsForImport</code> を実行。元の配信・集信管理TXTを順に指定した後、<strong>別の空フォルダ</strong>を出力先に選びます。</li>
@@ -92,83 +92,146 @@ utllist -r -v84 &gt; "C:\temp\hulft10_rcv_history.txt"</code></div>
 <div class="control"><button type="button" onclick="copyCode('exportBatCode','exportBatStatus')">コード全文をコピー</button><span class="status" id="exportBatStatus" role="status"></span></div>
 <details><summary>コードを表示する</summary><pre><code id="exportBatCode">@echo off
 setlocal EnableExtensions DisableDelayedExpansion
-REM HULFT10 for Windows: export 4 types to separate TXT files.
-REM ASCII-only BAT: suitable for ANSI or UTF-8 without BOM.
-REM The directory of this BAT determines the output folder.
-REM If V8 and V10 are both installed, replace command names with full V10 exe paths.
+REM HULFT10 Windows - ALL FOUR types, with diagnostic output.
+REM Save this BAT as ANSI/CP932 or UTF-8 without BOM (ASCII contents).
+REM This is an EXPORT ONLY: HULFT settings and history are not changed.
+REM Always check that the resolved utllist/utligen are for HULFT10.
+REM If both HULFT8 and HULFT10 are installed, use their FULL V10 EXE paths.
 set &quot;UTLIGEN=utligen&quot;
 set &quot;UTLLIST=utllist&quot;
-set &quot;OUT=%~dp0hulft10_export&quot;
-set &quot;LOG=%OUT%\export_result.log&quot;
-
-if not exist &quot;%OUT%&quot; mkdir &quot;%OUT%&quot;
-if not exist &quot;%OUT%&quot; (
-    echo ERROR: Cannot create &quot;%OUT%&quot;.
-    pause
-    exit /b 1
-)
+set &quot;ROOT=%~dp0hulft10_export_runs&quot;
+set &quot;RUN=1&quot;
 
 if not exist &quot;%UTLIGEN%&quot; (
     where &quot;%UTLIGEN%&quot; &gt;nul 2&gt;&amp;1
-    if errorlevel 1 goto MissingProgram
+    if errorlevel 1 goto NoExe
 )
 if not exist &quot;%UTLLIST%&quot; (
     where &quot;%UTLLIST%&quot; &gt;nul 2&gt;&amp;1
-    if errorlevel 1 goto MissingProgram
+    if errorlevel 1 goto NoExe
 )
 
-REM Never overwrite files in an existing export folder.
-if exist &quot;%OUT%\hulft10_source_snd.txt&quot; goto Exists
-if exist &quot;%OUT%\hulft10_source_rcv.txt&quot; goto Exists
-if exist &quot;%OUT%\hulft10_snd_history.txt&quot; goto Exists
-if exist &quot;%OUT%\hulft10_rcv_history.txt&quot; goto Exists
+if not exist &quot;%ROOT%&quot; mkdir &quot;%ROOT%&quot;
+if not exist &quot;%ROOT%&quot; (
+    echo ERROR: Unable to create output directory: &quot;%ROOT%&quot;
+    pause
+    exit /b 3
+)
 
-echo ==== HULFT10 export ==== &gt; &quot;%LOG%&quot;
-echo utligen path: %UTLIGEN% &gt;&gt; &quot;%LOG%&quot;
-echo utllist path: %UTLLIST% &gt;&gt; &quot;%LOG%&quot;
+:NextRun
+set &quot;OUT=%ROOT%\run_%RUN%&quot;
+if not exist &quot;%OUT%&quot; goto NewRun
+set /a RUN+=1
+if %RUN% GTR 9999 goto FolderLimit
+goto NextRun
+
+:NewRun
+mkdir &quot;%OUT%&quot; 2&gt;nul
+if not exist &quot;%OUT%&quot; (
+    echo ERROR: Cannot create &quot;%OUT%&quot;
+    pause
+    exit /b 3
+)
+
+set &quot;LOG=%OUT%\export_result.log&quot;
+&gt; &quot;%LOG%&quot; echo ==== HULFT10 Export (4 types) ====
+&gt;&gt; &quot;%LOG%&quot; echo Output directory: &quot;%OUT%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo UT LIGEN selected: &quot;%UTLIGEN%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo UT LLIST selected: &quot;%UTLLIST%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo ----- PATH resolution -----
+if exist &quot;%UTLIGEN%&quot; (
+    &gt;&gt; &quot;%LOG%&quot; echo utligen = &quot;%UTLIGEN%&quot;
+) else (
+    where &quot;%UTLIGEN%&quot; &gt;&gt; &quot;%LOG%&quot; 2&gt;&amp;1
+)
+if exist &quot;%UTLLIST%&quot; (
+    &gt;&gt; &quot;%LOG%&quot; echo utllist = &quot;%UTLLIST%&quot;
+) else (
+    where &quot;%UTLLIST%&quot; &gt;&gt; &quot;%LOG%&quot; 2&gt;&amp;1
+)
 
 echo [1/4] SEND management ...
-&quot;%UTLIGEN%&quot; -f &quot;%OUT%\hulft10_source_snd.txt&quot; -i snd -id &quot;*&quot; &gt;&gt; &quot;%LOG%&quot; 2&gt;&amp;1
-if errorlevel 1 goto Failure
+&quot;%UTLIGEN%&quot; -f &quot;%OUT%\hulft10_source_snd.txt&quot; -i snd -id &quot;*&quot; 1&gt; &quot;%OUT%\snd_mng_stdout.txt&quot; 2&gt; &quot;%OUT%\snd_mng_stderr.txt&quot;
+set &quot;RC_MS=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo SEND management exit code: %RC_MS%
 
 echo [2/4] RECEIVE management ...
-&quot;%UTLIGEN%&quot; -f &quot;%OUT%\hulft10_source_rcv.txt&quot; -i rcv -id &quot;*&quot; &gt;&gt; &quot;%LOG%&quot; 2&gt;&amp;1
-if errorlevel 1 goto Failure
+&quot;%UTLIGEN%&quot; -f &quot;%OUT%\hulft10_source_rcv.txt&quot; -i rcv -id &quot;*&quot; 1&gt; &quot;%OUT%\rcv_mng_stdout.txt&quot; 2&gt; &quot;%OUT%\rcv_mng_stderr.txt&quot;
+set &quot;RC_MR=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo RECEIVE management exit code: %RC_MR%
 
-echo [3/4] SEND history (V84) ...
-&quot;%UTLLIST%&quot; -s -v84 &gt; &quot;%OUT%\hulft10_snd_history.txt&quot; 2&gt;&gt; &quot;%LOG%&quot;
-if errorlevel 1 goto Failure
+echo [3/4] SEND history (-v84) ...
+&quot;%UTLLIST%&quot; -s -v84 1&gt; &quot;%OUT%\hulft10_snd_history.txt&quot; 2&gt; &quot;%OUT%\snd_hist_stderr.txt&quot;
+set &quot;RC_HS=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo SEND history exit code: %RC_HS%
 
-echo [4/4] RECEIVE history (V84) ...
-&quot;%UTLLIST%&quot; -r -v84 &gt; &quot;%OUT%\hulft10_rcv_history.txt&quot; 2&gt;&gt; &quot;%LOG%&quot;
-if errorlevel 1 goto Failure
+echo [4/4] RECEIVE history (-v84) ...
+&quot;%UTLLIST%&quot; -r -v84 1&gt; &quot;%OUT%\hulft10_rcv_history.txt&quot; 2&gt; &quot;%OUT%\rcv_hist_stderr.txt&quot;
+set &quot;RC_HR=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo RECEIVE history exit code: %RC_HR%
 
-echo SUCCESS. Exported files: &gt;&gt; &quot;%LOG%&quot;
-dir /b &quot;%OUT%\hulft10_*.txt&quot; &gt;&gt; &quot;%LOG%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo ----- File size / bytes -----
+if exist &quot;%OUT%\hulft10_source_snd.txt&quot; (
+    for %%F in (&quot;%OUT%\hulft10_source_snd.txt&quot;) do &gt;&gt; &quot;%LOG%&quot; echo SEND management: %%~zF
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo SEND management file missing
+)
+if exist &quot;%OUT%\hulft10_source_rcv.txt&quot; (
+    for %%F in (&quot;%OUT%\hulft10_source_rcv.txt&quot;) do &gt;&gt; &quot;%LOG%&quot; echo RECEIVE management: %%~zF
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo RECEIVE management file missing
+)
+if exist &quot;%OUT%\hulft10_snd_history.txt&quot; (
+    for %%F in (&quot;%OUT%\hulft10_snd_history.txt&quot;) do &gt;&gt; &quot;%LOG%&quot; echo SEND history: %%~zF
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo SEND history file missing
+)
+if exist &quot;%OUT%\hulft10_rcv_history.txt&quot; (
+    for %%F in (&quot;%OUT%\hulft10_rcv_history.txt&quot;) do &gt;&gt; &quot;%LOG%&quot; echo RECEIVE history: %%~zF
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo RECEIVE history file missing
+)
+
+&gt;&gt; &quot;%LOG%&quot; echo ----- SEND history STDERR -----
+type &quot;%OUT%\snd_hist_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo ----- RECEIVE history STDERR -----
+type &quot;%OUT%\rcv_hist_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo ----- SEND management STDERR -----
+type &quot;%OUT%\snd_mng_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo ----- RECEIVE management STDERR -----
+type &quot;%OUT%\rcv_mng_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
+
 echo.
-echo Export complete. Folder: &quot;%OUT%&quot;
-echo Review &quot;%LOG%&quot; and data counts.
+echo SEND management   : %RC_MS%
+echo RECEIVE management: %RC_MR%
+echo SEND history      : %RC_HS%
+echo RECEIVE history   : %RC_HR%
+echo.
+echo Output directory: &quot;%OUT%&quot;
+echo Check export_result.log and exported TXT before using Excel.
+if not &quot;%RC_MS%&quot;==&quot;0&quot; echo WARNING: SEND management command failed.
+if not &quot;%RC_MR%&quot;==&quot;0&quot; echo WARNING: RECEIVE management command failed.
+if not &quot;%RC_HS%&quot;==&quot;0&quot; echo WARNING: SEND history command failed.
+if not &quot;%RC_HR%&quot;==&quot;0&quot; echo WARNING: RECEIVE history command failed.
+echo.
 pause
+
+if not &quot;%RC_MS%&quot;==&quot;0&quot; exit /b 1
+if not &quot;%RC_MR%&quot;==&quot;0&quot; exit /b 1
+if not &quot;%RC_HS%&quot;==&quot;0&quot; exit /b 1
+if not &quot;%RC_HR%&quot;==&quot;0&quot; exit /b 1
 exit /b 0
 
-:Exists
-echo ERROR: One or more output TXT files already exist.
-echo Move the previous files or use a NEW export folder.
-echo No files were exported this time.
+:NoExe
+echo ERROR: Required utligen or utllist command was not found.
+echo Use the full HULFT10 EXE paths in the UT LIGEN / UT LLIST variables.
 pause
 exit /b 2
 
-:MissingProgram
-echo ERROR: HULFT CLI command not found in PATH.
-echo Run on the HULFT10 server or specify the full HULFT10 exe path.
+:FolderLimit
+echo ERROR: No unused run folder remains.
 pause
 exit /b 3
-
-:Failure
-echo ERROR: Export interrupted. See &quot;%LOG%&quot;.
-echo Files exported before the error may exist. They are NOT complete backup.
-pause
-exit /b 1
 </code></pre></details>
 </section>
 <section id="excelIn" class="block">
