@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>HULFT10 Windows 設定・履歴エクスポート／Excel比較／TXT再出力／BAT登録</title>
+<title>HULFT10 Windows ツール｜20261126-R3 集信履歴修正版</title>
 <meta name="description" content="HULFT10 for Windows の配信・集信管理情報と履歴をTXTに出力し、Excelで編集・比較、定義カードに戻してテスト環境へ登録するBATとVBA。">
 <style>
 :root{color-scheme:light;font-family:system-ui,-apple-system,"Yu Gothic UI",Meiryo,sans-serif;color:#253146;background:#f2f5fa;font-size:16px}
@@ -42,7 +42,8 @@ details pre{margin-top:0}
 </head><body>
 <header>
 <h1>HULFT10 for Windows｜エクスポート・Excel比較・再登録</h1>
-<p class="sub">2026年11月25日作成 ｜ HULFT10 for Windows専用。以前のHULFT8用ファイルは変更していません。</p>
+<p class="sub">2026年11月26日更新 ｜ Rev. 20261126-R3 ｜ HULFT10 for Windows専用。以前のHULFT8用ファイルは変更していません。</p>
+<p class="note"><strong>最新版：20261126-R3（集信履歴 TEMP 経由出力対応）</strong><br>集信履歴を <code>utllist -r -v84 &gt; "%TEMP%\..."</code> で取得する方式を、① 4種類一括BATと履歴専用BATの両方に反映しました。コード内の <code>:ReceiveToFile</code> と <code>RCV_STAGE</code> が最新版の目印です。実機検証は未実施です。</p>
 <p>HULFT10の管理情報と履歴をBATで出力し、Excelで一覧・比較します。管理情報はExcelから<strong>元のutligen定義カード形式を保持して再出力</strong>し、テスト用HULFT10に新規登録できます。</p>
 <div class="grid">
 <a href="#exportBat"><b>① TXT一括エクスポート</b><br><small>4種類のテキスト</small></a>
