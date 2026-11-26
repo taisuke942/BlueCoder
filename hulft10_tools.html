@@ -166,7 +166,9 @@ set &quot;RC_HS=%ERRORLEVEL%&quot;
 &gt;&gt; &quot;%LOG%&quot; echo SEND history exit code: %RC_HS%
 
 echo [4/4] RECEIVE history (-v84) ...
-&quot;%UTLLIST%&quot; -r -v84 1&gt; &quot;%OUT%\hulft10_rcv_history.txt&quot; 2&gt; &quot;%OUT%\rcv_hist_stderr.txt&quot;
+set &quot;RECV=%OUT%\hulft10_rcv_history.txt&quot;
+set &quot;ERR_RECV=%OUT%\rcv_hist_stderr.txt&quot;
+call :ReceiveToFile
 set &quot;RC_HR=%ERRORLEVEL%&quot;
 &gt;&gt; &quot;%LOG%&quot; echo RECEIVE history exit code: %RC_HR%
 
@@ -194,7 +196,7 @@ if exist &quot;%OUT%\hulft10_rcv_history.txt&quot; (
 
 &gt;&gt; &quot;%LOG%&quot; echo ----- SEND history STDERR -----
 type &quot;%OUT%\snd_hist_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
-&gt;&gt; &quot;%LOG%&quot; echo ----- RECEIVE history STDERR -----
+&gt;&gt; &quot;%LOG%&quot; echo ----- RECEIVE history diagnostics (stderr on console) -----
 type &quot;%OUT%\rcv_hist_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
 &gt;&gt; &quot;%LOG%&quot; echo ----- SEND management STDERR -----
 type &quot;%OUT%\snd_mng_stderr.txt&quot; &gt;&gt; &quot;%LOG%&quot;
@@ -232,6 +234,71 @@ exit /b 2
 echo ERROR: No unused run folder remains.
 pause
 exit /b 3
+
+:ReceiveToFile
+REM Use the same stdout-only redirection as the successful CMD test.
+REM Stage in TEMP, then copy the result to the normal output folder.
+REM stderr remains on screen, exactly as in the manual test.
+&gt; &quot;%ERR_RECV%&quot; echo RECEIVE diagnostics: stderr is displayed on the console.
+if not defined TEMP (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: TEMP is not defined.
+    exit /b 2001
+)
+set &quot;RCV_STAGE=%TEMP%\hulft10_rcv_%RANDOM%_%RANDOM%&quot;
+mkdir &quot;%RCV_STAGE%&quot; 2&gt;nul
+if errorlevel 1 (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Cannot create temporary folder &quot;%RCV_STAGE%&quot;.
+    exit /b 2001
+)
+set &quot;RCV_TMP=%RCV_STAGE%\hulft10_rcv_test.txt&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Staging file: &quot;%RCV_TMP%&quot;
+echo Temporary receive output: &quot;%RCV_TMP%&quot;
+if /i &quot;%UTLLIST%&quot;==&quot;utllist&quot; (
+    utllist -r -v84 &gt; &quot;%RCV_TMP%&quot;
+) else (
+    &quot;%UTLLIST%&quot; -r -v84 &gt; &quot;%RCV_TMP%&quot;
+)
+set &quot;RCV_CMD_RC=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo utllist receive exit code: %RCV_CMD_RC%
+if not &quot;%RCV_CMD_RC%&quot;==&quot;0&quot; (
+    echo RECEIVE command failed. Check the console and temporary file.
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo Failed; temporary files retained for diagnosis.
+    exit /b %RCV_CMD_RC%
+)
+if not exist &quot;%RCV_TMP%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Temporary output file is missing.
+    exit /b 2002
+)
+for %%F in (&quot;%RCV_TMP%&quot;) do set &quot;RCV_BYTES=%%~zF&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Temporary output bytes: %RCV_BYTES%
+if &quot;%RCV_BYTES%&quot;==&quot;0&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo WARNING: No receive history bytes; temporary file retained.
+    echo WARNING: RECEIVE temporary file is empty.
+    exit /b 2002
+)
+if exist &quot;%RECV%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Destination already exists; not overwritten.
+    exit /b 2003
+)
+copy /b /y &quot;%RCV_TMP%&quot; &quot;%RECV%&quot; &gt;&gt; &quot;%ERR_RECV%&quot; 2&gt;&amp;1
+if errorlevel 1 (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Copy failed; temporary file retained.
+    echo RECEIVE copy failed. Source retained: &quot;%RCV_TMP%&quot;
+    exit /b 2003
+)
+if not exist &quot;%RECV%&quot; exit /b 2003
+for %%F in (&quot;%RECV%&quot;) do set &quot;RCV_COPIED_BYTES=%%~zF&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Destination output bytes: %RCV_COPIED_BYTES%
+if not &quot;%RCV_BYTES%&quot;==&quot;%RCV_COPIED_BYTES%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Copy size differs; temporary file retained.
+    exit /b 2003
+)
+del /q &quot;%RCV_TMP%&quot; &gt;nul 2&gt;&amp;1
+rd &quot;%RCV_STAGE%&quot; &gt;nul 2&gt;&amp;1
+if exist &quot;%RCV_STAGE%&quot; &gt;&gt; &quot;%ERR_RECV%&quot; echo WARNING: Check remaining temporary files.
+&gt;&gt; &quot;%ERR_RECV%&quot; echo RECEIVE export and copy completed.
+echo RECEIVE history saved: &quot;%RECV%&quot;
+exit /b 0
 </code></pre></details>
 </section>
 <section id="excelIn" class="block">
@@ -1423,10 +1490,11 @@ exit /b 1
 </code></pre></details>
 </section>
 <section id="historyOnly">
+<p class="note"><strong>2026年11月26日再修正：</strong>集信履歴を <code>utllist -r -v84 &gt; "%TEMP%\..."</code> で正常出力できた結果に基づき、集信履歴だけTEMP内の一時フォルダで出力し、成功後に通常の出力先へコピーする方式に変更しました。配信履歴と管理情報の処理は変更していません。集信コマンドの標準エラーは画面に表示し、終了コード・一時ファイルとコピー先のサイズはログに記録します。異常終了時は調査のため一時ファイルが残る場合があります。原因は未確定で、BAT全体の実機検証は未実施です。履歴を含む一時ファイルも社内の保管ルールに従い取り扱ってください。</p>
 <div class="sectionHead"><span class="stepnum">補</span><h2>配信履歴・集信履歴だけを再収集するBAT（診断機能付き）</h2></div>
 <p><strong>管理情報の出力ができているのに履歴だけ取得できない場合</strong>に使用してください。以前の一括BATはTXTが1つでも存在すると処理を停止する仕様でした。こちらは毎回別フォルダを作るため、既存ファイルを上書きせずに再実行できます。</p>
 <p>取得するファイル：<code>hulft10_snd_history.txt</code>（配信履歴）、<code>hulft10_rcv_history.txt</code>（集信履歴）。ログ：<code>history_result.log</code>、<code>send_stderr.txt</code>、<code>receive_stderr.txt</code>。保存先はBATと同じ場所の <code>hulft10_history_runs\run_1</code>、<code>run_2</code> … です。</p>
-<p class="alert">ファイルが0バイトなら「履歴がない」「対象のHULFT環境が違う」「エラーが標準出力に書かれた」などの可能性があります。<strong>まず <code>history_result.log</code> の終了コードと標準エラー、TXTの内容を確認してください。</strong> 実機データはGitHubにアップロードしないでください。</p>
+<p class="alert">ファイルが0バイトなら「履歴がない」「対象のHULFT環境が違う」「エラーが標準出力に書かれた」などの可能性があります。<strong>まず <code>history_result.log</code> の終了コード、画面に表示された集信エラー、TXTの内容を確認してください。</strong> 実機データはGitHubにアップロードしないでください。</p>
 <p class="sub"><a href="https://github.com/taisuke942/BlueCoder/blob/master/hulft10_export_history_only.bat" target="_blank" rel="noopener">GitHubでBAT本体を見る</a></p>
 <div class="control"><button type="button" onclick="copyCode('historyOnlyCode','historyOnlyStatus')">履歴専用BATを全文コピー</button><span class="status" id="historyOnlyStatus"></span></div>
 <details><summary>履歴専用BATのコードを表示</summary><pre><code id="historyOnlyCode">@echo off
@@ -1495,7 +1563,7 @@ set &quot;SEND_RC=%ERRORLEVEL%&quot;
 
 echo [2/2] Exporting RECEIVE history ...
 &gt;&gt; &quot;%LOG%&quot; echo [RECEIVE] utllist -r -v84
-&quot;%UTLLIST%&quot; -r -v84 1&gt; &quot;%RECV%&quot; 2&gt; &quot;%ERR_RECV%&quot;
+call :ReceiveToFile
 set &quot;RECV_RC=%ERRORLEVEL%&quot;
 &gt;&gt; &quot;%LOG%&quot; echo RECEIVE exit code: %RECV_RC%
 
@@ -1515,7 +1583,7 @@ if exist &quot;%RECV%&quot; (
 &gt;&gt; &quot;%LOG%&quot; echo ==== SEND stderr ====
 type &quot;%ERR_SEND%&quot; &gt;&gt; &quot;%LOG%&quot;
 &gt;&gt; &quot;%LOG%&quot; echo.
-&gt;&gt; &quot;%LOG%&quot; echo ==== RECEIVE stderr ====
+&gt;&gt; &quot;%LOG%&quot; echo ==== RECEIVE diagnostics (stderr on console) ====
 type &quot;%ERR_RECV%&quot; &gt;&gt; &quot;%LOG%&quot;
 
 echo.
@@ -1530,7 +1598,7 @@ if not &quot;%SEND_RC%&quot;==&quot;0&quot; (
 )
 if not &quot;%RECV_RC%&quot;==&quot;0&quot; (
     echo WARNING: RECEIVE history export failed.
-    echo Inspect receive_stderr.txt and hulft10_rcv_history.txt.
+    echo Inspect receive_stderr.txt and the console; a temporary file may be retained.
 )
 if &quot;%SEND_RC%&quot;==&quot;0&quot; if &quot;%RECV_RC%&quot;==&quot;0&quot; (
     echo Both commands returned success.
@@ -1561,6 +1629,71 @@ exit /b 2
 echo ERROR: Too many history export folders.
 pause
 exit /b 3
+
+:ReceiveToFile
+REM Use the same stdout-only redirection as the successful CMD test.
+REM Stage in TEMP, then copy the result to the normal output folder.
+REM stderr remains on screen, exactly as in the manual test.
+&gt; &quot;%ERR_RECV%&quot; echo RECEIVE diagnostics: stderr is displayed on the console.
+if not defined TEMP (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: TEMP is not defined.
+    exit /b 2001
+)
+set &quot;RCV_STAGE=%TEMP%\hulft10_rcv_%RANDOM%_%RANDOM%&quot;
+mkdir &quot;%RCV_STAGE%&quot; 2&gt;nul
+if errorlevel 1 (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Cannot create temporary folder &quot;%RCV_STAGE%&quot;.
+    exit /b 2001
+)
+set &quot;RCV_TMP=%RCV_STAGE%\hulft10_rcv_test.txt&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Staging file: &quot;%RCV_TMP%&quot;
+echo Temporary receive output: &quot;%RCV_TMP%&quot;
+if /i &quot;%UTLLIST%&quot;==&quot;utllist&quot; (
+    utllist -r -v84 &gt; &quot;%RCV_TMP%&quot;
+) else (
+    &quot;%UTLLIST%&quot; -r -v84 &gt; &quot;%RCV_TMP%&quot;
+)
+set &quot;RCV_CMD_RC=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo utllist receive exit code: %RCV_CMD_RC%
+if not &quot;%RCV_CMD_RC%&quot;==&quot;0&quot; (
+    echo RECEIVE command failed. Check the console and temporary file.
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo Failed; temporary files retained for diagnosis.
+    exit /b %RCV_CMD_RC%
+)
+if not exist &quot;%RCV_TMP%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Temporary output file is missing.
+    exit /b 2002
+)
+for %%F in (&quot;%RCV_TMP%&quot;) do set &quot;RCV_BYTES=%%~zF&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Temporary output bytes: %RCV_BYTES%
+if &quot;%RCV_BYTES%&quot;==&quot;0&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo WARNING: No receive history bytes; temporary file retained.
+    echo WARNING: RECEIVE temporary file is empty.
+    exit /b 2002
+)
+if exist &quot;%RECV%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Destination already exists; not overwritten.
+    exit /b 2003
+)
+copy /b /y &quot;%RCV_TMP%&quot; &quot;%RECV%&quot; &gt;&gt; &quot;%ERR_RECV%&quot; 2&gt;&amp;1
+if errorlevel 1 (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Copy failed; temporary file retained.
+    echo RECEIVE copy failed. Source retained: &quot;%RCV_TMP%&quot;
+    exit /b 2003
+)
+if not exist &quot;%RECV%&quot; exit /b 2003
+for %%F in (&quot;%RECV%&quot;) do set &quot;RCV_COPIED_BYTES=%%~zF&quot;
+&gt;&gt; &quot;%ERR_RECV%&quot; echo Destination output bytes: %RCV_COPIED_BYTES%
+if not &quot;%RCV_BYTES%&quot;==&quot;%RCV_COPIED_BYTES%&quot; (
+    &gt;&gt; &quot;%ERR_RECV%&quot; echo ERROR: Copy size differs; temporary file retained.
+    exit /b 2003
+)
+del /q &quot;%RCV_TMP%&quot; &gt;nul 2&gt;&amp;1
+rd &quot;%RCV_STAGE%&quot; &gt;nul 2&gt;&amp;1
+if exist &quot;%RCV_STAGE%&quot; &gt;&gt; &quot;%ERR_RECV%&quot; echo WARNING: Check remaining temporary files.
+&gt;&gt; &quot;%ERR_RECV%&quot; echo RECEIVE export and copy completed.
+echo RECEIVE history saved: &quot;%RECV%&quot;
+exit /b 0
 </code></pre></details>
 </section>
 <section>
