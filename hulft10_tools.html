@@ -50,6 +50,7 @@ details pre{margin-top:0}
 <a href="#excelOut"><b>③ Excel→TXT出力VBA</b><br><small>元TXT保持方式</small></a>
 <a href="#registerBat"><b>④ HULFT登録BAT</b><br><small>配信・集信管理情報</small></a>
 <a href="#dependencyBat"><b>⑤ 関連設定のエクスポート</b><br><small>詳細ホスト・転送グループ等</small></a>
+<a href="#historyOnly"><b>履歴だけ再収集（診断BAT）</b><br><small>失敗・空ファイルを切り分け</small></a>
 </div>
 </header>
 
@@ -1356,6 +1357,147 @@ exit /b 2
 echo ERROR: One step failed; previous outputs might be partial.
 pause
 exit /b 1
+</code></pre></details>
+</section>
+<section id="historyOnly">
+<div class="sectionHead"><span class="stepnum">補</span><h2>配信履歴・集信履歴だけを再収集するBAT（診断機能付き）</h2></div>
+<p><strong>管理情報の出力ができているのに履歴だけ取得できない場合</strong>に使用してください。以前の一括BATはTXTが1つでも存在すると処理を停止する仕様でした。こちらは毎回別フォルダを作るため、既存ファイルを上書きせずに再実行できます。</p>
+<p>取得するファイル：<code>hulft10_snd_history.txt</code>（配信履歴）、<code>hulft10_rcv_history.txt</code>（集信履歴）。ログ：<code>history_result.log</code>、<code>send_stderr.txt</code>、<code>receive_stderr.txt</code>。保存先はBATと同じ場所の <code>hulft10_history_runs\run_1</code>、<code>run_2</code> … です。</p>
+<p class="alert">ファイルが0バイトなら「履歴がない」「対象のHULFT環境が違う」「エラーが標準出力に書かれた」などの可能性があります。<strong>まず <code>history_result.log</code> の終了コードと標準エラー、TXTの内容を確認してください。</strong> 実機データはGitHubにアップロードしないでください。</p>
+<p class="sub"><a href="https://github.com/taisuke942/BlueCoder/blob/master/hulft10_export_history_only.bat" target="_blank" rel="noopener">GitHubでBAT本体を見る</a></p>
+<div class="control"><button type="button" onclick="copyCode('historyOnlyCode','historyOnlyStatus')">履歴専用BATを全文コピー</button><span class="status" id="historyOnlyStatus"></span></div>
+<details><summary>履歴専用BATのコードを表示</summary><pre><code id="historyOnlyCode">@echo off
+setlocal EnableExtensions DisableDelayedExpansion
+REM HULFT10 Windows - export SEND / RECEIVE histories only (-v84).
+REM Does not change HULFT settings or delete history.
+REM Run on the HULFT10 server / an authorized HULFT10 command environment.
+REM Save as ANSI (CP932) or UTF-8 WITHOUT BOM.
+REM If HULFT8 and 10 coexist, use the full HULFT10 executable path:
+REM set &quot;UTLLIST=C:\path\to\HULFT10\bin\utllist.exe&quot;
+set &quot;UTLLIST=utllist&quot;
+set &quot;ROOT=%~dp0hulft10_history_runs&quot;
+set &quot;RUN=1&quot;
+
+REM Find utllist and log the actual Windows PATH resolution.
+if not exist &quot;%UTLLIST%&quot; (
+    where &quot;%UTLLIST%&quot; &gt;nul 2&gt;&amp;1
+    if errorlevel 1 goto NotFound
+)
+
+if not exist &quot;%ROOT%&quot; mkdir &quot;%ROOT%&quot;
+if not exist &quot;%ROOT%&quot; (
+    echo ERROR: Cannot create output root: &quot;%ROOT%&quot;
+    pause
+    exit /b 3
+)
+
+:FindNewFolder
+set &quot;DIR=%ROOT%\run_%RUN%&quot;
+if not exist &quot;%DIR%&quot; goto CreateFolder
+set /a RUN+=1
+if %RUN% GTR 9999 goto TooMany
+goto FindNewFolder
+
+:CreateFolder
+mkdir &quot;%DIR%&quot; 2&gt;nul
+if not exist &quot;%DIR%&quot; (
+    echo ERROR: Cannot create &quot;%DIR%&quot;
+    pause
+    exit /b 3
+)
+
+set &quot;SEND=%DIR%\hulft10_snd_history.txt&quot;
+set &quot;RECV=%DIR%\hulft10_rcv_history.txt&quot;
+set &quot;ERR_SEND=%DIR%\send_stderr.txt&quot;
+set &quot;ERR_RECV=%DIR%\receive_stderr.txt&quot;
+set &quot;LOG=%DIR%\history_result.log&quot;
+
+&gt; &quot;%LOG%&quot; echo ==== HULFT10 history export diagnostic ====
+&gt;&gt; &quot;%LOG%&quot; echo Output folder: &quot;%DIR%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo Configured utllist: &quot;%UTLLIST%&quot;
+
+if exist &quot;%UTLLIST%&quot; (
+    &gt;&gt; &quot;%LOG%&quot; echo Executable: &quot;%UTLLIST%&quot;
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo PATH candidate(s):
+    where &quot;%UTLLIST%&quot; &gt;&gt; &quot;%LOG%&quot; 2&gt;&amp;1
+)
+
+echo.
+echo [1/2] Exporting SEND history ...
+&gt;&gt; &quot;%LOG%&quot; echo [SEND] utllist -s -v84
+&quot;%UTLLIST%&quot; -s -v84 1&gt; &quot;%SEND%&quot; 2&gt; &quot;%ERR_SEND%&quot;
+set &quot;SEND_RC=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo SEND exit code: %SEND_RC%
+
+echo [2/2] Exporting RECEIVE history ...
+&gt;&gt; &quot;%LOG%&quot; echo [RECEIVE] utllist -r -v84
+&quot;%UTLLIST%&quot; -r -v84 1&gt; &quot;%RECV%&quot; 2&gt; &quot;%ERR_RECV%&quot;
+set &quot;RECV_RC=%ERRORLEVEL%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo RECEIVE exit code: %RECV_RC%
+
+echo.&gt;&gt; &quot;%LOG%&quot;
+if exist &quot;%SEND%&quot; (
+    for %%F in (&quot;%SEND%&quot;) do call :ReportSize SEND &quot;%%~zF&quot;
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo SEND output file missing.
+)
+if exist &quot;%RECV%&quot; (
+    for %%F in (&quot;%RECV%&quot;) do call :ReportSize RECEIVE &quot;%%~zF&quot;
+) else (
+    &gt;&gt; &quot;%LOG%&quot; echo RECEIVE output file missing.
+)
+
+&gt;&gt; &quot;%LOG%&quot; echo.
+&gt;&gt; &quot;%LOG%&quot; echo ==== SEND stderr ====
+type &quot;%ERR_SEND%&quot; &gt;&gt; &quot;%LOG%&quot;
+&gt;&gt; &quot;%LOG%&quot; echo.
+&gt;&gt; &quot;%LOG%&quot; echo ==== RECEIVE stderr ====
+type &quot;%ERR_RECV%&quot; &gt;&gt; &quot;%LOG%&quot;
+
+echo.
+echo SEND exit code    : %SEND_RC%
+echo RECEIVE exit code : %RECV_RC%
+echo Files and diagnostic log:
+echo &quot;%DIR%&quot;
+echo.
+if not &quot;%SEND_RC%&quot;==&quot;0&quot; (
+    echo WARNING: SEND history export failed.
+    echo Inspect send_stderr.txt and hulft10_snd_history.txt.
+)
+if not &quot;%RECV_RC%&quot;==&quot;0&quot; (
+    echo WARNING: RECEIVE history export failed.
+    echo Inspect receive_stderr.txt and hulft10_rcv_history.txt.
+)
+if &quot;%SEND_RC%&quot;==&quot;0&quot; if &quot;%RECV_RC%&quot;==&quot;0&quot; (
+    echo Both commands returned success.
+    echo Check TXT contents: empty history files can mean no retained records.
+)
+echo.
+echo Review history_result.log, then press any key.
+pause &gt;nul
+if not &quot;%SEND_RC%&quot;==&quot;0&quot; exit /b 1
+if not &quot;%RECV_RC%&quot;==&quot;0&quot; exit /b 1
+exit /b 0
+
+:ReportSize
+&gt;&gt; &quot;%LOG%&quot; echo %~1 output bytes: %~2
+if &quot;%~2&quot;==&quot;0&quot; (
+    &gt;&gt; &quot;%LOG%&quot; echo WARNING: %~1 output is 0 bytes.
+    echo WARNING: %~1 history output is 0 bytes.
+)
+exit /b 0
+
+:NotFound
+echo ERROR: utllist was not found.
+echo Run on HULFT10 Windows or change UTLLIST to the full EXE path.
+pause
+exit /b 2
+
+:TooMany
+echo ERROR: Too many history export folders.
+pause
+exit /b 3
 </code></pre></details>
 </section>
 <section>
